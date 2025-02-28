@@ -2,10 +2,10 @@
 line-length = 79
 
 [tool.poetry]
-name = "checkpdfform"
+name = "Check PDF Form with AI"
 version = "0.1.0"
 description = ""
-authors = ["Alex Grytsai <a.grytsai1987@gmail.com>"]
+authors = ["Alex Grytsai <grytsai.alex@gmail.com>"]
 readme = "README.md"
 package-mode = false
 
