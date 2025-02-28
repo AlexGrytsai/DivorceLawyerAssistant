@@ -1,7 +1,9 @@
 from abc import abstractmethod, ABC
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Tuple, TypeAlias
 
 import fitz
+
+ScrapedPage: TypeAlias = Tuple[List[List[Dict[str, Any]]], List[fitz.Widget]]
 
 
 class BaseScraperPDF(ABC):
@@ -81,10 +83,15 @@ class ScraperPDF(BaseScraperPDF):
             widgets_list.append(widget)
         return widgets_list
 
-    def scrap_data(self) -> None:
+    def scrap_data(
+        self,
+    ) -> List[ScrapedPage]:
         doc: fitz.Document = fitz.open(self.file_path)
+        scraped_pages: List[ScrapedPage] = []
         for page in doc:
             grouped_spans_on_page = self.__group_spans_into_lines(
                 self.__extract_text_from_page(page)
             )
             widgets = self.__extract_widgets_from_page(page)
+
+        return scraped_pages
