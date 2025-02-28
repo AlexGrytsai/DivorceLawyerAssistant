@@ -1,10 +1,12 @@
 from abc import abstractmethod, ABC
-from collections import namedtuple
-from typing import List, Dict, Any
+from typing import List, Dict, Any, NamedTuple
 
 import fitz
 
-ScrapedPage = namedtuple("ScrapedPage", ["text_data", "widgets"])
+
+class ScrapedPage(NamedTuple):
+    text_data: List[Dict[str, Any]]
+    widgets: List[fitz.Widget]
 
 
 class BaseScraperPDF(ABC):
@@ -52,7 +54,7 @@ class ScraperPDF(BaseScraperPDF):
         scraped_pages: List[ScrapedPage] = []
         for page in doc:
             scraped_pages.append(
-                (
+                ScrapedPage(
                     self.__extract_text_from_page(page),
                     self.__extract_widgets_from_page(page),
                 )
