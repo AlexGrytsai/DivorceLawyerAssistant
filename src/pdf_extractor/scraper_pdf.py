@@ -1,9 +1,10 @@
 from abc import abstractmethod, ABC
-from typing import List, Dict, Any, Tuple, TypeAlias
+from collections import namedtuple
+from typing import List, Dict, Any
 
 import fitz
 
-ScrapedPage: TypeAlias = Tuple[List[Dict[str, Any]], List[fitz.Widget]]
+ScrapedPage = namedtuple("ScrapedPage", ["text_data", "widgets"])
 
 
 class BaseScraperPDF(ABC):
