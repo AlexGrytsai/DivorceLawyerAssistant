@@ -42,10 +42,7 @@ class ScraperPDF(BaseScraperPDF):
 
     @staticmethod
     def __extract_widgets_from_page(page: fitz.Page) -> List[fitz.Widget]:
-        widgets_list: List[fitz.Widget] = []
-        for widget in page.widgets():
-            widgets_list.append(widget)
-        return widgets_list
+        return [widget for widget in page.widgets()]
 
     def scrap_data(
         self,
