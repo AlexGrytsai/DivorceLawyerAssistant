@@ -2,7 +2,6 @@ from abc import abstractmethod, ABC
 from typing import List, Dict, Any
 
 import fitz
-from pympler.asizeof import asizeof
 
 
 class BaseScraperPDF(ABC):
@@ -24,7 +23,7 @@ class ScraperPDF(BaseScraperPDF):
 
     @staticmethod
     def __extract_text_from_page(page: fitz.Page) -> List[Dict[str, Any]]:
-        list_text_with_parameters: List[Dict[str, Any]] = []
+        list_spans_with_parameters: List[Dict[str, Any]] = []
 
         for block in page.get_text("dict").get("blocks"):
             block: dict[str, list]
@@ -35,9 +34,9 @@ class ScraperPDF(BaseScraperPDF):
 
                     for span in line.get("spans"):
                         if span["text"].strip() != "":
-                            list_text_with_parameters.append(span)
+                            list_spans_with_parameters.append(span)
 
-        return list_text_with_parameters
+        return list_spans_with_parameters
 
     @staticmethod
     def __is_same_line(rect1: fitz.Rect, rect2: fitz.Rect, tolerance=5):
@@ -46,11 +45,38 @@ class ScraperPDF(BaseScraperPDF):
             and abs(rect1.y1 - rect2.y1) < tolerance
         )
 
+    def __group_spans_into_lines(
+        self,
+        spans_from_page: List[Dict[str, Any]],
+    ) -> List[List[Dict[str, Any]]]:
+        if not spans_from_page:
+            return []
+
+        groups_spans_on_page: List[List[Dict[str, Any]]] = []
+        spans_on_same_line: List[Dict[str, Any]] = []
+
+        line_rect: fitz.Rect = fitz.Rect(spans_from_page[0].get("bbox"))
+
+        for span in spans_from_page:
+            if self.__is_same_line(line_rect, fitz.Rect(span["bbox"])):
+                spans_on_same_line.append(span)
+            else:
+                groups_spans_on_page.append(spans_on_same_line)
+                spans_on_same_line = [span]
+                line_rect = fitz.Rect(span["bbox"])
+
+        if spans_on_same_line:
+            groups_spans_on_page.append(spans_on_same_line)
+
+        return groups_spans_on_page
+
     def _extract_widgets_from_page(self, page: fitz.Page) -> None:
         pass
 
     def scrap_data(self) -> None:
         doc: fitz.Document = fitz.open(self.file_path)
         for page in doc:
-            text_with_parameters = self.__extract_text_from_page(page)
+            grouped_spans_on_page = self.__group_spans_into_lines(
+                self.__extract_text_from_page(page)
+            )
             self._extract_widgets_from_page(page)
