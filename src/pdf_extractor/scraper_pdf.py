@@ -39,6 +39,13 @@ class ScraperPDF(BaseScraperPDF):
 
         return list_text_with_parameters
 
+    @staticmethod
+    def __is_same_line(rect1: fitz.Rect, rect2: fitz.Rect, tolerance=5):
+        return (
+            abs(rect1.y0 - rect2.y0) < tolerance
+            and abs(rect1.y1 - rect2.y1) < tolerance
+        )
+
     def _extract_widgets_from_page(self, page: fitz.Page) -> None:
         pass
 
