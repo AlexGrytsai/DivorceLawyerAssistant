@@ -70,6 +70,10 @@ class ScraperPDF(BaseScraperPDF):
 
         return groups_spans_on_page
 
+    @staticmethod
+    def show_scraped_text(spans: List[List[Dict[str, Any]]]) -> None:
+        pass
+
     def _extract_widgets_from_page(self, page: fitz.Page) -> None:
         pass
 
