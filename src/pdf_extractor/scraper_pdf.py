@@ -74,8 +74,12 @@ class ScraperPDF(BaseScraperPDF):
     def show_scraped_text(spans: List[List[Dict[str, Any]]]) -> None:
         pass
 
-    def _extract_widgets_from_page(self, page: fitz.Page) -> None:
-        pass
+    @staticmethod
+    def __extract_widgets_from_page(page: fitz.Page) -> List[fitz.Widget]:
+        widgets_list: List[fitz.Widget] = []
+        for widget in page.widgets():
+            widgets_list.append(widget)
+        return widgets_list
 
     def scrap_data(self) -> None:
         doc: fitz.Document = fitz.open(self.file_path)
@@ -83,4 +87,4 @@ class ScraperPDF(BaseScraperPDF):
             grouped_spans_on_page = self.__group_spans_into_lines(
                 self.__extract_text_from_page(page)
             )
-            self._extract_widgets_from_page(page)
+            widgets = self.__extract_widgets_from_page(page)
