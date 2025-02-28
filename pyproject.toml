@@ -13,8 +13,10 @@ package-mode = false
 python = "^3.13"
 pypdf2 = "^3.0.1"
 pymupdf = "^1.25.3"
-black = "^25.1.0"
 
+
+[tool.poetry.group.dev.dependencies]
+black = "^25.1.0"
 
 [build-system]
 requires = ["poetry-core"]
