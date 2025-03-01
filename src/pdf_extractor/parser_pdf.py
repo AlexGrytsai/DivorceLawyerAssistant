@@ -43,7 +43,7 @@ class ParserPDF(BaseParserPDF):
                         if span.field_value:
                             line_str += span.field_value
                         else:
-                            line_str += "_" * 10
+                            line_str += f"{'_' * 10} "
                 page_str += line_str + "\n"
             text_from_document += f"{page_str}\n"
         return text_from_document
@@ -72,7 +72,7 @@ class ParserPDF(BaseParserPDF):
     def __is_same_line(rect1: fitz.Rect, rect2: fitz.Rect, tolerance=5):
         return (
             abs(rect1.y0 - rect2.y0) < tolerance
-            and abs(rect1.y1 - rect2.y1) < tolerance
+            or abs(rect1.y1 - rect2.y1) < tolerance
         )
 
     def __add_widgets_to_lines_on_page(self, page: PagePDF) -> None:
