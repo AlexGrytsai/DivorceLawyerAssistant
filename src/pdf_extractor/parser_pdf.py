@@ -19,11 +19,17 @@ class BaseParserPDF(ABC):
 
     @property
     @abstractmethod
-    def all_fields_in_document(self) -> None:
+    def all_fields_in_document(self) -> List[fitz.Widget]:
         pass
 
 
 class ParserPDF(BaseParserPDF):
+
+    @property
+    def all_fields_in_document(self) -> List[fitz.Widget]:
+        return [
+            widget for page in self._document.pages for widget in page.widgets
+        ]
 
     def _prepare_data(self, scraped_data: List[ScrapedPage]) -> DocumentPDF:
         clean_document = []
