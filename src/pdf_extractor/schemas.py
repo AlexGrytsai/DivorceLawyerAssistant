@@ -1,4 +1,4 @@
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Union
 
 import fitz
 from pydantic import BaseModel, model_validator
@@ -18,7 +18,10 @@ class SpanPDF(BaseModel):
 
 
 class LinePDF(BaseModel):
-    spans: List[SpanPDF]
+    text: List[Union[fitz.Widget, SpanPDF]]
+
+    class Config:
+        arbitrary_types_allowed = True
 
 
 class PagePDF(BaseModel):
