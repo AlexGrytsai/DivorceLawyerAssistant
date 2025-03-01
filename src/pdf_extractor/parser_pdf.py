@@ -22,6 +22,11 @@ class BaseParserPDF(ABC):
     def all_fields_in_document(self) -> List[fitz.Widget]:
         pass
 
+    @property
+    @abstractmethod
+    def text_from_document(self) -> None:
+        pass
+
 
 class ParserPDF(BaseParserPDF):
 
