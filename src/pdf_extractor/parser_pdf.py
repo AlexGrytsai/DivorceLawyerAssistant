@@ -33,7 +33,7 @@ class ParserPDF(BaseParserPDF):
     def text_from_document(self) -> None:
         text_from_document = ""
         for page in self._document.pages:
-            page_str = ""
+            page_str = f"Page # {page.page_number}\n\n"
             for line in page.lines:
                 line_str = ""
                 for span in line.text:
@@ -45,7 +45,7 @@ class ParserPDF(BaseParserPDF):
                         else:
                             line_str += "_" * 10
                 page_str += line_str + "\n"
-            text_from_document += page_str
+            text_from_document += f"{page_str}\n"
         return text_from_document
 
     @property
