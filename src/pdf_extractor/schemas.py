@@ -1,4 +1,4 @@
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 
 import fitz
 from pydantic import BaseModel, model_validator
@@ -19,3 +19,12 @@ class Span(BaseModel):
 
 class Line(BaseModel):
     spans: List[Span]
+
+
+class Page(BaseModel):
+    page_number: Optional[int] = None
+    lines: List[Line]
+    widgets: Optional[List[fitz.Widget]] = None
+
+    class Config:
+        arbitrary_types_allowed = True
