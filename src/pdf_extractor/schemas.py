@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Dict, Any, List
 
 import fitz
 from pydantic import BaseModel, model_validator
@@ -15,3 +15,7 @@ class Span(BaseModel):
 
     class Config:
         arbitrary_types_allowed = True
+
+
+class Line(BaseModel):
+    spans: List[Span]
