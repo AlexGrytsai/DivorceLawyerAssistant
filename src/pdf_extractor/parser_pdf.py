@@ -17,6 +17,11 @@ class BaseParserPDF(ABC):
     def _prepare_data(self, scraped_data: List[ScrapedPage]) -> DocumentPDF:
         pass
 
+    @property
+    @abstractmethod
+    def all_fields_in_document(self) -> None:
+        pass
+
 
 class ParserPDF(BaseParserPDF):
 
