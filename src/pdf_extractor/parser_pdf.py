@@ -29,6 +29,24 @@ class BaseParserPDF(ABC):
 
 
 class ParserPDF(BaseParserPDF):
+    @property
+    def text_from_document(self) -> None:
+        text_from_document = ""
+        for page in self._document.pages:
+            page_str = ""
+            for line in page.lines:
+                line_str = ""
+                for span in line.text:
+                    if isinstance(span, SpanPDF):
+                        line_str += span.text
+                    else:
+                        if span.field_value:
+                            line_str += span.field_value
+                        else:
+                            line_str += "_" * 10
+                page_str += line_str + "\n"
+            text_from_document += page_str
+        return text_from_document
 
     @property
     def all_fields_in_document(self) -> List[fitz.Widget]:
