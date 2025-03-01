@@ -4,7 +4,7 @@ import fitz
 from pydantic import BaseModel, model_validator
 
 
-class Span(BaseModel):
+class SpanPDF(BaseModel):
     text: str
     rect: fitz.Rect
 
@@ -17,14 +17,18 @@ class Span(BaseModel):
         arbitrary_types_allowed = True
 
 
-class Line(BaseModel):
-    spans: List[Span]
+class LinePDF(BaseModel):
+    spans: List[SpanPDF]
 
 
-class Page(BaseModel):
+class PagePDF(BaseModel):
     page_number: Optional[int] = None
-    lines: List[Line]
+    lines: List[LinePDF]
     widgets: Optional[List[fitz.Widget]] = None
 
     class Config:
         arbitrary_types_allowed = True
+
+
+class DocumentPDF(BaseModel):
+    pages: List[PagePDF]
