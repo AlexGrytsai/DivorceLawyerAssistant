@@ -62,6 +62,8 @@ class ParserPDF(BaseParserPDF):
             )
             page.widgets = scraped_data[i].widgets
 
+            self._remove_text_duplicates_with_equal_value_of_the_widget(page)
+
             self.__add_widgets_to_lines_on_page(page=page)
 
             clean_document.append(page)
@@ -81,6 +83,19 @@ class ParserPDF(BaseParserPDF):
                 if self.__is_same_line(line.text[0].rect, widget.rect):
                     line.text.append(widget)
             line.text.sort(key=lambda x: x.rect.x0)
+
+    @staticmethod
+    def _remove_text_duplicates_with_equal_value_of_the_widget(
+        page: PagePDF,
+    ) -> None:
+        widget_value_set = set(
+            widget.field_value for widget in page.widgets if widget.field_value
+        )
+        page.lines = [
+            line
+            for line in page.lines
+            if not any(span.text in widget_value_set for span in line.text)
+        ]
 
     def __group_spans_on_page(
         self,
