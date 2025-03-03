@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any, TypeAlias, Optional
 
-import fitz
+import pymupdf as fitz
 
 from src.pdf_extractor.schemas import SpanPDF, LinePDF, PagePDF, DocumentPDF
 from src.pdf_extractor.scraper_pdf import ScrapedPage
