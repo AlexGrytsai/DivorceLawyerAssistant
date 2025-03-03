@@ -2,12 +2,13 @@ from abc import abstractmethod, ABC
 from typing import List, Dict, Any, NamedTuple
 
 import pymupdf as fitz
+from pymupdf.table import Table
 
 
 class ScrapedPage(NamedTuple):
     text_data: List[Dict[str, Any]]
     widgets: List[fitz.Widget]
-    tables: List[fitz.Table]
+    tables: List[Table]
 
 
 class BaseScraperPDF(ABC):
@@ -45,7 +46,7 @@ class ScraperPDF(BaseScraperPDF):
         return list_spans_with_parameters
 
     @staticmethod
-    def __extract_tables_from_page(page: fitz.Page) -> List[fitz.Table]:
+    def __extract_tables_from_page(page: fitz.Page) -> List[Table]:
         return [table for table in page.find_tables()]
 
     @staticmethod
