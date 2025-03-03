@@ -79,6 +79,25 @@ class ParserPDF(BaseParserPDF):
             or abs(rect1.y1 - rect2.y1) < tolerance
         )
 
+    @staticmethod
+    def __is_rect_inside(
+        outer_rect: fitz.Rect, inner_rect: fitz.Rect, tolerance=5
+    ):
+        return (
+            outer_rect.x0 - tolerance
+            <= inner_rect.x0
+            <= outer_rect.x1 + tolerance
+            and outer_rect.y0 - tolerance
+            <= inner_rect.y0
+            <= outer_rect.y1 + tolerance
+            and outer_rect.x0 - tolerance
+            <= inner_rect.x1
+            <= outer_rect.x1 + tolerance
+            and outer_rect.y0 - tolerance
+            <= inner_rect.y1
+            <= outer_rect.y1 + tolerance
+        )
+
     def __add_widgets_to_lines_on_page(self, page: PagePDF) -> None:
         for line in page.lines:
             for widget in page.widgets:
@@ -117,11 +136,15 @@ class ParserPDF(BaseParserPDF):
             if self.__is_same_line(line_rect, span.rect):
                 spans_on_same_line.append(span)
             else:
-                groups_spans_on_page.append(LinePDF(text=spans_on_same_line))
+                groups_spans_on_page.append(
+                    LinePDF(text=spans_on_same_line, rect=line_rect)
+                )
                 spans_on_same_line = [span]
                 line_rect = span.rect
 
         if spans_on_same_line:
-            groups_spans_on_page.append(LinePDF(text=spans_on_same_line))
+            groups_spans_on_page.append(
+                LinePDF(text=spans_on_same_line, rect=line_rect)
+            )
 
         return PagePDF(page_number=page_number, lines=groups_spans_on_page)
