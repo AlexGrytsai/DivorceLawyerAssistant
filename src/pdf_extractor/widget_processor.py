@@ -1,4 +1,4 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 
 from src.pdf_extractor.geometry_utils import GeometryUtils
 from src.pdf_extractor.schemas import PagePDF
@@ -7,6 +7,10 @@ from src.pdf_extractor.schemas import PagePDF
 class WidgetBaseProcessor(ABC):
     def __init__(self, geometry_utils: GeometryUtils) -> None:
         self._geometry_utils = geometry_utils
+
+    @abstractmethod
+    def add_widgets_to_lines_on_page(self, page: PagePDF) -> None:
+        pass
 
 
 class WidgetProcessor(WidgetBaseProcessor):
