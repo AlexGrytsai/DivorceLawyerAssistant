@@ -25,7 +25,9 @@ class TableBaseProcessor(ABC):
 
     @staticmethod
     @abstractmethod
-    def create_parser_table(table_lines: List[LinePDF], page: PagePDF) -> None:
+    def split_words_into_columns(
+        table_lines: List[LinePDF], page: PagePDF
+    ) -> None:
         pass
 
 
@@ -54,6 +56,18 @@ class TableProcessor(TableBaseProcessor):
             line for line in page.lines if id(line) not in table_lines_set
         ]
 
-    @staticmethod
-    def create_parser_table(table_lines: List[LinePDF], page: PagePDF) -> None:
-        pass
+    def split_words_into_columns(
+        self, table_lines: List[LinePDF], page: PagePDF
+    ) -> None:
+        all_split_table_lines = []
+        for table in page.tables:
+            table_split_lines = []
+            for column_rect in table.header.cells:
+                column_with_words = []
+                for line in table_lines:
+                    if self._geometry_utils.is_word_in_column(
+                        word_rect=line.rect, column_rect=fitz.Rect(column_rect)
+                    ):
+                        column_with_words.append(line)
+                table_split_lines.append(column_with_words)
+            all_split_table_lines.append(table_split_lines)
