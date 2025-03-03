@@ -63,6 +63,10 @@ class ParserPDF(BaseParserPDF):
             )
             if scraped_data[i].tables:
                 page.tables = scraped_data[i].tables
+                self._update_page_excluding_table_lines(
+                    table_lines=self._find_text_lines_in_tables(page),
+                    page=page,
+                )
             page.widgets = scraped_data[i].widgets
 
             self._remove_text_duplicates_with_equal_value_of_the_widget(page)
@@ -98,6 +102,16 @@ class ParserPDF(BaseParserPDF):
             <= inner_rect.y1
             <= outer_rect.y1 + tolerance
         )
+
+    @staticmethod
+    def _update_page_excluding_table_lines(
+        table_lines: List[LinePDF], page: PagePDF
+    ) -> None:
+        table_lines_set = {id(line) for line in table_lines}
+
+        page.lines = [
+            line for line in page.lines if id(line) not in table_lines_set
+        ]
 
     def _find_text_lines_in_tables(
         self,
