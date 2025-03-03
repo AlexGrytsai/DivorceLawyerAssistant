@@ -23,10 +23,6 @@ class TextBaseProcessor(ABC):
     def remove_text_duplicates(page: PagePDF) -> None:
         pass
 
-    @abstractmethod
-    def add_widgets_to_lines_on_page(self, page: PagePDF) -> None:
-        pass
-
 
 class TextProcessor(TextBaseProcessor):
     def group_text_on_page(
