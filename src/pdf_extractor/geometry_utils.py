@@ -18,6 +18,14 @@ class GeometryBaseUtils(ABC):
     ) -> bool:
         pass
 
+    @staticmethod
+    @abstractmethod
+    def is_word_in_column(
+        word_rect: fitz.Rect,
+        column_rect: fitz.Rect,
+    ) -> bool:
+        pass
+
 
 class GeometryUtils(GeometryBaseUtils):
     @staticmethod
