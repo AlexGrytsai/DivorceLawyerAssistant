@@ -1,6 +1,6 @@
 from typing import Dict, Any, List, Optional, Union
 
-import fitz
+import pymupdf as fitz
 from pydantic import BaseModel, model_validator
 from pymupdf.table import Table
 
