@@ -60,6 +60,8 @@ class ParserPDF(BaseParserPDF):
             page = self.__group_spans_on_page(
                 scraped_data[i].text_data, page_number=i + 1
             )
+            if scraped_data[i].tables:
+                page.tables = scraped_data[i].tables
             page.widgets = scraped_data[i].widgets
 
             self._remove_text_duplicates_with_equal_value_of_the_widget(page)
