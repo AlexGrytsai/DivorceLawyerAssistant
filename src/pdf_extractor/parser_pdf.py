@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from itertools import chain
 from typing import List, Dict, Any, TypeAlias, Optional
 
 import pymupdf as fitz
@@ -96,6 +97,20 @@ class ParserPDF(BaseParserPDF):
             and outer_rect.y0 - tolerance
             <= inner_rect.y1
             <= outer_rect.y1 + tolerance
+        )
+
+    def _find_text_lines_in_tables(
+        self,
+        page: PagePDF,
+    ) -> List[LinePDF]:
+        return list(
+            filter(
+                lambda line: any(
+                    self.__is_rect_inside(fitz.Rect(table.bbox), line.rect)
+                    for table in page.tables
+                ),
+                chain.from_iterable(page.lines for _ in page.tables),
+            )
         )
 
     def __add_widgets_to_lines_on_page(self, page: PagePDF) -> None:
