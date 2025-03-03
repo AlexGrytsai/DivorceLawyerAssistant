@@ -63,10 +63,14 @@ class ParserPDF(BaseParserPDF):
             )
             if scraped_data[i].tables:
                 page.tables = scraped_data[i].tables
+
+                table_lines = self._find_text_lines_in_tables(page)
                 self._update_page_excluding_table_lines(
-                    table_lines=self._find_text_lines_in_tables(page),
+                    table_lines=table_lines,
                     page=page,
                 )
+                self._create_parser_table(table_lines, page)
+
             page.widgets = scraped_data[i].widgets
 
             self._remove_text_duplicates_with_equal_value_of_the_widget(page)
@@ -126,6 +130,13 @@ class ParserPDF(BaseParserPDF):
                 chain.from_iterable(page.lines for _ in page.tables),
             )
         )
+
+    def _create_parser_table(
+        self,
+        table_lines: List[LinePDF],
+        page: PagePDF,
+    ) -> None:
+        pass
 
     def __add_widgets_to_lines_on_page(self, page: PagePDF) -> None:
         for line in page.lines:
