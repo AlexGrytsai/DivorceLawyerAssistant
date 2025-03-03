@@ -2,6 +2,7 @@ from typing import Dict, Any, List, Optional, Union
 
 import fitz
 from pydantic import BaseModel, model_validator
+from pymupdf.table import Table
 
 
 class SpanPDF(BaseModel):
@@ -28,6 +29,7 @@ class PagePDF(BaseModel):
     page_number: Optional[int] = None
     lines: List[LinePDF]
     widgets: Optional[List[fitz.Widget]] = None
+    tables: Optional[List[Table]] = None
 
     class Config:
         arbitrary_types_allowed = True
