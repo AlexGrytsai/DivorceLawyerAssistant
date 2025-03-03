@@ -47,7 +47,7 @@ class ScraperPDF(BaseScraperPDF):
 
     @staticmethod
     def __extract_tables_from_page(page: fitz.Page) -> List[Table]:
-        return [table for table in page.find_tables()]
+        return [table for table in page.find_tables(strategy="lines_strict")]
 
     @staticmethod
     def __extract_widgets_from_page(page: fitz.Page) -> List[fitz.Widget]:
