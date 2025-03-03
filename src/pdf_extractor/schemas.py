@@ -20,6 +20,7 @@ class SpanPDF(BaseModel):
 
 class LinePDF(BaseModel):
     text: List[Union[fitz.Widget, SpanPDF]]
+    rect: fitz.Rect
 
     class Config:
         arbitrary_types_allowed = True
