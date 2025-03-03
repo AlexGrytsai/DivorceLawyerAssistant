@@ -1,11 +1,12 @@
 from abc import ABC, abstractmethod
-from typing import Optional, List
+from typing import Optional, List, TypeAlias, Dict, Any
 
 import pymupdf as fitz
 
 from src.pdf_extractor.geometry_utils import GeometryBaseUtils
-from src.pdf_extractor.parser_pdf import LineType
 from src.pdf_extractor.schemas import PagePDF, LinePDF, SpanPDF
+
+LineType: TypeAlias = List[Dict[str, Any]] | fitz.Widget
 
 
 class TextBaseProcessor(ABC):
