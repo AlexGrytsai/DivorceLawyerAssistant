@@ -3,13 +3,13 @@ from typing import Optional, List
 
 import pymupdf as fitz
 
-from src.pdf_extractor.geometry_utils import GeometryUtils
+from src.pdf_extractor.geometry_utils import GeometryBaseUtils
 from src.pdf_extractor.parser_pdf import LineType
 from src.pdf_extractor.schemas import PagePDF, LinePDF, SpanPDF
 
 
 class TextBaseProcessor(ABC):
-    def __init__(self, geometry_utils: GeometryUtils) -> None:
+    def __init__(self, geometry_utils: GeometryBaseUtils) -> None:
         self._geometry_utils = geometry_utils
 
     @abstractmethod

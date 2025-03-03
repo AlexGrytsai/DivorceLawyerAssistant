@@ -4,12 +4,12 @@ from typing import List
 
 import pymupdf as fitz
 
-from src.pdf_extractor.geometry_utils import GeometryUtils
+from src.pdf_extractor.geometry_utils import GeometryBaseUtils
 from src.pdf_extractor.schemas import PagePDF, LinePDF
 
 
 class TableBaseProcessor(ABC):
-    def __init__(self, geometry_utils: GeometryUtils) -> None:
+    def __init__(self, geometry_utils: GeometryBaseUtils) -> None:
         self._geometry_utils = geometry_utils
 
     @abstractmethod

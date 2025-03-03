@@ -1,11 +1,11 @@
 from abc import ABC, abstractmethod
 
-from src.pdf_extractor.geometry_utils import GeometryUtils
+from src.pdf_extractor.geometry_utils import GeometryBaseUtils
 from src.pdf_extractor.schemas import PagePDF
 
 
 class WidgetBaseProcessor(ABC):
-    def __init__(self, geometry_utils: GeometryUtils) -> None:
+    def __init__(self, geometry_utils: GeometryBaseUtils) -> None:
         self._geometry_utils = geometry_utils
 
     @abstractmethod
