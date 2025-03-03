@@ -47,3 +47,10 @@ class GeometryUtils(GeometryBaseUtils):
             <= inner_rect.y1
             <= outer_rect.y1 + tolerance
         )
+
+    @staticmethod
+    def is_word_in_column(
+        word_rect: fitz.Rect,
+        column_rect: fitz.Rect,
+    ) -> bool:
+        return column_rect.x0 <= word_rect.x0 <= column_rect.x1
