@@ -6,7 +6,7 @@ from pymupdf import Widget
 from pymupdf.table import Table
 
 from src.pdf_extractor.geometry_utils import GeometryBaseUtils
-from src.pdf_extractor.schemas import PagePDF, LinePDF, SpanPDF
+from src.pdf_extractor.schemas import PagePDF, LinePDF, SpanPDF, TableParsed
 
 TableType: TypeAlias = List[List[List[Widget | SpanPDF]]]
 
@@ -41,7 +41,7 @@ class TableProcessor(TableBaseProcessor):
                 self._geometry_utils.is_rect_inside(
                     fitz.Rect(table.bbox), line.rect
                 )
-                for table in page.tables
+                for table in page.scraped_tables
             )
         ]
 
@@ -92,15 +92,23 @@ class TableProcessor(TableBaseProcessor):
             for row in table_rows
         ]
 
-    def _add_header_to_table(
-        self,
-        table_without_header: TableType,
-        table: Table,
-    ) -> None:
-        pass
-
     def create_table(self, table_rows: List[LinePDF], page: PagePDF) -> None:
-        for table in page.tables:
+        parsed_tables = []
+        for table in page.scraped_tables:
             table_without_header = self._split_words_into_columns(
                 self._delete_duplicates_in_header(table_rows, table), table
             )
+            header_text_list = table.header.names
+            table_rect = fitz.Rect(table.bbox)
+
+            parsed_tables.append(
+                TableParsed(
+                    table=table_without_header,
+                    header=header_text_list,
+                    rect=table_rect,
+                )
+            )
+
+        page.parsed_tables = parsed_tables
+
+        page.scraped_tables = None
