@@ -35,7 +35,7 @@ class PagePDF(BaseModel):
     page_number: Optional[int] = None
     lines: List[LinePDF]
     widgets: Optional[List[fitz.Widget]] = None
-    tables: Optional[List[Table]] = None
+    scraped_tables: Optional[List[Table]] = None
     parsed_tables: Optional[TableParsed] = None
 
     class Config:
