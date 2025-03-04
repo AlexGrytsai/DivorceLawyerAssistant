@@ -79,7 +79,7 @@ class ParserPDF(BaseParserPDF):
             self._widget_processor.add_widgets_to_lines_on_page(page=page)
 
             if scraped_data[i].tables:
-                page.tables = scraped_data[i].tables
+                page.scraped_tables = scraped_data[i].tables
 
                 table_lines = self._table_processor.find_text_lines_in_tables(
                     page
