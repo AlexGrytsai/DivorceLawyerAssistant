@@ -113,4 +113,4 @@ class TableProcessor(TableBaseProcessor):
             self._parse_scraped_table(table_rows, table)
             for table in page.scraped_tables
         ]
-        del page.scraped_tables
+        page.scraped_tables = None
