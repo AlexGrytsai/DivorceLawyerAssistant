@@ -31,6 +31,9 @@ class TableParsed(BaseModel):
     header: Optional[List[str]] = None
     rect: fitz.Rect
 
+    class Config:
+        arbitrary_types_allowed = True
+
 
 class PagePDF(BaseModel):
     page_number: Optional[int] = None
