@@ -58,8 +58,17 @@ class TableProcessor(TableBaseProcessor):
         self,
         table_rows: List[LinePDF],
         table: Table,
-    ) -> None:
-        pass
+    ) -> List[LinePDF]:
+        header_cells_rect = [fitz.Rect(cell) for cell in table.header.cells]
+
+        return [
+            row
+            for row in table_rows
+            if all(
+                not self._geometry_utils.is_rect_inside(cell_rect, row.rect)
+                for cell_rect in header_cells_rect
+            )
+        ]
 
     @staticmethod
     def _split_words_into_columns(
@@ -69,4 +78,8 @@ class TableProcessor(TableBaseProcessor):
         pass
 
     def create_table(self, table_rows: List[LinePDF], page: PagePDF) -> None:
-        pass
+        for table in page.tables:
+            table_rows_without_duplicates = self._delete_duplicates_in_header(
+                table_rows, table
+            )
+            print(table_rows_without_duplicates)
