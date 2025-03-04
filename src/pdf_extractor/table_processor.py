@@ -3,6 +3,7 @@ from itertools import chain
 from typing import List
 
 import pymupdf as fitz
+from pymupdf.table import Table
 
 from src.pdf_extractor.geometry_utils import GeometryBaseUtils
 from src.pdf_extractor.schemas import PagePDF, LinePDF
@@ -23,11 +24,8 @@ class TableBaseProcessor(ABC):
     ) -> None:
         pass
 
-    @staticmethod
     @abstractmethod
-    def split_words_into_columns(
-        table_lines: List[LinePDF], page: PagePDF
-    ) -> None:
+    def create_table(self, table_rows: List[LinePDF], page: PagePDF) -> None:
         pass
 
 
@@ -56,18 +54,19 @@ class TableProcessor(TableBaseProcessor):
             line for line in page.lines if id(line) not in table_lines_set
         ]
 
-    def split_words_into_columns(
-        self, table_lines: List[LinePDF], page: PagePDF
+    def _delete_duplicates_in_header(
+        self,
+        table_rows: List[LinePDF],
+        table: Table,
     ) -> None:
-        all_split_table_lines = []
-        for table in page.tables:
-            table_split_lines = []
-            for column_rect in table.header.cells:
-                column_with_words = []
-                for line in table_lines:
-                    if self._geometry_utils.is_word_in_column(
-                        word_rect=line.rect, column_rect=fitz.Rect(column_rect)
-                    ):
-                        column_with_words.append(line)
-                table_split_lines.append(column_with_words)
-            all_split_table_lines.append(table_split_lines)
+        pass
+
+    @staticmethod
+    def _split_words_into_columns(
+        table_rows: List[LinePDF],
+        page: PagePDF,
+    ) -> None:
+        pass
+
+    def create_table(self, table_rows: List[LinePDF], page: PagePDF) -> None:
+        pass
