@@ -27,7 +27,9 @@ class TableBaseProcessor(ABC):
         pass
 
     @abstractmethod
-    def create_table(self, table_rows: List[LinePDF], page: PagePDF) -> None:
+    def process_scraped_tables(
+        self, table_rows: List[LinePDF], page: PagePDF
+    ) -> None:
         pass
 
 
@@ -104,23 +106,11 @@ class TableProcessor(TableBaseProcessor):
             rect=fitz.Rect(table.bbox),
         )
 
-    def create_table(self, table_rows: List[LinePDF], page: PagePDF) -> None:
-        parsed_tables = []
-        for table in page.scraped_tables:
-            table_without_header = self._split_words_into_columns(
-                self._delete_duplicates_in_header(table_rows, table), table
-            )
-            header_text_list = table.header.names
-            table_rect = fitz.Rect(table.bbox)
-
-            parsed_tables.append(
-                TableParsed(
-                    table=table_without_header,
-                    header=header_text_list,
-                    rect=table_rect,
-                )
-            )
-
-        page.parsed_tables = parsed_tables
-
-        page.scraped_tables = None
+    def process_scraped_tables(
+        self, table_rows: List[LinePDF], page: PagePDF
+    ) -> None:
+        page.parsed_tables = [
+            self._parse_scraped_table(table_rows, table)
+            for table in page.scraped_tables
+        ]
+        del page.scraped_tables

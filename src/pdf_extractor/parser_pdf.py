@@ -88,7 +88,7 @@ class ParserPDF(BaseParserPDF):
                     table_lines=table_lines,
                     page=page,
                 )
-                self._table_processor.create_table(table_lines, page)
+                self._table_processor.process_scraped_tables(table_lines, page)
 
             clean_document.append(page)
 
