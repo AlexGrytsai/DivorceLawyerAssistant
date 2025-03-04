@@ -92,6 +92,18 @@ class TableProcessor(TableBaseProcessor):
             for row in table_rows
         ]
 
+    def _parse_scraped_table(
+        self, table_rows: List[LinePDF], table: Table
+    ) -> TableParsed:
+        table_without_header = self._split_words_into_columns(
+            self._delete_duplicates_in_header(table_rows, table), table
+        )
+        return TableParsed(
+            table=table_without_header,
+            header=table.header.names,
+            rect=fitz.Rect(table.bbox),
+        )
+
     def create_table(self, table_rows: List[LinePDF], page: PagePDF) -> None:
         parsed_tables = []
         for table in page.scraped_tables:
