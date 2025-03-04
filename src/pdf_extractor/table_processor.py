@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, TypeAlias
 
 import pymupdf as fitz
 from pymupdf import Widget
@@ -7,6 +7,8 @@ from pymupdf.table import Table
 
 from src.pdf_extractor.geometry_utils import GeometryBaseUtils
 from src.pdf_extractor.schemas import PagePDF, LinePDF, SpanPDF
+
+TableType: TypeAlias = List[List[List[Widget | SpanPDF]]]
 
 
 class TableBaseProcessor(ABC):
@@ -73,7 +75,7 @@ class TableProcessor(TableBaseProcessor):
         self,
         table_rows: List[LinePDF],
         table: Table,
-    ) -> List[List[List[Widget | SpanPDF]]]:
+    ) -> TableType:
         column_rects = [fitz.Rect(cell) for cell in table.header.cells]
 
         return [
@@ -90,8 +92,15 @@ class TableProcessor(TableBaseProcessor):
             for row in table_rows
         ]
 
+    def _add_header_to_table(
+        self,
+        table_without_header: TableType,
+        table: Table,
+    ) -> None:
+        pass
+
     def create_table(self, table_rows: List[LinePDF], page: PagePDF) -> None:
         for table in page.tables:
-            split_words_into_columns = self._split_words_into_columns(
+            table_without_header = self._split_words_into_columns(
                 self._delete_duplicates_in_header(table_rows, table), table
             )
