@@ -29,6 +29,7 @@ class LinePDF(BaseModel):
 class TableParsed(BaseModel):
     table: List[List[List[fitz.Widget | SpanPDF]]]
     header: Optional[List[str]] = None
+    rect: fitz.Rect
 
 
 class PagePDF(BaseModel):
