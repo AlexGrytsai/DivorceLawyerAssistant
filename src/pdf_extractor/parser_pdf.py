@@ -72,6 +72,12 @@ class ParserPDF(BaseParserPDF):
             page = self._text_processor.group_text_on_page(
                 scraped_data[i].text_data, page_number=i + 1
             )
+            page.widgets = scraped_data[i].widgets
+
+            self._text_processor.remove_text_duplicates(page)
+
+            self._widget_processor.add_widgets_to_lines_on_page(page=page)
+
             if scraped_data[i].tables:
                 page.tables = scraped_data[i].tables
 
@@ -82,13 +88,7 @@ class ParserPDF(BaseParserPDF):
                     table_lines=table_lines,
                     page=page,
                 )
-                self._table_processor.create_parser_table(table_lines, page)
-
-            page.widgets = scraped_data[i].widgets
-
-            self._text_processor.remove_text_duplicates(page)
-
-            self._widget_processor.add_widgets_to_lines_on_page(page=page)
+                self._table_processor.create_table(table_lines, page)
 
             clean_document.append(page)
 
