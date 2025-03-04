@@ -67,8 +67,8 @@ class TableProcessor(TableBaseProcessor):
         return [
             row
             for row in table_rows
-            if all(
-                not self._geometry_utils.is_rect_inside(cell_rect, row.rect)
+            if not any(
+                self._geometry_utils.is_rect_inside(cell_rect, row.rect)
                 for cell_rect in header_cells_rect
             )
         ]
