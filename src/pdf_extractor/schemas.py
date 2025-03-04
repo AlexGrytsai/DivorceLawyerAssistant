@@ -26,12 +26,17 @@ class LinePDF(BaseModel):
         arbitrary_types_allowed = True
 
 
+class TableParsed(BaseModel):
+    table: List[List[List[fitz.Widget | SpanPDF]]]
+    header: Optional[List[str]] = None
+
+
 class PagePDF(BaseModel):
     page_number: Optional[int] = None
     lines: List[LinePDF]
     widgets: Optional[List[fitz.Widget]] = None
     tables: Optional[List[Table]] = None
-    parsed_tables: Optional[List[Table]] = None
+    parsed_tables: Optional[TableParsed] = None
 
     class Config:
         arbitrary_types_allowed = True
