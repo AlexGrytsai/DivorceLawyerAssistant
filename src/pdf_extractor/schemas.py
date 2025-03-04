@@ -36,7 +36,7 @@ class PagePDF(BaseModel):
     lines: List[LinePDF]
     widgets: Optional[List[fitz.Widget]] = None
     scraped_tables: Optional[List[Table]] = None
-    parsed_tables: Optional[TableParsed] = None
+    parsed_tables: Optional[List[TableParsed]] = None
 
     class Config:
         arbitrary_types_allowed = True
