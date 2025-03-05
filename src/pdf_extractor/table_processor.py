@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, TypeAlias
+from typing import List, TypeAlias, Tuple
 
 import pymupdf as fitz
 from pymupdf import Widget
@@ -31,6 +31,10 @@ class TableBaseProcessor(ABC):
         self, table_rows: List[LinePDF], page: PagePDF
     ) -> None:
         pass
+
+    # @abstractmethod
+    # def show_tables(self, page: PagePDF) -> None:
+    #     pass
 
 
 class TableProcessor(TableBaseProcessor):
@@ -106,6 +110,26 @@ class TableProcessor(TableBaseProcessor):
             rect=fitz.Rect(table.bbox),
         )
 
+    @staticmethod
+    def table_to_text_rows(table: TableParsed) -> List[Tuple[str, ...]]:
+        text_rows = []
+        for row in table.table:
+            text_row = []
+            for cell in row:
+                cell_words = []
+                for text in cell:
+                    if not isinstance(text, SpanPDF):
+                        cell_words.append(
+                            text.field_value if text.field_value else "_" * 5
+                        )
+                    else:
+                        cell_words.append(text.text)
+                text_row.append(
+                    " ".join(cell_words),
+                )
+            text_rows.append(tuple(text_row))
+        return text_rows
+
     def process_scraped_tables(
         self, table_rows: List[LinePDF], page: PagePDF
     ) -> None:
@@ -114,3 +138,6 @@ class TableProcessor(TableBaseProcessor):
             for table in page.scraped_tables
         ]
         page.scraped_tables = None
+
+        for table in page.parsed_tables:
+            table_in_text = self.table_to_text_rows(table)
