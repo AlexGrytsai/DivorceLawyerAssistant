@@ -111,7 +111,7 @@ class TableProcessor(TableBaseProcessor):
         )
 
     @staticmethod
-    def table_to_text_rows(table: TableParsed) -> List[Tuple[str, ...]]:
+    def _table_to_text_rows(table: TableParsed) -> List[Tuple[str, ...]]:
         text_rows = []
         for row in table.table:
             text_row = []
@@ -140,4 +140,4 @@ class TableProcessor(TableBaseProcessor):
         page.scraped_tables = None
 
         for table in page.parsed_tables:
-            table_in_text = self.table_to_text_rows(table)
+            table_in_text = self._table_to_text_rows(table)
