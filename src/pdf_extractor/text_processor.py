@@ -105,5 +105,9 @@ class TextProcessor(TextBaseProcessor):
         page.lines = [
             line
             for line in page.lines
-            if not any(span.text in widget_value_set for span in line.text)
+            if not any(
+                span.text in widget_value_set
+                for span in line.text
+                if isinstance(span, SpanPDF)
+            )
         ]
