@@ -69,14 +69,16 @@ class ParserPDF(BaseParserPDF):
     def _prepare_data(self, scraped_data: List[ScrapedPage]) -> DocumentPDF:
         clean_document = []
         for i in range(len(scraped_data)):
+            span_pdf_list = self._text_processor.convert_raw_spans_to_span_pdf(
+                raw_span=scraped_data[i].text_data
+            )
             page = self._text_processor.group_text_on_page(
-                scraped_data[i].text_data, page_number=i + 1
+                spans_and_widgets_list=span_pdf_list + scraped_data[i].widgets,
+                page_number=i + 1,
             )
             page.widgets = scraped_data[i].widgets
 
             self._text_processor.remove_text_duplicates(page)
-
-            self._widget_processor.add_widgets_to_lines_on_page(page=page)
 
             if scraped_data[i].tables:
                 page.scraped_tables = scraped_data[i].tables
