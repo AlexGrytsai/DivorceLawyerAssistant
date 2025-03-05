@@ -1,10 +1,13 @@
 from abc import ABC, abstractmethod
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Union, TypeAlias, Set
 
 import pymupdf as fitz
+from pymupdf import Widget
 
 from src.pdf_extractor.geometry_utils import GeometryBaseUtils
 from src.pdf_extractor.schemas import PagePDF, LinePDF, SpanPDF
+
+LineType: TypeAlias = List[Union[SpanPDF, fitz.Widget]]
 
 
 class TextBaseProcessor(ABC):
@@ -17,11 +20,6 @@ class TextBaseProcessor(ABC):
         spans_and_widgets_list: List[SpanPDF | fitz.Widget],
         page_number: Optional[int] = None,
     ) -> PagePDF | None:
-        pass
-
-    @staticmethod
-    @abstractmethod
-    def remove_text_duplicates(page: PagePDF) -> None:
         pass
 
     @staticmethod
@@ -51,6 +49,25 @@ class TextProcessor(TextBaseProcessor):
     ) -> List[SpanPDF]:
         return sorted(spans, key=lambda x: x.rect.x0)
 
+    @staticmethod
+    def _remove_widget_text_duplicates(
+        text_line: LineType,
+    ) -> LineType:
+        widget_value_set: Set[str] = set(
+            span.field_value
+            for span in text_line
+            if isinstance(span, Widget) and span.field_value
+        )
+        filtered_spans = []
+        for span in text_line:
+            if isinstance(span, SpanPDF) and span.text not in widget_value_set:
+                filtered_spans.append(span)
+        filtered_spans += [
+            span for span in text_line if isinstance(span, Widget)
+        ]
+
+        return filtered_spans
+
     def _group_spans_into_lines(
         self, sorted_spans: List[SpanPDF]
     ) -> List[LinePDF]:
@@ -62,10 +79,13 @@ class TextProcessor(TextBaseProcessor):
             if self._geometry_utils.is_same_line(line_rect, span.rect):
                 spans_on_same_line.append(span)
             else:
+                text_line_without_duplicates = (
+                    self._remove_widget_text_duplicates(spans_on_same_line)
+                )
                 groups_spans_on_page.append(
                     LinePDF(
                         text=self._sort_spans_by_horizontal_position(
-                            spans_on_same_line
+                            text_line_without_duplicates
                         ),
                         rect=line_rect,
                     )
@@ -96,18 +116,3 @@ class TextProcessor(TextBaseProcessor):
         )
 
         return PagePDF(page_number=page_number, lines=groups_spans_on_page)
-
-    @staticmethod
-    def remove_text_duplicates(page: PagePDF) -> None:
-        widget_value_set = {
-            widget.field_value for widget in page.widgets if widget.field_value
-        }
-        page.lines = [
-            line
-            for line in page.lines
-            if not any(
-                span.text in widget_value_set
-                for span in line.text
-                if isinstance(span, SpanPDF)
-            )
-        ]
