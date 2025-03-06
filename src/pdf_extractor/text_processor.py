@@ -29,6 +29,12 @@ class TextBaseProcessor(ABC):
     ) -> List[SpanPDF]:
         pass
 
+    @abstractmethod
+    def replace_text_in_span(
+        self, target_span: SpanPDF, replacement_span: fitz.Widget
+    ) -> SpanPDF:
+        pass
+
 
 class TextProcessor(TextBaseProcessor):
     @staticmethod
