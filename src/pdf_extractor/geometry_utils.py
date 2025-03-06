@@ -5,6 +5,8 @@ import pymupdf as fitz  # type: ignore
 
 
 class GeometryBaseUtils(ABC):
+    __slots__ = ()
+
     @staticmethod
     @abstractmethod
     def is_same_line(rect1: fitz.Rect, rect2: fitz.Rect, tolerance=5) -> bool:
