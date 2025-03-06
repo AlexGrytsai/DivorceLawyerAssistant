@@ -33,12 +33,8 @@ class ScraperPDF(BaseScraperPDF):
         list_spans_with_parameters: List[Dict[str, Any]] = []
 
         for block in page.get_text("dict").get("blocks"):
-            block: dict[str, list]
-
             if block.get("lines"):
                 for line in block["lines"]:
-                    line: dict
-
                     for span in line.get("spans"):
                         if span["text"].strip() != "":
                             list_spans_with_parameters.append(span)
