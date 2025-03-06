@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Optional, List, Dict, Any, Union, TypeAlias, Set
 
-import pymupdf as fitz
-from pymupdf import Widget
+import pymupdf as fitz  # type: ignore
+from pymupdf import Widget  # type: ignore
 
 from src.pdf_extractor.geometry_utils import GeometryBaseUtils
 from src.pdf_extractor.schemas import PagePDF, LinePDF, SpanPDF

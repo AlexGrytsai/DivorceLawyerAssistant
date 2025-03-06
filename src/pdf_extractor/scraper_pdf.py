@@ -1,8 +1,8 @@
 from abc import abstractmethod, ABC
 from typing import List, Dict, Any, NamedTuple
 
-import pymupdf as fitz
-from pymupdf.table import Table
+import pymupdf as fitz  # type: ignore
+from pymupdf.table import Table  # type: ignore
 
 
 class ScrapedPage(NamedTuple):

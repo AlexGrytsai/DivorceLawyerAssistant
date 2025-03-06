@@ -1,8 +1,8 @@
 from typing import Dict, Any, List, Optional, Union, Tuple
 
-import pymupdf as fitz
+import pymupdf as fitz  # type: ignore
 from pydantic import BaseModel, model_validator
-from pymupdf.table import Table
+from pymupdf.table import Table  # type: ignore
 
 
 class SpanPDF(BaseModel):

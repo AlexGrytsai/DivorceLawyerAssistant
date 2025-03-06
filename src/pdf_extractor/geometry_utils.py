@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-import pymupdf as fitz
+import pymupdf as fitz  # type: ignore
 
 
 class GeometryBaseUtils(ABC):
