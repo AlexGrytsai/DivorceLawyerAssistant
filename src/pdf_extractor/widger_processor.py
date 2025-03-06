@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Optional
 
 import pymupdf as fitz  # type: ignore
-from pymupdf import Widget
+from pymupdf import Widget  # type: ignore
 
 from src.pdf_extractor.geometry_utils import GeometryBaseUtils
 from src.pdf_extractor.schemas import SpanPDF, LinePDF
@@ -40,11 +40,28 @@ class WidgetSpanProcessor(WidgetSpanBaseProcessor):
         target_span: SpanPDF,
         replacement_span: fitz.Widget,
     ) -> SpanPDF:
+        """
+        Replaces the text in the target span with the value of
+        the replacement span.
+
+        This method calculates the intersection of the target span and
+        the replacement span, and then replaces the text in the target span
+        with the value of the replacement span.
+
+        Args:
+            target_span (SpanPDF): The span to replace the text in.
+            replacement_span (fitz.Widget): The widget to replace the text with
+
+        Returns:
+            SpanPDF: The target span with the replaced text.
+        """
+
         intersection = self._geometry_utils.get_intersection_rect(
             target_span.rect, replacement_span.rect
         )
 
         if intersection:
+            # Calculate the start and end indices of the intersection
             start_index = int(
                 (intersection.x0 - target_span.rect.x0)
                 / (target_span.rect.x1 - target_span.rect.x0)
@@ -56,6 +73,8 @@ class WidgetSpanProcessor(WidgetSpanBaseProcessor):
                 * len(target_span.text)
             )
 
+            # Split the text in the target span into three parts: before,
+            # intersection, and after
             text_before = target_span.text[:start_index]
             text_after = target_span.text[end_index:]
 
