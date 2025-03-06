@@ -152,7 +152,7 @@ class TableProcessor(TableBaseProcessor):
                         if text.field_value:
                             value = text.field_value
                         else:
-                            value = "The field is not filled"
+                            value = "N/A"
                         cell_words.append(f"{text.field_name}: {value}")
                     elif text.field_value:
                         cell_words.append(text.field_value)
