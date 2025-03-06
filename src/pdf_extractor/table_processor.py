@@ -1,3 +1,4 @@
+import json
 from abc import ABC, abstractmethod
 from typing import List, TypeAlias, Tuple, Optional
 
@@ -30,6 +31,12 @@ class TableBaseProcessor(ABC):
     def process_scraped_tables(
         self, table_rows: List[LinePDF], page: PagePDF
     ) -> None:
+        pass
+
+    @abstractmethod
+    def format_table_to_json(
+        self, table: TableParsed, is_widget: bool = False
+    ) -> str:
         pass
 
 
@@ -137,41 +144,62 @@ class TableProcessor(TableBaseProcessor):
         )
 
     @staticmethod
+    def _extract_text(
+        cell_data: List[fitz.Widget | SpanPDF],
+        is_widget: bool = False,
+    ) -> Optional[str]:
+        cell_words = []
+
+        for text in cell_data:
+            if isinstance(text, fitz.Widget):
+                if is_widget:
+                    if text.field_value:
+                        value = text.field_value
+                    else:
+                        value = "N/A"
+                    cell_words.append(f"{text.field_name}: {value}")
+                elif text.field_value:
+                    cell_words.append(text.field_value)
+            else:
+                cell_words.append(text.text)
+        if cell_words:
+            return " ".join(cell_words)
+        return None
+
     def _table_to_text_rows(
+        self,
         table: TableParsed,
         is_widget: bool = False,
     ) -> List[Tuple[str, ...]]:
-        def extract_text(
-            cell_data: List[fitz.Widget | SpanPDF],
-        ) -> Optional[str]:
-            cell_words = []
-
-            for text in cell_data:
-                if isinstance(text, fitz.Widget):
-                    if is_widget:
-                        if text.field_value:
-                            value = text.field_value
-                        else:
-                            value = "N/A"
-                        cell_words.append(f"{text.field_name}: {value}")
-                    elif text.field_value:
-                        cell_words.append(text.field_value)
-                else:
-                    cell_words.append(text.text)
-            if cell_words:
-                return " ".join(cell_words)
-            return None
-
         text_rows = []
+
         for row in table.table:
             text_row = []
             for cell in row:
-                cell_str = extract_text(cell)
+                cell_str = self._extract_text(cell, is_widget)
                 if cell_str:
                     text_row.append(cell_str)
             if text_row:
                 text_rows.append(tuple(text_row))
         return text_rows
+
+    def format_table_to_json(
+        self,
+        table: TableParsed,
+        is_widget: bool = False,
+    ) -> str:
+        rows = []
+        for row in table.table:
+            row_data = {}
+            for i, cell in enumerate(row):
+                cell_str = self._extract_text(cell, is_widget)
+                if cell_str:
+                    row_data[table.header[i]] = cell_str
+                else:
+                    row_data[table.header[i]] = "The field is not filled"
+            rows.append(row_data)
+
+        return json.dumps(rows)
 
     def process_scraped_tables(
         self, table_rows: List[LinePDF], page: PagePDF
