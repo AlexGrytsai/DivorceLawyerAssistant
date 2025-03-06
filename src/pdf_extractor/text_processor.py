@@ -100,6 +100,55 @@ class TextProcessor(TextBaseProcessor):
 
         return groups_spans_on_page
 
+    def replace_text_in_span(
+        self,
+        target_span: SpanPDF,
+        replacement_span: fitz.Widget,
+    ) -> SpanPDF:
+        """
+        Replaces the text in the target span with the text from
+        the replacement span.
+
+        The replacement is done based on the intersection of the
+        target span's rectangle and the replacement span's rectangle.
+        The text is replaced at the position where the two rectangles intersect
+
+        Args:
+            target_span (SpanPDF): The span whose text will be replaced.
+            replacement_span (fitz.Widget): The span whose text will be used
+                                            for replacement.
+
+        Returns:
+            SpanPDF: The target span with the replaced text.
+        """
+        intersection = self._geometry_utils.get_intersection_rect(
+            target_span.rect, replacement_span.rect
+        )
+
+        if intersection:
+            # Calculate the start and end indices of the text to be replaced
+            start_index = int(
+                (intersection.x0 - target_span.rect.x0)
+                / (target_span.rect.x1 - target_span.rect.x0)
+                * len(target_span.text)
+            )
+            end_index = int(
+                (intersection.x1 - target_span.rect.x0)
+                / (target_span.rect.x1 - target_span.rect.x0)
+                * len(target_span.text)
+            )
+
+            # Split the text into three parts: before, to be replaced, and after
+            text_before = target_span.text[:start_index]
+            text_after = target_span.text[end_index:]
+
+            # Replace the text in the target span
+            target_span.text = (
+                text_before + replacement_span.field_value + text_after
+            )
+
+        return target_span
+
     def group_text_on_page(
         self,
         spans_and_widgets_list: List[SpanPDF | fitz.Widget],
