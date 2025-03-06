@@ -7,7 +7,6 @@ from src.pdf_extractor.schemas import SpanPDF, DocumentPDF
 from src.pdf_extractor.scraper_pdf import ScrapedPage
 from src.pdf_extractor.table_processor import TableBaseProcessor
 from src.pdf_extractor.text_processor import TextBaseProcessor
-from src.pdf_extractor.widget_processor import WidgetBaseProcessor
 
 LineType: TypeAlias = List[Dict[str, Any]] | fitz.Widget
 
@@ -18,11 +17,9 @@ class BaseParserPDF(ABC):
         scraped_data: List[ScrapedPage],
         text_processor: TextBaseProcessor,
         table_processor: TableBaseProcessor,
-        widget_processor: WidgetBaseProcessor,
     ) -> None:
         self._text_processor = text_processor
         self._table_processor = table_processor
-        self._widget_processor = widget_processor
         self._document = self._prepare_data(scraped_data)
 
     @abstractmethod
