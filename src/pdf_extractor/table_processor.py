@@ -101,11 +101,26 @@ class TableProcessor(TableBaseProcessor):
             for row in table_rows
         ]
 
+    def _filter_lines_inside_table(
+        self,
+        lines: List[LinePDF],
+        table: Table,
+    ) -> List[LinePDF]:
+        return [
+            line
+            for line in lines
+            if self._geometry_utils.is_rect_inside(
+                fitz.Rect(table.bbox), line.rect
+            )
+        ]
+
     def _parse_scraped_table(
-        self, table_rows: List[LinePDF], table: Table
+        self,
+        all_rows_in_tables: List[LinePDF],
+        table: Table,
     ) -> TableParsed:
         table_without_header = self._split_words_into_columns(
-            self._delete_duplicates_in_header(table_rows, table), table
+            self._delete_duplicates_in_header(all_rows_in_tables, table), table
         )
         return TableParsed(
             table=table_without_header,
@@ -132,7 +147,7 @@ class TableProcessor(TableBaseProcessor):
                     )
             if text_row:
                 text_rows.append(tuple(text_row))
-        print(tabulate(text_rows, tablefmt="grid", headers=table.header))
+        # print(tabulate(text_rows, tablefmt="grid", headers=table.header))
         return text_rows
 
     def process_scraped_tables(
