@@ -128,6 +128,7 @@ class TableProcessor(TableBaseProcessor):
             ),
             table=table,
         )
+
         return TableParsed(
             table=table_without_header,
             header=table.header.names,
@@ -153,7 +154,6 @@ class TableProcessor(TableBaseProcessor):
                     )
             if text_row:
                 text_rows.append(tuple(text_row))
-        # print(tabulate(text_rows, tablefmt="grid", headers=table.header))
         return text_rows
 
     def process_scraped_tables(
@@ -166,5 +166,4 @@ class TableProcessor(TableBaseProcessor):
         page.scraped_tables = None
 
         for table in page.parsed_tables:
-            table_in_text = self._table_to_text_rows(table)
-            print("*" * 50)
+            table.table_str_rows = self._table_to_text_rows(table)
