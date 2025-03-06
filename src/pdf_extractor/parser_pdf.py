@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, Dict, Any, TypeAlias
+from typing import List, Dict, Any, TypeAlias, Optional
 
 import pymupdf as fitz  # type: ignore
 
@@ -35,28 +35,33 @@ class BaseParserPDF(ABC):
 class ParserPDF(BaseParserPDF):
     @property
     def text_from_document(self) -> str:
-        text_from_document = ""
+        def get_widget_value(widget: fitz.Widget) -> Optional[str]:
+            if widget.field_type_string in ("Text", "ComboBox"):
+                if widget.field_value:
+                    return widget.field_value
+                else:
+                    return f"{'_' * 10} "
+            elif widget.field_type_string == "CheckBox":
+                if widget.field_value:
+                    return "[ON]"
+                else:
+                    return "[OFF]"
+            return None
+
+        text_from_document_list = []
         for page in self._document.pages:
-            page_str = f"Page # {page.page_number}\n\n"
+            page_str_list = [f"Page # {page.page_number}\n\n"]
             for line in page.lines:
-                line_str = ""
+                line_str_list = []
                 for span in line.text:
                     if isinstance(span, SpanPDF):
-                        line_str += span.text
+                        line_str_list.append(span.text)
                     else:
-                        if span.field_type_string in ("Text", "ComboBox"):
-                            if span.field_value:
-                                line_str += span.field_value
-                            else:
-                                line_str += f"{'_' * 10} "
-                        elif span.field_type_string == "CheckBox":
-                            if span.field_value:
-                                line_str += "[ON]"
-                            else:
-                                line_str += "[OFF]"
-                page_str += line_str + "\n"
-            text_from_document += f"{page_str}\n"
-        return text_from_document
+                        line_str_list.append(get_widget_value(span))
+                page_str_list.append(" ".join(line_str_list))
+                page_str_list.append("\n")
+            text_from_document_list.append("".join(page_str_list) + "\n")
+        return "".join(text_from_document_list)
 
     def _prepare_data(self, scraped_data: List[ScrapedPage]) -> DocumentPDF:
         clean_document = []
