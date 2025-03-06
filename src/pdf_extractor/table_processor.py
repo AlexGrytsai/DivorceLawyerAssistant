@@ -4,6 +4,7 @@ from typing import List, TypeAlias, Tuple
 import pymupdf as fitz
 from pymupdf import Widget
 from pymupdf.table import Table
+from tabulate import tabulate
 
 from src.pdf_extractor.geometry_utils import GeometryBaseUtils
 from src.pdf_extractor.schemas import PagePDF, LinePDF, SpanPDF, TableParsed
@@ -62,23 +63,19 @@ class TableProcessor(TableBaseProcessor):
         table_rows: List[LinePDF],
         table: Table,
     ) -> List[LinePDF]:
-        header_cells_rect = [fitz.Rect(cell) for cell in table.header.cells]
+        header_rects = [fitz.Rect(cell) for cell in table.header.cells]
 
-        filtered_rows = []
-        for row in table_rows:
-            is_inside = False
-            for cell_rect in header_cells_rect:
-                if self._geometry_utils.is_rect_inside(
+        return [
+            row
+            for row in table_rows
+            if not any(
+                self._geometry_utils.is_rect_inside(cell_rect, row.rect)
+                or self._geometry_utils.is_partially_inside_rect(
                     cell_rect, row.rect
-                ) or self._geometry_utils.is_partially_inside_rect(
-                    cell_rect, row.rect
-                ):
-                    is_inside = True
-                    break
-            if not is_inside:
-                filtered_rows.append(row)
-
-        return filtered_rows
+                )
+                for cell_rect in header_rects
+            )
+        ]
 
     def _split_words_into_columns(
         self,
@@ -167,3 +164,8 @@ class TableProcessor(TableBaseProcessor):
 
         for table in page.parsed_tables:
             table.table_str_rows = self._table_to_text_rows(table)
+            print(
+                tabulate(
+                    table.table_str_rows, tablefmt="grid", headers=table.header
+                )
+            )
