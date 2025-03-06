@@ -4,7 +4,7 @@ from typing import List, TypeAlias, Tuple
 import pymupdf as fitz
 from pymupdf import Widget
 from pymupdf.table import Table
-from tabulate import tabulate
+
 from src.pdf_extractor.geometry_utils import GeometryBaseUtils
 from src.pdf_extractor.schemas import PagePDF, LinePDF, SpanPDF, TableParsed
 
@@ -120,7 +120,13 @@ class TableProcessor(TableBaseProcessor):
         table: Table,
     ) -> TableParsed:
         table_without_header = self._split_words_into_columns(
-            self._delete_duplicates_in_header(all_rows_in_tables, table), table
+            table_rows=self._delete_duplicates_in_header(
+                table_rows=self._filter_lines_inside_table(
+                    all_rows_in_tables, table
+                ),
+                table=table,
+            ),
+            table=table,
         )
         return TableParsed(
             table=table_without_header,
