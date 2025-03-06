@@ -30,6 +30,7 @@ class TableParsed(BaseModel):
     table: List[List[List[fitz.Widget | SpanPDF]]]
     header: Optional[List[str]] = None
     table_str_rows: Optional[List[Tuple[str, ...]]] = None
+    table_str_rows_for_ai: Optional[List[Tuple[str, ...]]] = None
     rect: fitz.Rect
 
     class Config:
