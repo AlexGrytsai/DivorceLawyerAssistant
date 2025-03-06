@@ -33,13 +33,13 @@ class BaseParserPDF(ABC):
 
     @property
     @abstractmethod
-    def text_from_document(self) -> None:
+    def text_from_document(self) -> str:
         pass
 
 
 class ParserPDF(BaseParserPDF):
     @property
-    def text_from_document(self) -> None:
+    def text_from_document(self) -> str:
         text_from_document = ""
         for page in self._document.pages:
             page_str = f"Page # {page.page_number}\n\n"
@@ -73,19 +73,22 @@ class ParserPDF(BaseParserPDF):
                 spans_and_widgets_list=span_pdf_list + scraped_data[i].widgets,
                 page_number=i + 1,
             )
-            page.widgets = scraped_data[i].widgets
+            if page:
+                page.widgets = scraped_data[i].widgets
 
-            if scraped_data[i].tables:
-                page.scraped_tables = scraped_data[i].tables
+                if scraped_data[i].tables:
+                    page.scraped_tables = scraped_data[i].tables
 
-                table_lines = self._table_processor.find_text_lines_in_tables(
-                    page
-                )
-                self._table_processor.remove_table_lines_from_page(
-                    table_lines=table_lines,
-                    page=page,
-                )
-                self._table_processor.process_scraped_tables(table_lines, page)
+                    table_lines = (
+                        self._table_processor.find_text_lines_in_tables(page)
+                    )
+                    self._table_processor.remove_table_lines_from_page(
+                        table_lines=table_lines,
+                        page=page,
+                    )
+                    self._table_processor.process_scraped_tables(
+                        table_lines, page
+                    )
 
             clean_document.append(page)
 
