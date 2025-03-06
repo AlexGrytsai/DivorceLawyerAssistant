@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any, TypeAlias
 
-import pymupdf as fitz
+import pymupdf as fitz  # type: ignore
 
 from src.pdf_extractor.schemas import SpanPDF, DocumentPDF
 from src.pdf_extractor.scraper_pdf import ScrapedPage
