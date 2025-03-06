@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Optional
 
 import pymupdf as fitz  # type: ignore
 
@@ -26,6 +27,13 @@ class GeometryBaseUtils(ABC):
     def is_word_in_column(
         word_rect: fitz.Rect, column_rect: fitz.Rect
     ) -> bool:
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def get_intersection_rect(
+        target_rect: fitz.Rect, replacement_rect: fitz.Rect
+    ) -> Optional[fitz.Rect]:
         pass
 
 
@@ -75,3 +83,16 @@ class GeometryUtils(GeometryBaseUtils):
         column_rect: fitz.Rect,
     ) -> bool:
         return column_rect.x0 <= word_rect.x0 <= column_rect.x1
+
+    @staticmethod
+    def get_intersection_rect(
+        target_rect: fitz.Rect,
+        replacement_rect: fitz.Rect,
+    ) -> Optional[fitz.Rect]:
+        if target_rect.intersects(replacement_rect):
+            x0 = max(target_rect.x0, replacement_rect.x0)
+            y0 = max(target_rect.y0, replacement_rect.y0)
+            x1 = min(target_rect.x1, replacement_rect.x1)
+            y1 = min(target_rect.y1, replacement_rect.y1)
+            return fitz.Rect(x0, y0, x1, y1)
+        return None
