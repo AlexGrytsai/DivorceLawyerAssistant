@@ -90,6 +90,6 @@ class ParserPDF(BaseParserPDF):
                         table_lines, page
                     )
 
-            clean_document.append(page)
+                clean_document.append(page)
 
         return DocumentPDF(pages=clean_document)
