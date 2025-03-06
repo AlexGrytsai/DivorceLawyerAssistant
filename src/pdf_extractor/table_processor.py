@@ -13,6 +13,8 @@ TableType: TypeAlias = List[List[List[Widget | SpanPDF]]]
 
 
 class TableBaseProcessor(ABC):
+    __slots__ = ("_geometry_utils",)
+
     def __init__(self, geometry_utils: GeometryBaseUtils) -> None:
         self._geometry_utils = geometry_utils
 
