@@ -36,16 +36,16 @@ class TableBaseProcessor(ABC):
 class TableProcessor(TableBaseProcessor):
 
     def find_text_lines_in_tables(self, page: PagePDF) -> List[LinePDF]:
-        return [
-            line
-            for line in page.lines
+        table_rects = [fitz.Rect(table.bbox) for table in page.scraped_tables]
+
+        result = []
+        for line in page.lines:
             if any(
-                self._geometry_utils.is_rect_inside(
-                    fitz.Rect(table.bbox), line.rect
-                )
-                for table in page.scraped_tables
-            )
-        ]
+                self._geometry_utils.is_rect_inside(table_rect, line.rect)
+                for table_rect in table_rects
+            ):
+                result.append(line)
+        return result
 
     @staticmethod
     def remove_table_lines_from_page(
