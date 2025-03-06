@@ -21,7 +21,7 @@ class TableBaseProcessor(ABC):
 
     @staticmethod
     @abstractmethod
-    def update_page_excluding_table_lines(
+    def remove_table_lines_from_page(
         table_lines: List[LinePDF], page: PagePDF
     ) -> None:
         pass
@@ -48,7 +48,7 @@ class TableProcessor(TableBaseProcessor):
         ]
 
     @staticmethod
-    def update_page_excluding_table_lines(
+    def remove_table_lines_from_page(
         table_lines: List[LinePDF],
         page: PagePDF,
     ) -> None:
