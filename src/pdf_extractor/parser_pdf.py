@@ -44,10 +44,16 @@ class ParserPDF(BaseParserPDF):
                     if isinstance(span, SpanPDF):
                         line_str += span.text
                     else:
-                        if span.field_value:
-                            line_str += span.field_value
-                        else:
-                            line_str += f"{'_' * 10} "
+                        if span.field_type_string in ("Text", "ComboBox"):
+                            if span.field_value:
+                                line_str += span.field_value
+                            else:
+                                line_str += f"{'_' * 10} "
+                        elif span.field_type_string == "CheckBox":
+                            if span.field_value:
+                                line_str += "[ON]"
+                            else:
+                                line_str += "[OFF]"
                 page_str += line_str + "\n"
             text_from_document += f"{page_str}\n"
         return text_from_document
