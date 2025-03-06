@@ -37,15 +37,13 @@ class ParserPDF(BaseParserPDF):
     def text_from_document(self) -> str:
         def get_widget_value(widget: fitz.Widget) -> Optional[str]:
             if widget.field_type_string in ("Text", "ComboBox"):
-                if widget.field_value:
-                    return widget.field_value
-                else:
-                    return f"{'_' * 10} "
+                return (
+                    widget.field_value
+                    if widget.field_value
+                    else f"{'_' * 10} "
+                )
             elif widget.field_type_string == "CheckBox":
-                if widget.field_value:
-                    return "[ON]"
-                else:
-                    return "[OFF]"
+                return "[ON]" if widget.field_value else "[OFF]"
             return None
 
         text_from_document_list = []
