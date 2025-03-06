@@ -40,9 +40,9 @@ class TableParsed(BaseModel):
 class PagePDF(BaseModel):
     page_number: Optional[int] = None
     lines: List[LinePDF]
-    widgets: Optional[List[fitz.Widget]] = None
-    scraped_tables: Optional[List[Table]] = None
-    parsed_tables: Optional[List[TableParsed]] = None
+    widgets: Optional[List[fitz.Widget]] = []
+    scraped_tables: Optional[List[Table]] = []
+    parsed_tables: Optional[List[TableParsed]] = []
 
     class Config:
         arbitrary_types_allowed = True
