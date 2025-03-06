@@ -11,7 +11,8 @@ def timer_of_execution(func: Callable) -> Callable:
         end_time = time.perf_counter()
 
         print(
-            f"Function {func.__name__} took {end_time - start_time:0.4f} seconds"
+            f"Function {func.__name__} took "
+            f"{end_time - start_time:0.4f} seconds"
         )
 
         return result
