@@ -161,6 +161,7 @@ class TableProcessor(TableBaseProcessor):
                 return text_row.append(
                     " ".join(cell_words),
                 )
+            return None
 
         text_rows = []
         for row in table.table:
