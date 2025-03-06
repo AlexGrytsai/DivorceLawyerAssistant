@@ -78,15 +78,13 @@ class ParserPDF(BaseParserPDF):
             )
             page.widgets = scraped_data[i].widgets
 
-            self._text_processor.remove_text_duplicates(page)
-
             if scraped_data[i].tables:
                 page.scraped_tables = scraped_data[i].tables
 
                 table_lines = self._table_processor.find_text_lines_in_tables(
                     page
                 )
-                self._table_processor.update_page_excluding_table_lines(
+                self._table_processor.remove_table_lines_from_page(
                     table_lines=table_lines,
                     page=page,
                 )
