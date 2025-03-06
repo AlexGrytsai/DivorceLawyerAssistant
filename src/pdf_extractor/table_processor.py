@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, TypeAlias, Tuple
+from typing import List, TypeAlias, Tuple, Optional
 
 import pymupdf as fitz
 from pymupdf import Widget
@@ -134,21 +134,28 @@ class TableProcessor(TableBaseProcessor):
 
     @staticmethod
     def _table_to_text_rows(table: TableParsed) -> List[Tuple[str, ...]]:
+        def extract_text(
+            cell_data: List[fitz.Widget | SpanPDF],
+        ) -> Optional[str]:
+            cell_words = []
+            for text in cell_data:
+                if isinstance(text, fitz.Widget):
+                    if text.field_value:
+                        cell_words.append(text.field_value)
+                else:
+                    cell_words.append(text.text)
+            if cell_words:
+                return text_row.append(
+                    " ".join(cell_words),
+                )
+
         text_rows = []
         for row in table.table:
             text_row = []
             for cell in row:
-                cell_words = []
-                for text in cell:
-                    if isinstance(text, fitz.Widget):
-                        if text.field_value:
-                            cell_words.append(text.field_value)
-                    else:
-                        cell_words.append(text.text)
-                if cell_words:
-                    text_row.append(
-                        " ".join(cell_words),
-                    )
+                cell_str = extract_text(cell)
+                if cell_str:
+                    text_row.append(cell_str)
             if text_row:
                 text_rows.append(tuple(text_row))
         return text_rows
