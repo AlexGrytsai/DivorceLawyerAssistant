@@ -28,11 +28,6 @@ class BaseParserPDF(ABC):
 
     @property
     @abstractmethod
-    def all_fields_in_document(self) -> List[fitz.Widget]:
-        pass
-
-    @property
-    @abstractmethod
     def text_from_document(self) -> str:
         pass
 
@@ -56,12 +51,6 @@ class ParserPDF(BaseParserPDF):
                 page_str += line_str + "\n"
             text_from_document += f"{page_str}\n"
         return text_from_document
-
-    @property
-    def all_fields_in_document(self) -> List[fitz.Widget]:
-        return [
-            widget for page in self._document.pages for widget in page.widgets
-        ]
 
     def _prepare_data(self, scraped_data: List[ScrapedPage]) -> DocumentPDF:
         clean_document = []
