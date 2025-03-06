@@ -49,19 +49,20 @@ class ScraperPDF(BaseScraperPDF):
     def __extract_widgets_from_page(page: fitz.Page) -> List[fitz.Widget]:
         return [widget for widget in page.widgets()]
 
+    def _scrap_page(self, page: fitz.Page) -> ScrapedPage:
+        return ScrapedPage(
+            self.__extract_text_from_page(page),
+            self.__extract_widgets_from_page(page),
+            self.__extract_tables_from_page(page),
+        )
+
     def scrap_data(
         self,
     ) -> List[ScrapedPage]:
         doc: fitz.Document = fitz.open(self.file_path)
         scraped_pages: List[ScrapedPage] = []
         for page in doc:
-            scraped_pages.append(
-                ScrapedPage(
-                    self.__extract_text_from_page(page),
-                    self.__extract_widgets_from_page(page),
-                    self.__extract_tables_from_page(page),
-                )
-            )
+            scraped_pages.append(self._scrap_page(page))
         doc.close()
 
         return scraped_pages
