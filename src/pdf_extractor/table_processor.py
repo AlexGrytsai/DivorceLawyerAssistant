@@ -145,6 +145,7 @@ class TableProcessor(TableBaseProcessor):
             cell_data: List[fitz.Widget | SpanPDF],
         ) -> Optional[str]:
             cell_words = []
+
             for text in cell_data:
                 if isinstance(text, fitz.Widget):
                     if is_widget:
@@ -158,9 +159,7 @@ class TableProcessor(TableBaseProcessor):
                 else:
                     cell_words.append(text.text)
             if cell_words:
-                return text_row.append(
-                    " ".join(cell_words),
-                )
+                return " ".join(cell_words)
             return None
 
         text_rows = []
@@ -177,14 +176,15 @@ class TableProcessor(TableBaseProcessor):
     def process_scraped_tables(
         self, table_rows: List[LinePDF], page: PagePDF
     ) -> None:
-        page.parsed_tables = [
-            self._parse_scraped_table(table_rows, table)
-            for table in page.scraped_tables
-        ]
-        page.scraped_tables = None
+        if page.scraped_tables:
+            page.parsed_tables = [
+                self._parse_scraped_table(table_rows, table)
+                for table in page.scraped_tables
+            ]
+            page.scraped_tables = None
 
-        for table in page.parsed_tables:
-            table.table_str_rows = self._table_to_text_rows(table)
-            table.table_str_rows_for_ai = self._table_to_text_rows(
-                table, is_widget=True
-            )
+            for table in page.parsed_tables:
+                table.table_str_rows = self._table_to_text_rows(table)
+                table.table_str_rows_for_ai = self._table_to_text_rows(
+                    table, is_widget=True
+                )
