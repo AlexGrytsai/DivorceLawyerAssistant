@@ -1,4 +1,4 @@
-from typing import Dict, Any, List, Optional, Union
+from typing import Dict, Any, List, Optional, Union, Tuple
 
 import pymupdf as fitz
 from pydantic import BaseModel, model_validator
@@ -29,6 +29,7 @@ class LinePDF(BaseModel):
 class TableParsed(BaseModel):
     table: List[List[List[fitz.Widget | SpanPDF]]]
     header: Optional[List[str]] = None
+    table_str_rows: Optional[List[Tuple[str, ...]]] = None
     rect: fitz.Rect
 
     class Config:
