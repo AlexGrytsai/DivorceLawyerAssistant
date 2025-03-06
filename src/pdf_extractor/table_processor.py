@@ -4,7 +4,6 @@ from typing import List, TypeAlias, Tuple, Optional
 import pymupdf as fitz
 from pymupdf import Widget
 from pymupdf.table import Table
-from tabulate import tabulate
 
 from src.pdf_extractor.geometry_utils import GeometryBaseUtils
 from src.pdf_extractor.schemas import PagePDF, LinePDF, SpanPDF, TableParsed
@@ -133,14 +132,23 @@ class TableProcessor(TableBaseProcessor):
         )
 
     @staticmethod
-    def _table_to_text_rows(table: TableParsed) -> List[Tuple[str, ...]]:
+    def _table_to_text_rows(
+        table: TableParsed,
+        is_widget: bool = False,
+    ) -> List[Tuple[str, ...]]:
         def extract_text(
             cell_data: List[fitz.Widget | SpanPDF],
         ) -> Optional[str]:
             cell_words = []
             for text in cell_data:
                 if isinstance(text, fitz.Widget):
-                    if text.field_value:
+                    if is_widget:
+                        if text.field_value:
+                            value = text.field_value
+                        else:
+                            value = "The field is not filled"
+                        cell_words.append(f"{text.field_name}: {value}")
+                    elif text.field_value:
                         cell_words.append(text.field_value)
                 else:
                     cell_words.append(text.text)
@@ -171,8 +179,6 @@ class TableProcessor(TableBaseProcessor):
 
         for table in page.parsed_tables:
             table.table_str_rows = self._table_to_text_rows(table)
-            print(
-                tabulate(
-                    table.table_str_rows, tablefmt="grid", headers=table.header
-                )
+            table.table_str_rows_for_ai = self._table_to_text_rows(
+                table, is_widget=True
             )
