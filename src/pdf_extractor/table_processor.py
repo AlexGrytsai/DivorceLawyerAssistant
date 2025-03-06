@@ -36,7 +36,12 @@ class TableBaseProcessor(ABC):
 class TableProcessor(TableBaseProcessor):
 
     def find_text_lines_in_tables(self, page: PagePDF) -> List[LinePDF]:
-        table_rects = [fitz.Rect(table.bbox) for table in page.scraped_tables]
+        if page.scraped_tables:
+            table_rects = [
+                fitz.Rect(table.bbox) for table in page.scraped_tables
+            ]
+        else:
+            table_rects = []
 
         result = []
         for line in page.lines:
