@@ -5,7 +5,7 @@ import pymupdf as fitz  # type: ignore
 from pymupdf import Widget  # type: ignore
 
 from src.pdf_extractor.geometry_utils import GeometryBaseUtils
-from src.pdf_extractor.schemas import PagePDF, LinePDF, SpanPDF
+from src.pdf_extractor.schemas import PagePDF, LinePDF, SpanPDF, TableParsed
 
 LineType: TypeAlias = List[Union[SpanPDF, fitz.Widget]]
 
@@ -34,6 +34,13 @@ class TextBaseProcessor(ABC):
     def remove_underscores(text: str) -> str:
         pass
 
+    @staticmethod
+    @abstractmethod
+    def sort_spans_by_vertical_position(
+        spans: List[Union[SpanPDF, TableParsed]],
+    ) -> List[Union[SpanPDF, TableParsed]]:
+        pass
+
 
 class TextProcessor(TextBaseProcessor):
     @staticmethod
@@ -43,9 +50,9 @@ class TextProcessor(TextBaseProcessor):
         return [SpanPDF(**span) for span in raw_span]
 
     @staticmethod
-    def _sort_spans_by_vertical_position(
-        spans: List[SpanPDF],
-    ) -> List[SpanPDF]:
+    def sort_spans_by_vertical_position(
+        spans: List[Union[SpanPDF, TableParsed]],
+    ) -> List[Union[SpanPDF, TableParsed]]:
         return sorted(spans, key=lambda y: y.rect.y0)
 
     @staticmethod
@@ -117,7 +124,7 @@ class TextProcessor(TextBaseProcessor):
         if not spans_and_widgets_list:
             return None
 
-        sorted_spans_and_widgets_list = self._sort_spans_by_vertical_position(
+        sorted_spans_and_widgets_list = self.sort_spans_by_vertical_position(
             spans_and_widgets_list
         )
         groups_spans_on_page = self._group_spans_into_lines(
