@@ -12,8 +12,6 @@ LineType: TypeAlias = List[Union[SpanPDF, fitz.Widget]]
 
 
 class TextBaseProcessor(ABC):
-    def __init__(self, geometry_utils: GeometryBaseUtils) -> None:
-        self._geometry_utils = geometry_utils
 
     @staticmethod
     @abstractmethod
@@ -33,6 +31,9 @@ class TextBaseProcessor(ABC):
 
 
 class TextProcessor(TextBaseProcessor):
+    def __init__(self, geometry_utils: GeometryBaseUtils) -> None:
+        self._geometry_utils = geometry_utils
+
     @staticmethod
     def _convert_raw_spans_to_span_pdf(
         raw_span: List[Dict[str, Any]],
