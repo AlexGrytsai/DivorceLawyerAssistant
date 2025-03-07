@@ -81,32 +81,7 @@ class ParserPDF(BaseParserPDF):
         return "".join(text_from_document_list)
 
     def _prepare_data(self, scraped_data: List[ScrapedPage]) -> DocumentPDF:
-        processed_pages = []
-        for i in range(len(scraped_data)):
-            span_pdf_list = self._text_processor.convert_raw_spans_to_span_pdf(
-                raw_span=scraped_data[i].text_data
-            )
-            page = self._text_processor.group_text_on_page(
-                spans_and_widgets_list=span_pdf_list + scraped_data[i].widgets,
-                page_number=i + 1,
-            )
-            if page:
-                page.widgets = scraped_data[i].widgets
+        pages = self._text_processor.process_text(scraped_data)
+        self._table_processor.process_tables(pages, scraped_data)
 
-                if scraped_data[i].tables:
-                    page.scraped_tables = scraped_data[i].tables
-
-                    table_lines = (
-                        self._table_processor.find_text_lines_in_tables(page)
-                    )
-                    self._table_processor.remove_table_lines_from_page(
-                        table_lines=table_lines,
-                        page=page,
-                    )
-                    self._table_processor.process_scraped_tables(
-                        table_lines, page
-                    )
-
-                processed_pages.append(page)
-
-        return DocumentPDF(pages=processed_pages)
+        return DocumentPDF(pages=pages)

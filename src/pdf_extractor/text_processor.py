@@ -6,6 +6,7 @@ from pymupdf import Widget  # type: ignore
 
 from src.pdf_extractor.geometry_utils import GeometryBaseUtils
 from src.pdf_extractor.schemas import PagePDF, LinePDF, SpanPDF, TableParsed
+from src.pdf_extractor.scraper_pdf import ScrapedPage
 
 LineType: TypeAlias = List[Union[SpanPDF, fitz.Widget]]
 
@@ -13,21 +14,6 @@ LineType: TypeAlias = List[Union[SpanPDF, fitz.Widget]]
 class TextBaseProcessor(ABC):
     def __init__(self, geometry_utils: GeometryBaseUtils) -> None:
         self._geometry_utils = geometry_utils
-
-    @abstractmethod
-    def group_text_on_page(
-        self,
-        spans_and_widgets_list: List[SpanPDF | fitz.Widget],
-        page_number: Optional[int] = None,
-    ) -> PagePDF | None:
-        pass
-
-    @staticmethod
-    @abstractmethod
-    def convert_raw_spans_to_span_pdf(
-        raw_span: List[Dict[str, Any]],
-    ) -> List[SpanPDF]:
-        pass
 
     @staticmethod
     @abstractmethod
@@ -41,10 +27,14 @@ class TextBaseProcessor(ABC):
     ) -> List[Union[SpanPDF, TableParsed]]:
         pass
 
+    @abstractmethod
+    def process_text(self, scraped_data: List[ScrapedPage]) -> List[PagePDF]:
+        pass
+
 
 class TextProcessor(TextBaseProcessor):
     @staticmethod
-    def convert_raw_spans_to_span_pdf(
+    def _convert_raw_spans_to_span_pdf(
         raw_span: List[Dict[str, Any]],
     ) -> List[SpanPDF]:
         return [SpanPDF(**span) for span in raw_span]
@@ -116,7 +106,7 @@ class TextProcessor(TextBaseProcessor):
     def remove_underscores(text: str) -> str:
         return text.replace("_", "")
 
-    def group_text_on_page(
+    def _group_text_on_page(
         self,
         spans_and_widgets_list: List[SpanPDF | fitz.Widget],
         page_number: Optional[int] = None,
@@ -132,3 +122,18 @@ class TextProcessor(TextBaseProcessor):
         )
 
         return PagePDF(page_number=page_number, lines=groups_spans_on_page)
+
+    def process_text(self, scraped_data: List[ScrapedPage]) -> List[PagePDF]:
+        pages = []
+        for i, page_data in enumerate(scraped_data):
+            span_pdf_list = self._convert_raw_spans_to_span_pdf(
+                raw_span=page_data.text_data
+            )
+            page = self._group_text_on_page(
+                spans_and_widgets_list=span_pdf_list + page_data.widgets,
+                page_number=i + 1,
+            )
+            if page:
+                page.widgets = page_data.widgets
+                pages.append(page)
+        return pages
