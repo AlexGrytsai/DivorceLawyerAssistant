@@ -3,7 +3,7 @@ from typing import List, Dict, Any, TypeAlias
 
 import pymupdf as fitz  # type: ignore
 
-from src.pdf_extractor.schemas import SpanPDF, DocumentPDF
+from src.pdf_extractor.schemas import SpanPDF, DocumentPDF, TableParsed
 from src.pdf_extractor.scraper_pdf import ScrapedPage
 from src.pdf_extractor.table_processor import TableBaseProcessor
 from src.pdf_extractor.text_processor import TextBaseProcessor
@@ -51,21 +51,32 @@ class ParserPDF(BaseParserPDF):
         text_from_document_list = []
         for page in document.pages:
             page_str_list = [f"Page # {page.page_number}\n\n"]
-            for line in page.lines:
-                checked_line = (
-                    self._widget_processor.handle_widget_span_intersections(
+            list_with_line_and_table = (
+                self._text_processor.sort_spans_by_vertical_position(
+                    page.lines + page.parsed_tables
+                )
+            )
+            for line in list_with_line_and_table:
+                line_str_list = []
+                if isinstance(line, TableParsed):
+                    page_str_list.append(
+                        self._table_processor.format_table_to_string(line)
+                    )
+                    page_str_list.append("\n")
+                else:
+                    checked_line = self._widget_processor.handle_widget_span_intersections(
                         line
                     )
-                )
-                line_str_list = []
-                for span in checked_line.text:
-                    if isinstance(span, SpanPDF):
-                        line_str_list.append(f"{span.text}")
-                    else:
-                        span = self._widget_processor.get_widget_value(span)
-                        line_str_list.append(f"[{span}]")
-                page_str_list.append(" ".join(line_str_list))
-                page_str_list.append("\n")
+                    for span in checked_line.text:
+                        if isinstance(span, SpanPDF):
+                            line_str_list.append(f"{span.text}")
+                        else:
+                            span = self._widget_processor.get_widget_value(
+                                span
+                            )
+                            line_str_list.append(f"[{span}]")
+                    page_str_list.append(" ".join(line_str_list))
+                    page_str_list.append("\n")
             text_from_document_list.append("".join(page_str_list) + "\n")
         return "".join(text_from_document_list)
 
