@@ -38,13 +38,13 @@ class BaseParserPDF(ABC):
 
     @property
     @abstractmethod
-    def show_document(self) -> str:
+    def document_as_text(self) -> str:
         pass
 
 
 class ParserPDF(BaseParserPDF):
     @property
-    def show_document(self) -> str:
+    def document_as_text(self) -> str:
         return self._document_as_str
 
     def _convert_document_to_string(self, document: DocumentPDF) -> str:
@@ -81,7 +81,7 @@ class ParserPDF(BaseParserPDF):
         return "".join(text_from_document_list)
 
     def _prepare_data(self, scraped_data: List[ScrapedPage]) -> DocumentPDF:
-        clean_document = []
+        processed_pages = []
         for i in range(len(scraped_data)):
             span_pdf_list = self._text_processor.convert_raw_spans_to_span_pdf(
                 raw_span=scraped_data[i].text_data
@@ -107,6 +107,6 @@ class ParserPDF(BaseParserPDF):
                         table_lines, page
                     )
 
-                clean_document.append(page)
+                processed_pages.append(page)
 
-        return DocumentPDF(pages=clean_document)
+        return DocumentPDF(pages=processed_pages)
