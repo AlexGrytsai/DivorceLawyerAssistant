@@ -14,10 +14,6 @@ TableType: TypeAlias = List[List[List[Widget | SpanPDF]]]
 
 
 class TableBaseProcessor(ABC):
-    __slots__ = ("_geometry_utils",)
-
-    def __init__(self, geometry_utils: GeometryBaseUtils) -> None:
-        self._geometry_utils = geometry_utils
 
     @abstractmethod
     def format_table_to_dict(
@@ -38,6 +34,10 @@ class TableBaseProcessor(ABC):
 
 
 class TableProcessor(TableBaseProcessor):
+    __slots__ = ("_geometry_utils",)
+
+    def __init__(self, geometry_utils: GeometryBaseUtils) -> None:
+        self._geometry_utils = geometry_utils
 
     def _find_text_lines_in_tables(self, page: PagePDF) -> List[LinePDF]:
         if page.scraped_tables:
