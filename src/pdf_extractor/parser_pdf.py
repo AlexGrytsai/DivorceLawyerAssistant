@@ -50,11 +50,10 @@ class ParserPDF(BaseParserPDF):
                 line_str_list = []
                 for span in checked_line.text:
                     if isinstance(span, SpanPDF):
-                        line_str_list.append(span.text)
+                        line_str_list.append(f"{span.text}")
                     else:
-                        line_str_list.append(
-                            self._widget_processor.get_widget_value(span)
-                        )
+                        span = self._widget_processor.get_widget_value(span)
+                        line_str_list.append(f"[{span}]")
                 page_str_list.append(" ".join(line_str_list))
                 page_str_list.append("\n")
             text_from_document_list.append("".join(page_str_list) + "\n")
