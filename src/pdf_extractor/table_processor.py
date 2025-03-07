@@ -1,6 +1,6 @@
 import json
 from abc import ABC, abstractmethod
-from typing import List, TypeAlias, Tuple, Optional
+from typing import List, TypeAlias, Tuple, Optional, Dict
 
 import pymupdf as fitz  # type: ignore
 from pymupdf import Widget  # type: ignore
@@ -36,9 +36,9 @@ class TableBaseProcessor(ABC):
         pass
 
     @abstractmethod
-    def format_table_to_json(
+    def format_table_to_dict(
         self, table: TableParsed, is_widget: bool = False
-    ) -> str:
+    ) -> List[Dict[str, str]]:
         pass
 
 
@@ -185,23 +185,24 @@ class TableProcessor(TableBaseProcessor):
                 text_rows.append(tuple(text_row))
         return text_rows
 
-    def format_table_to_json(
+    def format_table_to_dict(
         self,
         table: TableParsed,
         is_widget: bool = False,
-    ) -> str:
+    ) -> List[Dict[str, str]]:
         rows = []
         for row in table.table:
             row_data = {}
             for i, cell in enumerate(row):
                 cell_str = self._extract_text(cell, is_widget)
-                if cell_str:
-                    row_data[table.header[i]] = cell_str
-                else:
-                    row_data[table.header[i]] = "The field is not filled"
+                if table.header:
+                    if cell_str:
+                        row_data[table.header[i]] = cell_str
+                    else:
+                        row_data[table.header[i]] = "The field is not filled"
             rows.append(row_data)
 
-        return json.dumps(rows)
+        return rows
 
     def process_scraped_tables(
         self, table_rows: List[LinePDF], page: PagePDF
