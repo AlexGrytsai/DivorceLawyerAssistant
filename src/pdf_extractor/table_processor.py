@@ -4,6 +4,7 @@ from typing import List, TypeAlias, Tuple, Optional, Dict
 import pymupdf as fitz  # type: ignore
 from pymupdf import Widget  # type: ignore
 from pymupdf.table import Table  # type: ignore
+from tabulate import tabulate
 
 from src.pdf_extractor.geometry_utils import GeometryBaseUtils
 from src.pdf_extractor.schemas import PagePDF, LinePDF, SpanPDF, TableParsed
@@ -38,6 +39,11 @@ class TableBaseProcessor(ABC):
     def format_table_to_dict(
         self, table: TableParsed, is_widget: bool = False
     ) -> List[Dict[str, str]]:
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def format_table_to_string(table: TableParsed) -> str:
         pass
 
 
@@ -183,6 +189,10 @@ class TableProcessor(TableBaseProcessor):
             if text_row:
                 text_rows.append(tuple(text_row))
         return text_rows
+
+    @staticmethod
+    def format_table_to_string(table: TableParsed) -> str:
+        return tabulate(table.table, headers=table.header, tablefmt="grid")
 
     def format_table_to_dict(
         self,
