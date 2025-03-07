@@ -24,22 +24,21 @@ class BaseParserPDF(ABC):
         self._table_processor = table_processor
         self._widget_processor = widget_processor
         self._document = self._prepare_data(scraped_data)
+        self._document_as_str = self._text_from_document(self._document)
 
     @abstractmethod
     def _prepare_data(self, scraped_data: List[ScrapedPage]) -> DocumentPDF:
         pass
 
-    @property
     @abstractmethod
-    def text_from_document(self) -> str:
+    def _text_from_document(self, document: DocumentPDF) -> str:
         pass
 
 
 class ParserPDF(BaseParserPDF):
-    @property
-    def text_from_document(self) -> str:
+    def _text_from_document(self, document: DocumentPDF) -> str:
         text_from_document_list = []
-        for page in self._document.pages:
+        for page in document.pages:
             page_str_list = [f"Page # {page.page_number}\n\n"]
             for line in page.lines:
                 checked_line = (
