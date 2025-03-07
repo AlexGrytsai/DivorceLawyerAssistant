@@ -29,6 +29,11 @@ class TextBaseProcessor(ABC):
     ) -> List[SpanPDF]:
         pass
 
+    @staticmethod
+    @abstractmethod
+    def remove_underscores(text: str) -> str:
+        pass
+
 
 class TextProcessor(TextBaseProcessor):
     @staticmethod
@@ -99,6 +104,10 @@ class TextProcessor(TextBaseProcessor):
             )
 
         return groups_spans_on_page
+
+    @staticmethod
+    def remove_underscores(text: str) -> str:
+        return text.replace("_", "")
 
     def group_text_on_page(
         self,
