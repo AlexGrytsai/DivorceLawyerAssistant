@@ -24,7 +24,9 @@ class BaseParserPDF(ABC):
         self._table_processor = table_processor
         self._widget_processor = widget_processor
         self._document = self._prepare_data(scraped_data)
-        self._document_as_str = self._convert_document_to_string(self._document)
+        self._document_as_str = self._convert_document_to_string(
+            self._document
+        )
 
     @abstractmethod
     def _prepare_data(self, scraped_data: List[ScrapedPage]) -> DocumentPDF:
