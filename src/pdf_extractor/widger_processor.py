@@ -6,11 +6,17 @@ from pymupdf import Widget  # type: ignore
 
 from src.pdf_extractor.geometry_utils import GeometryBaseUtils
 from src.pdf_extractor.schemas import SpanPDF, LinePDF
+from src.pdf_extractor.text_processor import TextBaseProcessor
 
 
 class WidgetSpanBaseProcessor(ABC):
-    def __init__(self, geometry_utils: GeometryBaseUtils) -> None:
+    def __init__(
+        self,
+        geometry_utils: GeometryBaseUtils,
+        text_processor: TextBaseProcessor,
+    ) -> None:
         self._geometry_utils = geometry_utils
+        self._text_processor = text_processor
 
     @staticmethod
     @abstractmethod
@@ -81,10 +87,12 @@ class WidgetSpanProcessor(WidgetSpanBaseProcessor):
             ]
             text_after = target_span.text[end_index - tolerance_after_index :]
 
-            target_span.text = (
+            new_text = self._text_processor.remove_underscores(
                 f"{text_before}"
                 f"[{self.get_widget_value(replacement_span)}]{text_after}"
             )
+
+            target_span.text = new_text
 
         return target_span
 
