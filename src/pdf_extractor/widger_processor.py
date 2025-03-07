@@ -30,15 +30,17 @@ class WidgetSpanProcessor(WidgetSpanBaseProcessor):
     @staticmethod
     def get_widget_value(widget: fitz.Widget) -> Optional[str]:
         if widget.field_type_string in ("Text", "ComboBox"):
-            return widget.field_value if widget.field_value else f"{'_' * 10} "
+            return f"{widget.field_value}" if widget.field_value else "N/A"
         elif widget.field_type_string == "CheckBox":
-            return "[ON]" if widget.field_value else "[OFF]"
+            return "ON" if widget.field_value else "OFF"
         return None
 
     def _replace_text_in_span(
         self,
         target_span: SpanPDF,
         replacement_span: fitz.Widget,
+        tolerance_before_index: int = 2,
+        tolerance_after_index: int = 1,
     ) -> SpanPDF:
         """
         Replaces the text in the target span with the value of
@@ -72,15 +74,16 @@ class WidgetSpanProcessor(WidgetSpanBaseProcessor):
                 / (target_span.rect.x1 - target_span.rect.x0)
                 * len(target_span.text)
             )
-
             # Split the text in the target span into three parts: before,
             # intersection, and after
-            text_before = target_span.text[:start_index]
-            text_after = target_span.text[end_index:]
+            text_before = target_span.text[
+                : start_index + tolerance_before_index
+            ]
+            text_after = target_span.text[end_index - tolerance_after_index :]
 
             target_span.text = (
-                f"{text_before} "
-                f"{self.get_widget_value(replacement_span)} {text_after}"
+                f"{text_before}"
+                f"[{self.get_widget_value(replacement_span)}]{text_after}"
             )
 
         return target_span
