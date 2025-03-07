@@ -8,6 +8,7 @@ from tabulate import tabulate
 
 from src.pdf_extractor.geometry_utils import GeometryBaseUtils
 from src.pdf_extractor.schemas import PagePDF, LinePDF, SpanPDF, TableParsed
+from src.pdf_extractor.scraper_pdf import ScrapedPage
 
 TableType: TypeAlias = List[List[List[Widget | SpanPDF]]]
 
@@ -17,23 +18,6 @@ class TableBaseProcessor(ABC):
 
     def __init__(self, geometry_utils: GeometryBaseUtils) -> None:
         self._geometry_utils = geometry_utils
-
-    @abstractmethod
-    def find_text_lines_in_tables(self, page: PagePDF) -> List[LinePDF]:
-        pass
-
-    @staticmethod
-    @abstractmethod
-    def remove_table_lines_from_page(
-        table_lines: List[LinePDF], page: PagePDF
-    ) -> None:
-        pass
-
-    @abstractmethod
-    def process_scraped_tables(
-        self, table_rows: List[LinePDF], page: PagePDF
-    ) -> None:
-        pass
 
     @abstractmethod
     def format_table_to_dict(
@@ -46,10 +30,16 @@ class TableBaseProcessor(ABC):
     def format_table_to_string(table: TableParsed) -> str:
         pass
 
+    @abstractmethod
+    def process_tables(
+        self, pages: List[PagePDF], scraped_data: List[ScrapedPage]
+    ) -> None:
+        pass
+
 
 class TableProcessor(TableBaseProcessor):
 
-    def find_text_lines_in_tables(self, page: PagePDF) -> List[LinePDF]:
+    def _find_text_lines_in_tables(self, page: PagePDF) -> List[LinePDF]:
         if page.scraped_tables:
             table_rects = [
                 fitz.Rect(table.bbox) for table in page.scraped_tables
@@ -67,7 +57,7 @@ class TableProcessor(TableBaseProcessor):
         return result
 
     @staticmethod
-    def remove_table_lines_from_page(
+    def _remove_table_lines_from_page(
         table_lines: List[LinePDF],
         page: PagePDF,
     ) -> None:
@@ -215,7 +205,7 @@ class TableProcessor(TableBaseProcessor):
 
         return rows
 
-    def process_scraped_tables(
+    def _process_scraped_tables(
         self, table_rows: List[LinePDF], page: PagePDF
     ) -> None:
         if page.scraped_tables:
@@ -230,3 +220,15 @@ class TableProcessor(TableBaseProcessor):
                 table.table_str_rows_for_ai = self._table_to_text_rows(
                     table, is_widget=True
                 )
+
+    def process_tables(
+        self,
+        pages: List[PagePDF],
+        scraped_data: List[ScrapedPage],
+    ) -> None:
+        for i, page in enumerate(pages):
+            if scraped_data[i].tables:
+                page.scraped_tables = scraped_data[i].tables
+                table_lines = self._find_text_lines_in_tables(page)
+                self._remove_table_lines_from_page(table_lines, page)
+                self._process_scraped_tables(table_lines, page)
