@@ -34,8 +34,17 @@ class BaseParserPDF(ABC):
     def _text_from_document(self, document: DocumentPDF) -> str:
         pass
 
+    @property
+    @abstractmethod
+    def show_document(self) -> str:
+        pass
+
 
 class ParserPDF(BaseParserPDF):
+    @property
+    def show_document(self) -> str:
+        return self._document_as_str
+
     def _text_from_document(self, document: DocumentPDF) -> str:
         text_from_document_list = []
         for page in document.pages:
