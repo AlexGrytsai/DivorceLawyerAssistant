@@ -2,14 +2,14 @@ import functools
 import json
 import threading
 import time
-from typing import Callable, List, Tuple, Optional
+from typing import Callable, List, Tuple, Optional, Dict
 
 import psutil
 from redis import Redis
 
 monitoring = False
 ram_usage = []
-ram_usage_results = {}
+ram_usage_results: Dict[str, List[Tuple[List[float], float]]] = {}
 
 
 def save_data_to_usage_results(
