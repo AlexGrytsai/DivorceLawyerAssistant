@@ -200,7 +200,7 @@ class TableProcessor(TableBaseProcessor):
                     if cell_str:
                         row_data[table.header[i]] = cell_str
                     else:
-                        row_data[table.header[i]] = "The field is not filled"
+                        row_data[table.header[i]] = "N/A"
             rows.append(row_data)
 
         return rows
