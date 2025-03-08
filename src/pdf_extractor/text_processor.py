@@ -10,9 +10,10 @@ from src.pdf_extractor.scraper_pdf import ScrapedPage
 
 LineType: TypeAlias = List[Union[SpanPDF, fitz.Widget]]
 
-SortedItemType: TypeAlias = Union[
-    List[Union[SpanPDF, Widget]], List[Union[TableParsed, LinePDF]]
-]
+SortedItemForPageType: TypeAlias = List[Union[TableParsed, LinePDF]]
+SortedItemForLineType: TypeAlias = List[Union[SpanPDF, Widget]]
+
+SortedItemType: TypeAlias = Union[SortedItemForLineType, SortedItemForPageType]
 
 
 class TextBaseProcessor(ABC):
@@ -129,7 +130,7 @@ class TextProcessor(TextBaseProcessor):
             spans_and_widgets_list
         )
         groups_spans_on_page = self._group_spans_into_lines(
-            sorted_spans_and_widgets_list
+            sorted_spans_and_widgets_list  # type: ignore[arg-type]
         )
 
         return PagePDF(page_number=page_number, lines=groups_spans_on_page)
