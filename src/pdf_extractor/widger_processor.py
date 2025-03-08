@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Optional, List, Dict
 
 import pymupdf as fitz  # type: ignore
 from pymupdf import Widget  # type: ignore
@@ -25,6 +25,13 @@ class WidgetSpanBaseProcessor(ABC):
     ) -> Optional[str]:
         pass
 
+    @staticmethod
+    @abstractmethod
+    def extract_text_widgets(
+        widgets: List[fitz.Widget],
+    ) -> Dict[str, str]:
+        pass
+
     @abstractmethod
     def handle_widget_span_intersections(
         self,
@@ -34,6 +41,17 @@ class WidgetSpanBaseProcessor(ABC):
 
 
 class WidgetSpanProcessor(WidgetSpanBaseProcessor):
+
+    @staticmethod
+    def extract_text_widgets(
+        widgets: List[fitz.Widget],
+    ) -> Dict[str, str]:
+        return {
+            widget.field_name: widget.field_value
+            for widget in widgets
+            if widget.field_type_string in {"Text", "ComboBox"}
+            and widget.field_value
+        }
 
     @staticmethod
     def get_widget_value(
