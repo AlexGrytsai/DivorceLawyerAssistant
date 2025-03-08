@@ -9,7 +9,7 @@ from src.pdf_extractor.widger_processor import WidgetSpanBaseProcessor
 
 class PageFormatterBase(ABC):
     @abstractmethod
-    def format_page(self, page: PagePDF) -> str:
+    def format_page(self, page: PagePDF, is_for_ai: bool = True) -> str:
         pass
 
 
