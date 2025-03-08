@@ -48,15 +48,24 @@ class ParserPDF(BaseParserPDF):
     def document_as_text(self) -> str:
         return self._document_as_str
 
-    def _convert_document_to_string(self, document: DocumentPDF) -> str:
+    def _convert_document_to_string(
+        self,
+        document: DocumentPDF,
+        is_for_ai: bool = True,
+    ) -> str:
         return "".join(
-            self._page_formatter.format_page(page) for page in document.pages
+            self._page_formatter.format_page(page, is_for_ai=is_for_ai)
+            for page in document.pages
         )
 
-    def prepare_data(self, scraped_data: List[ScrapedPage]) -> None:
+    def prepare_data(
+        self,
+        scraped_data: List[ScrapedPage],
+        is_for_ai: bool = True,
+    ) -> None:
         pages = self._text_processor.process_text(scraped_data)
         self._table_processor.process_tables(pages, scraped_data)
 
         self._document_as_str = self._convert_document_to_string(
-            DocumentPDF(pages=pages)
+            DocumentPDF(pages=pages), is_for_ai=is_for_ai
         )
