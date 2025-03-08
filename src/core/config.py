@@ -1,5 +1,6 @@
 import logging.config
 import os
+from types import MappingProxyType
 from typing import Dict
 
 from dotenv import load_dotenv
@@ -28,19 +29,11 @@ class Settings:
         "gpt-3.5-turbo": 200000,
     }
 
-    @property
-    def model_token_limits(self) -> Dict[str, int]:
-        return self._MODEL_TOKEN_LIMITS
-
-    @model_token_limits.setter
-    def model_token_limits(self, value) -> None:
-        raise AttributeError(
-            "MODEL_TOKEN_LIMITS is immutable and cannot be modified."
-        )
+    MODEL_TOKEN_LIMITS = MappingProxyType(_MODEL_TOKEN_LIMITS)
 
     @property
     def get_token_limit(self) -> int:
-        return self._MODEL_TOKEN_LIMITS.get(self.OPENAI_MODEL, None)
+        return self.MODEL_TOKEN_LIMITS.get(self.OPENAI_MODEL, None)
 
 
 LOGGING_CONFIG = {
