@@ -26,7 +26,7 @@ class PageFormatter(PageFormatterBase):
         self._table_processor = table_processor
         self._widget_processor = widget_processor
 
-    def format_page(self, page: PagePDF) -> str:
+    def format_page(self, page: PagePDF, is_for_ai: bool = True) -> str:
         result = [f"Page # {page.page_number}\n\n"]
         elements = self._text_processor.sort_spans_by_vertical_position(
             page.lines + page.parsed_tables
@@ -34,9 +34,17 @@ class PageFormatter(PageFormatterBase):
         element: List[LinePDF | TableParsed]
         for element in elements:
             if isinstance(element, TableParsed):
-                result.append(
-                    self._table_processor.format_table_to_string(element)
-                )
+                if is_for_ai:
+
+                    result.append(
+                        self._table_processor.format_table_to_string_for_ai(
+                            element
+                        )
+                    )
+                else:
+                    result.append(
+                        self._table_processor.format_table_to_string(element)
+                    )
             else:
                 processed_text = self._process_text_line(element)
                 result.append(processed_text)
