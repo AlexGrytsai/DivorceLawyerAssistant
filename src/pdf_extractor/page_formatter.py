@@ -27,9 +27,12 @@ class PageFormatter(PageFormatterBase):
         self._widget_processor = widget_processor
 
     def format_page(self, page: PagePDF, is_for_ai: bool = True) -> str:
-        result = [f"Page # {page.page_number}\n\n"]
+        result = [f"Page # {page.page_number}\n"]
+        liens = page.lines if page.lines else []
+        tables = page.parsed_tables if page.parsed_tables else []
+
         elements = self._text_processor.sort_spans_by_vertical_position(
-            page.lines + page.parsed_tables
+            liens + tables
         )
         element: List[LinePDF | TableParsed]
         for element in elements:
