@@ -10,6 +10,10 @@ from src.pdf_extractor.scraper_pdf import ScrapedPage
 
 LineType: TypeAlias = List[Union[SpanPDF, fitz.Widget]]
 
+SortedItemType: TypeAlias = Union[
+    List[Union[SpanPDF, Widget]], List[Union[TableParsed, LinePDF]]
+]
+
 
 class TextBaseProcessor(ABC):
 
@@ -20,11 +24,13 @@ class TextBaseProcessor(ABC):
 
     @staticmethod
     @abstractmethod
-    def sort_spans_by_vertical_position(
-        spans: (
-            List[Union[LinePDF, TableParsed]] | List[Union[SpanPDF, Widget]]
-        ),
-    ) -> List[Union[LinePDF, TableParsed]] | List[Union[SpanPDF, Widget]]:
+    def sort_by_vertical_position(
+        spans: Union[
+            List[Union[SpanPDF, Widget]], List[Union[TableParsed, LinePDF]]
+        ],
+    ) -> Union[
+        List[Union[SpanPDF, Widget]], List[Union[TableParsed, LinePDF]]
+    ]:
         pass
 
     @abstractmethod
@@ -45,12 +51,10 @@ class TextProcessor(TextBaseProcessor):
         return [SpanPDF(**span) for span in raw_span]
 
     @staticmethod
-    def sort_spans_by_vertical_position(
-        spans: (
-            List[Union[LinePDF, TableParsed]] | List[Union[SpanPDF, Widget]]
-        ),
-    ) -> List[Union[LinePDF, TableParsed]] | List[Union[SpanPDF, Widget]]:
-        return sorted(spans, key=lambda y: y.rect.y0)
+    def sort_by_vertical_position(
+        items: SortedItemType,
+    ) -> SortedItemType:
+        return sorted(items, key=lambda y: y.rect.y0)
 
     @staticmethod
     def _sort_spans_by_horizontal_position(
@@ -78,7 +82,7 @@ class TextProcessor(TextBaseProcessor):
         return filtered_spans
 
     def _group_spans_into_lines(
-        self, sorted_spans: List[Union[SpanPDF, LinePDF, TableParsed]]
+        self, sorted_spans: List[Union[SpanPDF, TableParsed]]
     ) -> List[LinePDF]:
         groups_spans_on_page: List[LinePDF] = []
         spans_on_same_line: List[Union[SpanPDF, LinePDF, TableParsed]] = []
@@ -121,7 +125,7 @@ class TextProcessor(TextBaseProcessor):
         if not spans_and_widgets_list:
             return None
 
-        sorted_spans_and_widgets_list = self.sort_spans_by_vertical_position(
+        sorted_spans_and_widgets_list = self.sort_by_vertical_position(
             spans_and_widgets_list
         )
         groups_spans_on_page = self._group_spans_into_lines(
