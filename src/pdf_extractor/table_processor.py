@@ -188,7 +188,9 @@ class TableProcessor(TableBaseProcessor):
     @staticmethod
     def format_table_to_string(table: TableParsed) -> str:
         return tabulate(
-            table.table_str_rows, headers=table.header, tablefmt="grid"
+            table.table_str_rows or [],
+            headers=table.header or [],
+            tablefmt="grid",
         )
 
     def format_table_to_string_for_ai(
