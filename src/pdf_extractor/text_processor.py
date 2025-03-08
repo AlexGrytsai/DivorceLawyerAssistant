@@ -121,7 +121,7 @@ class TextProcessor(TextBaseProcessor):
     def _group_text_on_page(
         self,
         spans_and_widgets_list: List[SpanPDF | fitz.Widget],
-        page_number: Optional[int] = None,
+        page_number: int,
     ) -> Optional[PagePDF]:
         if not spans_and_widgets_list:
             return None
