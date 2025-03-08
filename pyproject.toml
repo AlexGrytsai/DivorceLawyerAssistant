@@ -15,6 +15,7 @@ pypdf2 = "^3.0.1"
 pymupdf = "^1.25.3"
 pydantic = "^2.10.6"
 tabulate = "^0.9.0"
+redis = "^5.2.1"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -22,6 +23,7 @@ black = "^25.1.0"
 flake8 = "^7.1.2"
 pympler = "^1.1"
 mypy = "^1.15.0"
+psutil = "^7.0.0"
 
 [build-system]
 requires = ["poetry-core"]
