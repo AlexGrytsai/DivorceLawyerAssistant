@@ -1,7 +1,6 @@
 import logging.config
 import os
 from types import MappingProxyType
-from typing import Dict
 
 from dotenv import load_dotenv
 from redis import Redis
