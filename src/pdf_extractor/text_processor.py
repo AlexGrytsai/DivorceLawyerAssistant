@@ -21,8 +21,10 @@ class TextBaseProcessor(ABC):
     @staticmethod
     @abstractmethod
     def sort_spans_by_vertical_position(
-        spans: List[Union[SpanPDF, TableParsed]],
-    ) -> List[Union[SpanPDF, TableParsed]]:
+        spans: (
+            List[Union[LinePDF, TableParsed]] | List[Union[SpanPDF, Widget]]
+        ),
+    ) -> List[Union[LinePDF, TableParsed]] | List[Union[SpanPDF, Widget]]:
         pass
 
     @abstractmethod
@@ -44,8 +46,10 @@ class TextProcessor(TextBaseProcessor):
 
     @staticmethod
     def sort_spans_by_vertical_position(
-        spans: List[Union[SpanPDF, TableParsed]],
-    ) -> List[Union[SpanPDF, TableParsed]]:
+        spans: (
+            List[Union[LinePDF, TableParsed]] | List[Union[SpanPDF, Widget]]
+        ),
+    ) -> List[Union[LinePDF, TableParsed]] | List[Union[SpanPDF, Widget]]:
         return sorted(spans, key=lambda y: y.rect.y0)
 
     @staticmethod
@@ -74,10 +78,10 @@ class TextProcessor(TextBaseProcessor):
         return filtered_spans
 
     def _group_spans_into_lines(
-        self, sorted_spans: List[Union[SpanPDF, TableParsed]]
+        self, sorted_spans: List[Union[SpanPDF, LinePDF, TableParsed]]
     ) -> List[LinePDF]:
         groups_spans_on_page: List[LinePDF] = []
-        spans_on_same_line: List[Union[SpanPDF, TableParsed]] = []
+        spans_on_same_line: List[Union[SpanPDF, LinePDF, TableParsed]] = []
         line_rect: fitz.Rect = fitz.Rect(sorted_spans[0].rect)
 
         for span in sorted_spans:
