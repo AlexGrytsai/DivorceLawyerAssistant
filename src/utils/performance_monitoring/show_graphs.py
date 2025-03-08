@@ -19,11 +19,11 @@ def load_usage_data_from_redis(key_prefix: str):
         data = {
             key: [
                 json.loads(value)
-                for value in redis_client_for_performance_monitoring.lrange(
+                for value in redis_client_for_performance_monitoring.lrange(  # type: ignore
                     key, 0, -1
                 )
             ]
-            for key in redis_keys
+            for key in redis_keys  # type: ignore
         }
         return data
     except Exception as exc:
@@ -32,16 +32,20 @@ def load_usage_data_from_redis(key_prefix: str):
 
 def determine_limit_on_axis_y(
     resource_data: Dict[str, List[Tuple[List[float], float]]],
-    y_limit: int = None,
+    y_limit: float,
     is_cpu: bool = False,
 ) -> float:
-    return y_limit or (
-        100
-        if is_cpu
-        else 1.1
-        * max(
-            max(max(run[0], default=0) for run in data) if data else 0
-            for data in resource_data.values()
+    return (
+        y_limit
+        if y_limit != 0
+        else (
+            100
+            if is_cpu
+            else 1.1
+            * max(
+                max(max(run[0], default=0) for run in data) if data else 0
+                for data in resource_data.values()
+            )
         )
     )
 
@@ -62,7 +66,9 @@ def determine_min_on_axis_y(
 
 
 def preparation_of_graphs(
-    func_name: str, runs: List[Tuple[List[float], float]], is_cpu: bool
+    func_name: str,
+    runs: List[Tuple[List[float], float]],
+    is_cpu: bool,
 ) -> list[Line2D] | None:
     all_resource_usages = [run[0] for run in runs]
     exec_times = [run[1] for run in runs]
@@ -115,7 +121,7 @@ def plot_resource_usage(
     resource_data: Dict[str, List[Tuple[List[float], float]]],
     title: str,
     y_label: str,
-    y_limit: int = None,
+    y_limit: float,
     detailing: int = 10,
     is_cpu: bool = False,
 ) -> None:
@@ -145,15 +151,15 @@ def plot_resource_usage(
 
 def plot_combined_ram_graph(
     ram_data: Dict[str, List[Tuple[List[float], float]]],
-    y_limit: int = None,
-    detailing: int = None,
+    y_limit: float = 0,
+    detailing: int = 10,
 ) -> None:
     plot_resource_usage(
         ram_data,
         title="RAM Usage Comparison",
         y_label="RAM Usage (MB)",
         y_limit=y_limit,
-        detailing=detailing or 10,
+        detailing=detailing,
         is_cpu=False,
     )
 
