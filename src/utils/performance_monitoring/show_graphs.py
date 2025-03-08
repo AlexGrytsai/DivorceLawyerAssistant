@@ -19,7 +19,7 @@ def load_usage_data_from_redis(key_prefix: str):
         data = {
             key: [
                 json.loads(value)
-                for value in redis_client_for_performance_monitoring.lrange(  # type: ignore
+                for value in redis_client_for_performance_monitoring.lrange(  # type: ignore # noqa: E501
                     key, 0, -1
                 )
             ]
