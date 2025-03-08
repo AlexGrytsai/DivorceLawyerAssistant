@@ -27,9 +27,7 @@ class TableBaseProcessor(ABC):
         pass
 
     @abstractmethod
-    def format_table_to_string_for_ai(
-        self, table: TableParsed
-    ) -> Optional[str]:
+    def format_table_to_string_for_ai(self, table: TableParsed) -> str:
         pass
 
     @abstractmethod
@@ -197,11 +195,11 @@ class TableProcessor(TableBaseProcessor):
     def format_table_to_string_for_ai(
         self,
         table: TableParsed,
-    ) -> Optional[str]:
+    ) -> str:
         table_data = self.format_table_to_dict(table, is_widget=True)
 
         if not table_data:
-            return None
+            return ""
 
         headers = table_data[0].keys()
 
