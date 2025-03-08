@@ -238,7 +238,7 @@ class TableProcessor(TableBaseProcessor):
                 self._parse_scraped_table(table_rows, table)
                 for table in page.scraped_tables
             ]
-            page.scraped_tables = None
+            page.scraped_tables = []
 
             for table in page.parsed_tables:
                 table.table_str_rows = self._table_to_text_rows(table)
