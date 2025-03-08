@@ -1,6 +1,10 @@
 import logging.config
+import os
 
+from dotenv import load_dotenv
 from redis import Redis
+
+load_dotenv()
 
 redis_client_for_performance_monitoring = Redis(
     host="localhost",
@@ -12,6 +16,7 @@ redis_client_for_performance_monitoring = Redis(
 
 class Settings:
     DEBUG: bool = True
+    OPENAI_MODEL: str = os.getenv("OPENAI_MODEL")
 
 
 LOGGING_CONFIG = {
