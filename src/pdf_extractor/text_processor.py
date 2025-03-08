@@ -74,10 +74,10 @@ class TextProcessor(TextBaseProcessor):
         return filtered_spans
 
     def _group_spans_into_lines(
-        self, sorted_spans: List[SpanPDF]
+        self, sorted_spans: List[Union[SpanPDF, TableParsed]]
     ) -> List[LinePDF]:
         groups_spans_on_page: List[LinePDF] = []
-        spans_on_same_line: List[SpanPDF] = []
+        spans_on_same_line: List[Union[SpanPDF, TableParsed]] = []
         line_rect: fitz.Rect = fitz.Rect(sorted_spans[0].rect)
 
         for span in sorted_spans:
