@@ -26,6 +26,11 @@ class TableBaseProcessor(ABC):
     def format_table_to_string(table: TableParsed) -> str:
         pass
 
+    @staticmethod
+    @abstractmethod
+    def format_table_to_string_for_ai(table: TableParsed) -> Optional[str]:
+        pass
+
     @abstractmethod
     def process_tables(
         self, pages: List[PagePDF], scraped_data: List[ScrapedPage]
@@ -185,6 +190,25 @@ class TableProcessor(TableBaseProcessor):
         return tabulate(
             table.table_str_rows, headers=table.header, tablefmt="grid"
         )
+
+    def format_table_to_string_for_ai(
+        self,
+        table: TableParsed,
+    ) -> Optional[str]:
+        table_data = self.format_table_to_dict(table, is_widget=True)
+
+        if not table_data:
+            return None
+
+        headers = table_data[0].keys()
+
+        rows = [" | ".join(headers), "-" * (len(" | ".join(headers)) + 5)]
+
+        for row in table_data:
+            row_str = " | ".join(row.get(header, "N/A") for header in headers)
+            rows.append(row_str)
+
+        return "\n".join(rows)
 
     def format_table_to_dict(
         self,
