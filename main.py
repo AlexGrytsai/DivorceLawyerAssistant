@@ -37,7 +37,7 @@ def main(path_to_pdf: str) -> None:
     )
     parser.prepare_data(scrap_pdf.scrap_data(), is_for_ai=True)
     a = parser.document_as_text
-    # print(a)
+    print(a)
 
 
 if __name__ == "__main__":
