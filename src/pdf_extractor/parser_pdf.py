@@ -16,11 +16,7 @@ LineType: TypeAlias = List[Dict[str, Any]] | fitz.Widget
 class BaseParserPDF(ABC):
 
     @abstractmethod
-    def _prepare_data(self, scraped_data: List[ScrapedPage]) -> DocumentPDF:
-        pass
-
-    @abstractmethod
-    def _convert_document_to_string(self, document: DocumentPDF) -> str:
+    def prepare_data(self, scraped_data: List[ScrapedPage]) -> DocumentPDF:
         pass
 
     @property
@@ -30,9 +26,15 @@ class BaseParserPDF(ABC):
 
 
 class ParserPDF(BaseParserPDF):
+    __slots__ = (
+        "_text_processor",
+        "_table_processor",
+        "_page_formatter",
+        "_document_as_str",
+    )
+
     def __init__(
         self,
-        scraped_data: List[ScrapedPage],
         text_processor: TextBaseProcessor,
         table_processor: TableBaseProcessor,
         page_formatter: PageFormatterBase,
@@ -40,10 +42,7 @@ class ParserPDF(BaseParserPDF):
         self._text_processor = text_processor
         self._table_processor = table_processor
         self._page_formatter = page_formatter
-        self._document = self._prepare_data(scraped_data)
-        self._document_as_str = self._convert_document_to_string(
-            self._document
-        )
+        self._document_as_str = None
 
     @property
     def document_as_text(self) -> str:
@@ -54,8 +53,10 @@ class ParserPDF(BaseParserPDF):
             self._page_formatter.format_page(page) for page in document.pages
         )
 
-    def _prepare_data(self, scraped_data: List[ScrapedPage]) -> DocumentPDF:
+    def prepare_data(self, scraped_data: List[ScrapedPage]) -> None:
         pages = self._text_processor.process_text(scraped_data)
         self._table_processor.process_tables(pages, scraped_data)
 
-        return DocumentPDF(pages=pages)
+        self._document_as_str = self._convert_document_to_string(
+            DocumentPDF(pages=pages)
+        )
