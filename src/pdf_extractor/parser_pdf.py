@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, Dict, Any, TypeAlias
+from typing import List, Dict, Any, TypeAlias, Optional
 
 import pymupdf as fitz  # type: ignore
 
@@ -15,12 +15,12 @@ LineType: TypeAlias = List[Dict[str, Any]] | fitz.Widget
 class BaseParserPDF(ABC):
 
     @abstractmethod
-    def prepare_data(self, scraped_data: List[ScrapedPage]) -> DocumentPDF:
+    def prepare_data(self, scraped_data: List[ScrapedPage]) -> None:
         pass
 
     @property
     @abstractmethod
-    def document_as_text(self) -> str:
+    def document_as_text(self) -> Optional[str]:
         pass
 
 
@@ -41,10 +41,10 @@ class ParserPDF(BaseParserPDF):
         self._text_processor = text_processor
         self._table_processor = table_processor
         self._page_formatter = page_formatter
-        self._document_as_str = None
+        self._document_as_str: Optional[str] = None
 
     @property
-    def document_as_text(self) -> str:
+    def document_as_text(self) -> Optional[str]:
         return self._document_as_str
 
     def _convert_document_to_string(
