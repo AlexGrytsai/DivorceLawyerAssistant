@@ -2,14 +2,14 @@ import functools
 import json
 import threading
 import time
-from typing import Callable, List, Tuple, Optional
+from typing import Callable, List, Tuple, Optional, Dict
 
 import psutil
 from redis import Redis
 
 running = False
 cpu_usage_data = []
-cpu_usage_results = {}
+cpu_usage_results: Dict[str, List[Tuple[List[float], float]]] = {}
 
 
 def monitor_cpu_usage(interval: float = 0.1):
