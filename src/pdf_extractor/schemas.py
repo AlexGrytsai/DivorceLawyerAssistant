@@ -28,9 +28,9 @@ class LinePDF(BaseModel):
 
 class TableParsed(BaseModel):
     table: List[List[List[fitz.Widget | SpanPDF]]]
-    header: Optional[List[str]] = None
-    table_str_rows: Optional[List[Tuple[str, ...]]] = None
-    table_str_rows_for_ai: Optional[List[Tuple[str, ...]]] = None
+    header: List[str] = []
+    table_str_rows: List[Tuple[str, ...]] = []
+    table_str_rows_for_ai: List[Tuple[str, ...]] = []
     rect: fitz.Rect
 
     class Config:
@@ -38,11 +38,11 @@ class TableParsed(BaseModel):
 
 
 class PagePDF(BaseModel):
-    page_number: Optional[int] = None
+    page_number: int = 0
     lines: List[LinePDF]
-    widgets: Optional[List[fitz.Widget]] = []
-    scraped_tables: Optional[List[Table]] = []
-    parsed_tables: Optional[List[TableParsed]] = []
+    widgets: List[fitz.Widget] = []
+    scraped_tables: List[Table] = []
+    parsed_tables: List[TableParsed] = []
 
     class Config:
         arbitrary_types_allowed = True
