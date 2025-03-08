@@ -26,6 +26,7 @@ pympler = "^1.1"
 mypy = "^1.15.0"
 psutil = "^7.0.0"
 matplotlib = "^3.10.1"
+types-psutil = "^7.0.0.20250218"
 
 [build-system]
 requires = ["poetry-core"]

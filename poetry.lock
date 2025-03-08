@@ -988,6 +988,17 @@ files = [
 widechars = ["wcwidth"]
 
 [[package]]
+name = "types-psutil"
+version = "7.0.0.20250218"
+description = "Typing stubs for psutil"
+optional = false
+python-versions = ">=3.9"
+files = [
+    {file = "types_psutil-7.0.0.20250218-py3-none-any.whl", hash = "sha256:1447a30c282aafefcf8941ece854e1100eee7b0296a9d9be9977292f0269b121"},
+    {file = "types_psutil-7.0.0.20250218.tar.gz", hash = "sha256:1e642cdafe837b240295b23b1cbd4691d80b08a07d29932143cbbae30eb0db9c"},
+]
+
+[[package]]
 name = "types-tabulate"
 version = "0.9.0.20241207"
 description = "Typing stubs for tabulate"
@@ -1012,4 +1023,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.13"
-content-hash = "9391ad4792c0e04425745a73f1adbc0133119293e4734552664b9c590d470198"
+content-hash = "a23ff973ddc550cc85ce76402a5f3c153763f520ed61713c2013a16592fd5781"
