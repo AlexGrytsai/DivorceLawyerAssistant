@@ -20,7 +20,9 @@ class WidgetSpanBaseProcessor(ABC):
 
     @staticmethod
     @abstractmethod
-    def get_widget_value(widget: fitz.Widget) -> Optional[str]:
+    def get_widget_value(
+        widget: fitz.Widget, is_for_ai: bool = True
+    ) -> Optional[str]:
         pass
 
     @abstractmethod
@@ -34,7 +36,24 @@ class WidgetSpanBaseProcessor(ABC):
 class WidgetSpanProcessor(WidgetSpanBaseProcessor):
 
     @staticmethod
-    def get_widget_value(widget: fitz.Widget) -> Optional[str]:
+    def get_widget_value(
+        widget: fitz.Widget,
+        is_for_ai: bool = True,
+    ) -> Optional[str]:
+        if is_for_ai:
+            if widget.field_type_string in ("Text", "ComboBox"):
+                return (
+                    f"{widget.field_name}: {widget.field_value}"
+                    if widget.field_value
+                    else f"{widget.field_name}: N/A"
+                )
+            elif widget.field_type_string == "CheckBox":
+                return (
+                    f"{widget.field_name}: ON"
+                    if widget.field_value
+                    else f"{widget.field_name}: OFF"
+                )
+
         if widget.field_type_string in ("Text", "ComboBox"):
             return f"{widget.field_value}" if widget.field_value else "N/A"
         elif widget.field_type_string == "CheckBox":
