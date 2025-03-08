@@ -24,6 +24,7 @@ flake8 = "^7.1.2"
 pympler = "^1.1"
 mypy = "^1.15.0"
 psutil = "^7.0.0"
+matplotlib = "^3.10.1"
 
 [build-system]
 requires = ["poetry-core"]
