@@ -35,7 +35,8 @@ class Settings:
     @model_token_limits.setter
     def model_token_limits(self, value) -> None:
         raise AttributeError(
-            "MODEL_TOKEN_LIMITS is immutable and cannot be modified.")
+            "MODEL_TOKEN_LIMITS is immutable and cannot be modified."
+        )
 
     @property
     def get_token_limit(self) -> int:
