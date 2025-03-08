@@ -27,7 +27,8 @@ def main_pdf_extractor(path_to_pdf: str) -> str:
 
     parser = ParserPDF(
         text_processor=text_processor,
-        table_processor=TableProcessor(geometry_utils=geometric_utils),
+        table_processor=table_processor,
+        widget_processor=widget_processor,
         page_formatter=page_formatter,
     )
 
