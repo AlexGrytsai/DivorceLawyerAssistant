@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Union
 
 from src.pdf_extractor.schemas import PagePDF, TableParsed, LinePDF, SpanPDF
 from src.pdf_extractor.table_processor import TableBaseProcessor
@@ -28,14 +28,17 @@ class PageFormatter(PageFormatterBase):
 
     def format_page(self, page: PagePDF, is_for_ai: bool = True) -> str:
         result = [f"Page # {page.page_number}\n"]
-        liens = page.lines if page.lines else []
-        tables = page.parsed_tables if page.parsed_tables else []
 
-        elements = self._text_processor.sort_spans_by_vertical_position(
+        liens: List[LinePDF] = page.lines if page.lines else []
+        tables: List[TableParsed] = (
+            page.parsed_tables if page.parsed_tables else []
+        )
+
+        elements = self._text_processor.sort_by_vertical_position(
             liens + tables
         )
-        element: List[LinePDF | TableParsed]
-        for element in elements:
+        element: Union[LinePDF, TableParsed]
+        for element in elements:  # type: ignore[assignment]
             if isinstance(element, TableParsed):
                 if is_for_ai:
 
