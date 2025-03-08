@@ -59,7 +59,7 @@ class PageFormatter(PageFormatterBase):
             (
                 span.text
                 if isinstance(span, SpanPDF)
-                else f"[{self._widget_processor.get_widget_value(span)}]"
+                else f"[{self._widget_processor.get_widget_value(span, is_for_ai=True)}]"
             )
             for span in checked_line.text
         )
