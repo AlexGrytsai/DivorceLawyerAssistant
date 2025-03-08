@@ -26,9 +26,10 @@ class TableBaseProcessor(ABC):
     def format_table_to_string(table: TableParsed) -> str:
         pass
 
-    @staticmethod
     @abstractmethod
-    def format_table_to_string_for_ai(table: TableParsed) -> Optional[str]:
+    def format_table_to_string_for_ai(
+        self, table: TableParsed
+    ) -> Optional[str]:
         pass
 
     @abstractmethod
