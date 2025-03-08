@@ -148,13 +148,13 @@ class TableProcessor(TableBaseProcessor):
     @staticmethod
     def _extract_text(
         cell_data: List[fitz.Widget | SpanPDF],
-        is_widget: bool = False,
+        is_for_ai: bool = False,
     ) -> Optional[str]:
         cell_words = []
 
         for text in cell_data:
             if isinstance(text, fitz.Widget):
-                if is_widget:
+                if is_for_ai:
                     if text.field_value:
                         value = text.field_value
                     else:
@@ -171,14 +171,14 @@ class TableProcessor(TableBaseProcessor):
     def _table_to_text_rows(
         self,
         table: TableParsed,
-        is_widget: bool = False,
+        is_for_ai: bool = True,
     ) -> List[Tuple[str, ...]]:
         text_rows = []
 
         for row in table.table:
             text_row = []
             for cell in row:
-                cell_str = self._extract_text(cell, is_widget)
+                cell_str = self._extract_text(cell, is_for_ai)
                 if cell_str:
                     text_row.append(cell_str)
             if text_row:
@@ -242,7 +242,7 @@ class TableProcessor(TableBaseProcessor):
             for table in page.parsed_tables:
                 table.table_str_rows = self._table_to_text_rows(table)
                 table.table_str_rows_for_ai = self._table_to_text_rows(
-                    table, is_widget=True
+                    table, is_for_ai=True
                 )
 
     def process_tables(
