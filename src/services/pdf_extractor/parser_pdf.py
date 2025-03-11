@@ -16,7 +16,7 @@ LineType: TypeAlias = List[Dict[str, Any]] | fitz.Widget
 class BaseParserPDF(ABC):
 
     @abstractmethod
-    def prepare_data(self, scraped_data: List[ScrapedPage]) -> None:
+    def prepare_data(self, scraped_data: List[ScrapedPage], is_for_ai=True) -> None:
         pass
 
     @property
