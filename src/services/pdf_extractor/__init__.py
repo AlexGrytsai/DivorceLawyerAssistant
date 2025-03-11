@@ -1,3 +1,3 @@
-from .main_pdf_extractor import main_pdf_extractor
+from .pdf_extractor import extract_pdf_data
 
-__all__ = ["main_pdf_extractor"]
+__all__ = ["extract_pdf_data"]
