@@ -22,6 +22,12 @@ class BaseScraperPDF(ABC):
     def file_path(self) -> str:
         return self._file_path
 
+    @abstractmethod
+    def scrap_data(
+        self
+    ) -> List[ScrapedPage]:
+        pass
+
 
 class ScraperPDF(BaseScraperPDF):
     @property
