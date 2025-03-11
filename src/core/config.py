@@ -19,7 +19,7 @@ class Settings:
     DEBUG: bool = True
 
     OPENAI_MODEL: str = os.environ["OPENAI_MODEL"]
-    OPENAI_API_KEY: str = os.environ["OPENAI_MODEL"]
+    OPENAI_API_KEY: str = os.environ["OPENAI_API_KEY"]
 
     _MODEL_TOKEN_LIMITS = {
         "gpt-4": 10000,

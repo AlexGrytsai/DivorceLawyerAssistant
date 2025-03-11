@@ -1,10 +1,10 @@
 from abc import ABC, abstractmethod
 from typing import List, Union
 
-from src.pdf_extractor.schemas import PagePDF, TableParsed, LinePDF, SpanPDF
-from src.pdf_extractor.table_processor import TableBaseProcessor
-from src.pdf_extractor.text_processor import TextBaseProcessor
-from src.pdf_extractor.widger_processor import WidgetSpanBaseProcessor
+from src.services.pdf_extractor.schemas import PagePDF, TableParsed, LinePDF, SpanPDF
+from src.services.pdf_extractor.table_processor import TableBaseProcessor
+from src.services.pdf_extractor.text_processor import TextBaseProcessor
+from src.services.pdf_extractor.widger_processor import WidgetSpanBaseProcessor
 
 
 class PageFormatterBase(ABC):

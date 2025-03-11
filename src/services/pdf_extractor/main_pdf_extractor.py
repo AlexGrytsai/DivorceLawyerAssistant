@@ -1,10 +1,10 @@
-from src.pdf_extractor.geometry_utils import GeometryUtils
-from src.pdf_extractor.page_formatter import PageFormatter
-from src.pdf_extractor.parser_pdf import ParserPDF
-from src.pdf_extractor.scraper_pdf import ScraperPDF
-from src.pdf_extractor.table_processor import TableProcessor
-from src.pdf_extractor.text_processor import TextProcessor
-from src.pdf_extractor.widger_processor import WidgetSpanProcessor
+from src.services.pdf_extractor.geometry_utils import GeometryUtils
+from src.services.pdf_extractor.page_formatter import PageFormatter
+from src.services.pdf_extractor.parser_pdf import ParserPDF
+from src.services.pdf_extractor.scraper_pdf import ScraperPDF
+from src.services.pdf_extractor.table_processor import TableProcessor
+from src.services.pdf_extractor.text_processor import TextProcessor
+from src.services.pdf_extractor.widger_processor import WidgetSpanProcessor
 
 
 def main_pdf_extractor(path_to_pdf: str) -> str:
