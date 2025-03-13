@@ -3,6 +3,15 @@ from typing import Dict
 
 
 class TextBaseValidator(ABC):
+    @staticmethod
+    @abstractmethod
+    def validate_line_length(line: str, max_length: int) -> bool:
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def is_caps_lock_on(line: str) -> bool:
+        pass
 
     @abstractmethod
     def validate_widgets(
@@ -18,6 +27,10 @@ class TextWidgetValidator(TextBaseValidator):
     @staticmethod
     def validate_line_length(line: str, max_length: int) -> bool:
         return len(line) <= max_length
+
+    @staticmethod
+    def is_caps_lock_on(line: str) -> bool:
+        return line.isupper()
 
     def get_widget_max_length(self, place_of_widget: str) -> int:
         if place_of_widget == "Table":
@@ -37,5 +50,10 @@ class TextWidgetValidator(TextBaseValidator):
                 ):
                     errors_in_widgets[widget_name] = {
                         "Max length": "Perhaps the line is too long"
+                    }
+
+                if self.is_caps_lock_on(widget_value):
+                    errors_in_widgets[widget_name] = {
+                        "Caps lock": "Caps lock is on"
                     }
         return errors_in_widgets
