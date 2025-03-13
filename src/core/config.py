@@ -18,7 +18,7 @@ redis_client_for_performance_monitoring = Redis(
 class Settings:
     DEBUG: bool = True
 
-    OPENAI_MODEL: str = os.environ["OPENAI_MODEL"]
+    BASE_AI_MODEL: str = os.environ["BASE_AI_MODEL"]
     OPENAI_API_KEY: str = os.environ["OPENAI_API_KEY"]
 
     _MODEL_TOKEN_LIMITS = {
@@ -35,7 +35,7 @@ class Settings:
 
     @property
     def get_token_limit(self) -> int:
-        return self.MODEL_TOKEN_LIMITS.get(self.OPENAI_MODEL, 0)
+        return self.MODEL_TOKEN_LIMITS.get(self.BASE_AI_MODEL, 0)
 
 
 LOGGING_CONFIG = {
