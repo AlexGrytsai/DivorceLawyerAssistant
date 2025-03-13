@@ -3,20 +3,24 @@ from typing import List, Dict, Any, TypeAlias
 
 import pymupdf as fitz  # type: ignore
 
-from src.services.pdf_extractor.page_formatter import PageFormatterBase
+from src.services.pdf_extractor import (
+    TextBaseProcessor,
+    TableBaseProcessor,
+    WidgetSpanBaseProcessor,
+    PageFormatterBase,
+)
 from src.services.pdf_extractor.schemas import DocumentPDF
 from src.services.pdf_extractor.scraper_pdf import ScrapedPage
-from src.services.pdf_extractor.table_processor import TableBaseProcessor
-from src.services.pdf_extractor.text_processor import TextBaseProcessor
-from src.services.pdf_extractor.widger_processor import WidgetSpanBaseProcessor
 
 LineType: TypeAlias = List[Dict[str, Any]] | fitz.Widget
 
 
-class BaseParserPDF(ABC):
+class ParserPDFBase(ABC):
 
     @abstractmethod
-    def prepare_data(self, scraped_data: List[ScrapedPage], is_for_ai=True) -> None:
+    def prepare_data(
+        self, scraped_data: List[ScrapedPage], use_widget_label: bool = True
+    ) -> None:
         pass
 
     @property
@@ -30,7 +34,7 @@ class BaseParserPDF(ABC):
         pass
 
 
-class ParserPDF(BaseParserPDF):
+class ParserPDF(ParserPDFBase):
     __slots__ = (
         "_text_processor",
         "_table_processor",
@@ -65,23 +69,25 @@ class ParserPDF(BaseParserPDF):
     def _convert_document_to_string(
         self,
         document: DocumentPDF,
-        is_for_ai: bool = True,
+        use_widget_label: bool = False,
     ) -> str:
         return "".join(
-            self._page_formatter.format_page(page, is_for_ai=is_for_ai)
+            self._page_formatter.format_page(
+                page, use_widget_label=use_widget_label
+            )
             for page in document.pages
         )
 
     def prepare_data(
         self,
         scraped_data: List[ScrapedPage],
-        is_for_ai: bool = True,
+        use_widget_label: bool = False,
     ) -> None:
         pages = self._text_processor.process_text(scraped_data)
         self._table_processor.process_tables(pages, scraped_data)
 
         self._document_as_str = self._convert_document_to_string(
-            DocumentPDF(pages=pages), is_for_ai=is_for_ai
+            DocumentPDF(pages=pages), use_widget_label=use_widget_label
         )
         self._widget_data = self._widget_processor.extract_text_widgets(
             [widget for page in pages for widget in page.widgets]
