@@ -21,6 +21,7 @@ tiktoken = "^0.9.0"
 python-dotenv = "^1.0.1"
 openai = "^1.65.4"
 fastapi = "^0.115.11"
+email-validator = "^2.2.0"
 
 
 [tool.poetry.group.dev.dependencies]
