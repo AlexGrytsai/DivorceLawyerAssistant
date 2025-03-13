@@ -7,6 +7,8 @@ from typing import Callable, List, Tuple, Optional, Dict
 import psutil
 from redis import Redis
 
+from src.core import settings
+
 monitoring = False
 ram_usage = []
 ram_usage_results: Dict[str, List[Tuple[List[float], float]]] = {}
@@ -42,7 +44,7 @@ def monitor_ram_usage(interval: float = 0.1) -> None:
 def ram_monitor_decorator(
     r_client: Optional[Redis] = None,
     save_data: Optional[bool] = True,
-    is_enabled: Optional[bool] = True,
+    is_enabled: Optional[bool] = settings.DEBUG,
 ) -> Callable:
     def decorator(func: Callable) -> Callable:
         @functools.wraps(func)
