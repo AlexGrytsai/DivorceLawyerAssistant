@@ -28,7 +28,7 @@ class ParserPDFBase(ABC):
 
     @property
     @abstractmethod
-    def widget_data_dict(self) -> Dict[str, str]:
+    def widget_data_dict(self) -> Dict[str, Dict[str, str]]:
         pass
 
 
@@ -54,14 +54,17 @@ class ParserPDF(ParserPDFBase):
         self._widget_processor = widget_processor
         self._page_formatter = page_formatter
         self._document_as_str: str = ""
-        self._widget_data: Dict[str, str] = {}
+        self._widget_data: Dict[str, Dict[str, str]] = {
+            "Text": {},
+            "Table": {},
+        }
 
     @property
     def document_as_text(self) -> str:
         return self._document_as_str
 
     @property
-    def widget_data_dict(self) -> Dict[str, str]:
+    def widget_data_dict(self) -> Dict[str, Dict[str, str]]:
         return self._widget_data
 
     def _convert_document_to_string(
@@ -84,9 +87,20 @@ class ParserPDF(ParserPDFBase):
         pages = self._text_processor.process_text(scraped_data)
         self._table_processor.process_tables(pages, scraped_data)
 
+        self._widget_data["Table"] = (
+            self._table_processor.value_widgets_in_table
+        )
+
         self._document_as_str = self._convert_document_to_string(
             DocumentPDF(pages=pages), use_widget_label=use_widget_label
         )
-        self._widget_data = self._widget_processor.extract_text_widgets(
-            [widget for page in pages for widget in page.widgets]
+        self._widget_data["Text"] = (
+            self._widget_processor.extract_text_widgets(
+                [
+                    widget
+                    for page in pages
+                    for widget in page.widgets
+                    if widget not in set(self._widget_data["Table"].keys())
+                ]
+            )
         )
