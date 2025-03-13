@@ -14,11 +14,14 @@ from src.services.pdf_extractor.schemas import (
     TableParsed,
 )
 from src.services.pdf_extractor.scraper_pdf import ScrapedPage
+from src.services.pdf_extractor.widger_processor import WidgetSpanBaseProcessor
 
 TableType: TypeAlias = List[List[List[Widget | SpanPDF]]]
 
 
 class TableBaseProcessor(ABC):
+    def __init__(self) -> None:
+        self._value_widgets_in_table: Dict[str, str] = {}
 
     @abstractmethod
     def format_table_to_dict(
@@ -35,6 +38,11 @@ class TableBaseProcessor(ABC):
     def format_table_to_string_for_ai(self, table: TableParsed) -> str:
         pass
 
+    @property
+    @abstractmethod
+    def value_widgets_in_table(self) -> Dict[str, str]:
+        pass
+
     @abstractmethod
     def process_tables(
         self, pages: List[PagePDF], scraped_data: List[ScrapedPage]
@@ -45,8 +53,14 @@ class TableBaseProcessor(ABC):
 class TableProcessor(TableBaseProcessor):
     __slots__ = ("_geometry_utils",)
 
-    def __init__(self, geometry_utils: GeometryBaseUtils) -> None:
+    def __init__(
+        self,
+        geometry_utils: GeometryBaseUtils,
+        widget_processor: WidgetSpanBaseProcessor,
+    ) -> None:
+        super().__init__()
         self._geometry_utils = geometry_utils
+        self._widget_processor = widget_processor
 
     def process_tables(
         self,
@@ -57,6 +71,7 @@ class TableProcessor(TableBaseProcessor):
             if scraped_data[i].tables:
                 page.scraped_tables = scraped_data[i].tables
                 table_lines = self._find_text_lines_in_tables(page)
+                self._collect_widgets_from_table(table_lines)
                 self._remove_table_lines_from_page(table_lines, page)
                 self._process_scraped_tables(table_lines, page)
 
@@ -97,6 +112,19 @@ class TableProcessor(TableBaseProcessor):
             rows.append(row_data)
 
         return rows
+
+    @property
+    def value_widgets_in_table(self) -> Dict[str, str]:
+        return self._value_widgets_in_table
+
+    def _collect_widgets_from_table(self, table_lines: List[LinePDF]) -> None:
+        for line in table_lines:
+            widget_list = [
+                widget for widget in line.text if isinstance(widget, Widget)
+            ]
+            self._value_widgets_in_table.update(
+                self._widget_processor.extract_text_widgets(widget_list)
+            )
 
     def _find_text_lines_in_tables(self, page: PagePDF) -> List[LinePDF]:
         if page.scraped_tables:
