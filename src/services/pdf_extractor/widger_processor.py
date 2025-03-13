@@ -21,7 +21,7 @@ class WidgetSpanBaseProcessor(ABC):
     @staticmethod
     @abstractmethod
     def get_widget_value(
-        widget: fitz.Widget, is_for_ai: bool = True
+        widget: fitz.Widget, use_widget_label: bool = False
     ) -> Optional[str]:
         pass
 
@@ -56,9 +56,9 @@ class WidgetSpanProcessor(WidgetSpanBaseProcessor):
     @staticmethod
     def get_widget_value(
         widget: fitz.Widget,
-        is_for_ai: bool = True,
+        use_widget_label: bool = True,
     ) -> Optional[str]:
-        if is_for_ai:
+        if use_widget_label:
             if widget.field_type_string in ("Text", "ComboBox"):
                 return (
                     f"{widget.field_name}: {widget.field_value}"
