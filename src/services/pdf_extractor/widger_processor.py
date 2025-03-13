@@ -49,8 +49,7 @@ class WidgetSpanProcessor(WidgetSpanBaseProcessor):
         return {
             widget.field_name: widget.field_value
             for widget in widgets
-            if widget.field_type_string in {"Text", "ComboBox"}
-            and widget.field_value
+            if widget.field_type_string in {"Text"} and widget.field_value
         }
 
     @staticmethod
