@@ -1,6 +1,6 @@
 from typing import List, Dict, Tuple
 
-from src.services.pdf_extractor import ParserPDFBase
+from src.services.pdf_extractor.parser_pdf import ParserPDFBase
 from src.services.pdf_extractor.scraper_pdf import ScrapedPage, ScraperPDF
 
 
