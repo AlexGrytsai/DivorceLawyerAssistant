@@ -48,6 +48,56 @@ class TableProcessor(TableBaseProcessor):
     def __init__(self, geometry_utils: GeometryBaseUtils) -> None:
         self._geometry_utils = geometry_utils
 
+    def process_tables(
+        self,
+        pages: List[PagePDF],
+        scraped_data: List[ScrapedPage],
+    ) -> None:
+        for i, page in enumerate(pages):
+            if scraped_data[i].tables:
+                page.scraped_tables = scraped_data[i].tables
+                table_lines = self._find_text_lines_in_tables(page)
+                self._remove_table_lines_from_page(table_lines, page)
+                self._process_scraped_tables(table_lines, page)
+
+    def format_table_to_string_for_ai(
+        self,
+        table: TableParsed,
+    ) -> str:
+        table_data = self.format_table_to_dict(table)
+
+        if not table_data:
+            return ""
+
+        headers = table_data[0].keys()
+
+        rows = [" | ".join(headers), "-" * (len(" | ".join(headers)) + 5)]
+
+        for row in table_data:
+            row_str = " | ".join(row.get(header, "N/A") for header in headers)
+            rows.append(row_str)
+
+        return "\n".join(rows)
+
+    def format_table_to_dict(
+        self,
+        table: TableParsed,
+        use_widget_label: bool = False,
+    ) -> List[Dict[str, str]]:
+        rows = []
+        for row in table.table:
+            row_data = {}
+            for i, cell in enumerate(row):
+                cell_str = self._extract_text(cell, use_widget_label)
+                if table.header:
+                    if cell_str:
+                        row_data[table.header[i]] = cell_str
+                    else:
+                        row_data[table.header[i]] = "N/A"
+            rows.append(row_data)
+
+        return rows
+
     def _find_text_lines_in_tables(self, page: PagePDF) -> List[LinePDF]:
         if page.scraped_tables:
             table_rects = [
@@ -197,44 +247,6 @@ class TableProcessor(TableBaseProcessor):
             tablefmt="grid",
         )
 
-    def format_table_to_string_for_ai(
-        self,
-        table: TableParsed,
-    ) -> str:
-        table_data = self.format_table_to_dict(table)
-
-        if not table_data:
-            return ""
-
-        headers = table_data[0].keys()
-
-        rows = [" | ".join(headers), "-" * (len(" | ".join(headers)) + 5)]
-
-        for row in table_data:
-            row_str = " | ".join(row.get(header, "N/A") for header in headers)
-            rows.append(row_str)
-
-        return "\n".join(rows)
-
-    def format_table_to_dict(
-        self,
-        table: TableParsed,
-        use_widget_label: bool = False,
-    ) -> List[Dict[str, str]]:
-        rows = []
-        for row in table.table:
-            row_data = {}
-            for i, cell in enumerate(row):
-                cell_str = self._extract_text(cell, use_widget_label)
-                if table.header:
-                    if cell_str:
-                        row_data[table.header[i]] = cell_str
-                    else:
-                        row_data[table.header[i]] = "N/A"
-            rows.append(row_data)
-
-        return rows
-
     def _process_scraped_tables(
         self, table_rows: List[LinePDF], page: PagePDF
     ) -> None:
@@ -248,15 +260,3 @@ class TableProcessor(TableBaseProcessor):
             for table in page.parsed_tables:
                 table.table_str_rows = self._table_to_text_rows(table)
                 table.table_str_rows_for_ai = self._table_to_text_rows(table)
-
-    def process_tables(
-        self,
-        pages: List[PagePDF],
-        scraped_data: List[ScrapedPage],
-    ) -> None:
-        for i, page in enumerate(pages):
-            if scraped_data[i].tables:
-                page.scraped_tables = scraped_data[i].tables
-                table_lines = self._find_text_lines_in_tables(page)
-                self._remove_table_lines_from_page(table_lines, page)
-                self._process_scraped_tables(table_lines, page)
