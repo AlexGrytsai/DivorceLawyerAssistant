@@ -18,7 +18,7 @@ def prepare_parser_data(
 def extract_pdf_data(
     path_to_pdf: str,
     parser: ParserPDFBase,
-) -> Tuple[str, Dict[str, str]]:
+) -> Tuple[str, Dict[str, Dict[str, str]]]:
     prepare_parser_data(parser, main_scraper(path_to_pdf))
 
     return parser.document_as_text, parser.widget_data_dict
