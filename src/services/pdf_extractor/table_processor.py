@@ -7,7 +7,12 @@ from pymupdf.table import Table  # type: ignore
 from tabulate import tabulate
 
 from src.services.pdf_extractor.geometry_utils import GeometryBaseUtils
-from src.services.pdf_extractor.schemas import PagePDF, LinePDF, SpanPDF, TableParsed
+from src.services.pdf_extractor.schemas import (
+    PagePDF,
+    LinePDF,
+    SpanPDF,
+    TableParsed,
+)
 from src.services.pdf_extractor.scraper_pdf import ScrapedPage
 
 TableType: TypeAlias = List[List[List[Widget | SpanPDF]]]
@@ -147,13 +152,13 @@ class TableProcessor(TableBaseProcessor):
     @staticmethod
     def _extract_text(
         cell_data: List[fitz.Widget | SpanPDF],
-        is_for_ai: bool = False,
+        use_widget_label: bool = False,
     ) -> Optional[str]:
         cell_words = []
 
         for text in cell_data:
             if isinstance(text, fitz.Widget):
-                if is_for_ai:
+                if use_widget_label:
                     if text.field_value:
                         value = text.field_value
                     else:
@@ -170,14 +175,14 @@ class TableProcessor(TableBaseProcessor):
     def _table_to_text_rows(
         self,
         table: TableParsed,
-        is_for_ai: bool = True,
+        use_widget_label: bool = False,
     ) -> List[Tuple[str, ...]]:
         text_rows = []
 
         for row in table.table:
             text_row = []
             for cell in row:
-                cell_str = self._extract_text(cell, is_for_ai)
+                cell_str = self._extract_text(cell, use_widget_label)
                 if cell_str:
                     text_row.append(cell_str)
             if text_row:
@@ -196,7 +201,7 @@ class TableProcessor(TableBaseProcessor):
         self,
         table: TableParsed,
     ) -> str:
-        table_data = self.format_table_to_dict(table, is_widget=True)
+        table_data = self.format_table_to_dict(table)
 
         if not table_data:
             return ""
@@ -214,13 +219,13 @@ class TableProcessor(TableBaseProcessor):
     def format_table_to_dict(
         self,
         table: TableParsed,
-        is_widget: bool = False,
+        use_widget_label: bool = False,
     ) -> List[Dict[str, str]]:
         rows = []
         for row in table.table:
             row_data = {}
             for i, cell in enumerate(row):
-                cell_str = self._extract_text(cell, is_widget)
+                cell_str = self._extract_text(cell, use_widget_label)
                 if table.header:
                     if cell_str:
                         row_data[table.header[i]] = cell_str
@@ -242,9 +247,7 @@ class TableProcessor(TableBaseProcessor):
 
             for table in page.parsed_tables:
                 table.table_str_rows = self._table_to_text_rows(table)
-                table.table_str_rows_for_ai = self._table_to_text_rows(
-                    table, is_for_ai=True
-                )
+                table.table_str_rows_for_ai = self._table_to_text_rows(table)
 
     def process_tables(
         self,
