@@ -1,5 +1,5 @@
 import json
-from abc import ABC
+from abc import ABC, abstractmethod
 from typing import Dict, Union
 
 from openai import (
@@ -10,7 +10,11 @@ from src.services.ai_service.decorators_for_ai import reconnection_async
 
 
 class AIBaseValidator(ABC):
-    pass
+    @abstractmethod
+    async def analyze_text(
+        self, prompt: str, assistant_prompt: str
+    ) -> Dict[str, Union[str, Dict[str, str]]]:
+        pass
 
 
 class OpenAITextAnalyzer(AIBaseValidator):
@@ -19,7 +23,7 @@ class OpenAITextAnalyzer(AIBaseValidator):
         self._openai_model = openai_model
 
     @reconnection_async(attempts=10)
-    async def analyze_text_with_ai(
+    async def analyze_text(
         self,
         prompt: str,
         assistant_prompt: str,
