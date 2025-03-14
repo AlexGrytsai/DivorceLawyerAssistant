@@ -1,1 +1,0 @@
-DEFAULT_PROMPT_PDF_ANALYZE = """ """
