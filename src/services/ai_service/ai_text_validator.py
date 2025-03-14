@@ -40,5 +40,6 @@ class OpenAITextAnalyzer(AIBaseValidator):
             response_format={"type": "json_object"},
             temperature=0.9,
         )
-
-        return json.loads(response.choices[0].message.content)
+        if response.choices[0].message.content:
+            return json.loads(response.choices[0].message.content)
+        return {}
