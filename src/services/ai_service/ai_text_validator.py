@@ -13,7 +13,7 @@ class AIBaseValidator(ABC):
     @abstractmethod
     async def analyze_text(
         self, prompt: str, assistant_prompt: str
-    ) -> Dict[str, Union[str, Dict[str, str]]]:
+    ) -> Dict[str, str]:
         pass
 
 
