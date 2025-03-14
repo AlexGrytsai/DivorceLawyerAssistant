@@ -36,9 +36,9 @@ class TextBaseValidator(ABC):
         pass
 
     @abstractmethod
-    def validate_widgets(
+    async def validate_widgets(
         self, widgets: Dict[str, Dict[str, str]]
-    ) -> Dict[str, Dict[str, str]]:
+    ) -> Dict[str, str]:
         pass
 
 
