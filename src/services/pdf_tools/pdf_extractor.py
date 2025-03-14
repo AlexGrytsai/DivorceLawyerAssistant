@@ -1,7 +1,7 @@
 from typing import List, Dict, Tuple
 
-from src.services.pdf_extractor.parser_pdf import ParserPDFBase
-from src.services.pdf_extractor.scraper_pdf import ScrapedPage, ScraperPDF
+from src.services.pdf_tools.parser_pdf import ParserPDFBase
+from src.services.pdf_tools.scraper_pdf import ScrapedPage, ScraperPDF
 
 
 def main_scraper(path_to_pdf: str) -> List[ScrapedPage]:

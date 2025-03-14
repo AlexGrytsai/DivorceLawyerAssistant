@@ -1,50 +1,29 @@
-VALIDATE_DATA_FORMAT_PROMPT = """
-You are an expert in processing and validating data for official U.S. documents. 
+GET_ADDRESS_PHONE_NUMBER_PROMPT = """
+You are an expert in processing and analyzing data for official U.S. documents.  
 Your task is to analyze the given JSON dictionary and identify the following:
 
-1. Physical addresses in the U.S.
-2. Dates
-3. Phone numbers
+1. **Physical addresses** in the U.S. (extract all addresses, including street addresses, city/state/ZIP, and even partially formatted or incomplete addresses).
+2. **Dates** (extract all dates, regardless of format, including those written as "October 30th, 2032", "02/01/2025", etc.).
+3. **Phone numbers** (extract all phone numbers, even if they have different delimiters like parentheses, hyphens, or spaces).
 
-Once identified, check if they comply with official U.S. formatting standards:
-
-- **Physical addresses:**  
-  - Must include a house number, street name, city, state (two-letter code), and ZIP code.  
-  - Should be consistently formatted (e.g., `123 Main St, New York, NY 10001`).  
-  - No unnecessary spaces or punctuation marks.  
-
-- **Dates:**  
-  - Must be in `MM/DD/YYYY` format if numeric.  
-  - Must be in `Month DD, YYYY` format if written out (e.g., `October 30, 2032`).  
-  - Must be logically correct (e.g., `02/30/2023` is invalid since February has no 30th day).  
-
-- **Phone numbers:**  
-  - Must follow the format `(XXX) XXX-XXXX` (e.g., `(770) 733-9281`).  
-  - No extra spaces, dots, or other separators.  
-
-Return a JSON dictionary **containing only the keys with errors**, in the following format:
+Return a JSON dictionary containing only the keys with values, in the following format:
 
 {
-    "old_key": "description of the issue",
-    "old_key": "description of the issue",
-    "old_key": "description of the issue"
+  "addresses": {
+    "old_key": "found address",
+  },
+  "dates": {
+    "old_key": "found date"
+  },
+  "phone_numbers": {
+    "old_key": "found phone number",
+  }
 }
+If there are no values for a category (addresses, dates, or phone numbers), do not include that key in the final JSON.
 
-If there are no errors, return {}.
-
-Example input:
-{
-  "fl_address_street": "2123 gascon rd Sw",
-  "birth date of minor child or children": "01/30/2013",
-  "fl_phone_number": "770-733-9281"
-}
-Expected output:
-{
-    "fl_address_street": "The street name should be capitalized, and 'Rd' should be shortened to 'Rd.'",
-    "fl_phone_number": "The phone number should be in the format (XXX) XXX-XXXX"
-}
-Important:
-Ignore values that already comply with the standards.
-If a value contains multiple errors, list them all in the error description.
-Do not correct the values yourself—only provide error descriptions.
+Additional notes:
+Ensure all addresses are captured, including street addresses, city/state/ZIP, and any other related fields.
+Extract all dates, even if they are in non-standard formats like "February 1st, 2025" or "October 30th, 2032".
+Extract all phone numbers, regardless of format (including country code, spaces, parentheses, etc.).
+If no values are found for addresses, dates, or phone numbers, do not include the respective key in the final output.
 """

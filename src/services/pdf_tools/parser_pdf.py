@@ -3,12 +3,12 @@ from typing import List, Dict, Any, TypeAlias
 
 import pymupdf as fitz  # type: ignore
 
-from src.services.pdf_extractor.page_formatter import PageFormatterBase
-from src.services.pdf_extractor.schemas import DocumentPDF
-from src.services.pdf_extractor.scraper_pdf import ScrapedPage
-from src.services.pdf_extractor.table_processor import TableBaseProcessor
-from src.services.pdf_extractor.text_processor import TextBaseProcessor
-from src.services.pdf_extractor.widger_processor import WidgetSpanBaseProcessor
+from src.services.pdf_tools.page_formatter import PageFormatterBase
+from src.services.pdf_tools.schemas import DocumentPDF
+from src.services.pdf_tools.scraper_pdf import ScrapedPage
+from src.services.pdf_tools.table_processor import TableBaseProcessor
+from src.services.pdf_tools.text_processor import TextBaseProcessor
+from src.services.pdf_tools.widger_processor import WidgetSpanBaseProcessor
 
 LineType: TypeAlias = List[Dict[str, Any]] | fitz.Widget
 

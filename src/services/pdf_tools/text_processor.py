@@ -4,14 +4,14 @@ from typing import Optional, List, Dict, Any, Union, TypeAlias, Set
 import pymupdf as fitz  # type: ignore
 from pymupdf import Widget  # type: ignore
 
-from src.services.pdf_extractor.geometry_utils import GeometryBaseUtils
-from src.services.pdf_extractor.schemas import (
-    PagePDF,
-    LinePDF,
+from src.services.pdf_tools.geometry_utils import GeometryBaseUtils
+from src.services.pdf_tools.schemas import (
     SpanPDF,
     TableParsed,
+    LinePDF,
+    PagePDF,
 )
-from src.services.pdf_extractor.scraper_pdf import ScrapedPage
+from src.services.pdf_tools.scraper_pdf import ScrapedPage
 
 LineType: TypeAlias = List[Union[SpanPDF, fitz.Widget]]
 

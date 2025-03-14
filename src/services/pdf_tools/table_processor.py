@@ -6,15 +6,15 @@ from pymupdf import Widget  # type: ignore
 from pymupdf.table import Table  # type: ignore
 from tabulate import tabulate
 
-from src.services.pdf_extractor.geometry_utils import GeometryBaseUtils
-from src.services.pdf_extractor.schemas import (
-    PagePDF,
-    LinePDF,
+from src.services.pdf_tools.geometry_utils import GeometryBaseUtils
+from src.services.pdf_tools.schemas import (
     SpanPDF,
     TableParsed,
+    PagePDF,
+    LinePDF,
 )
-from src.services.pdf_extractor.scraper_pdf import ScrapedPage
-from src.services.pdf_extractor.widger_processor import WidgetSpanBaseProcessor
+from src.services.pdf_tools.scraper_pdf import ScrapedPage
+from src.services.pdf_tools.widger_processor import WidgetSpanBaseProcessor
 
 TableType: TypeAlias = List[List[List[Widget | SpanPDF]]]
 

@@ -4,9 +4,9 @@ from typing import Optional, List, Dict
 import pymupdf as fitz  # type: ignore
 from pymupdf import Widget  # type: ignore
 
-from src.services.pdf_extractor.geometry_utils import GeometryBaseUtils
-from src.services.pdf_extractor.schemas import SpanPDF, LinePDF
-from src.services.pdf_extractor.text_processor import TextBaseProcessor
+from src.services.pdf_tools.geometry_utils import GeometryBaseUtils
+from src.services.pdf_tools.schemas import LinePDF, SpanPDF
+from src.services.pdf_tools.text_processor import TextBaseProcessor
 
 
 class WidgetSpanBaseProcessor(ABC):
