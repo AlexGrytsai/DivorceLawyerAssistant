@@ -13,7 +13,7 @@ class AIBaseValidator(ABC):
     @abstractmethod
     async def analyze_text(
         self, prompt: str, assistant_prompt: str
-    ) -> Dict[str, str]:
+    ) -> Dict[str, Dict[str, str]]:
         pass
 
 
@@ -27,7 +27,7 @@ class OpenAITextAnalyzer(AIBaseValidator):
         self,
         prompt: str,
         assistant_prompt: str,
-    ) -> Dict[str, str]:
+    ) -> Dict[str, Dict[str, str]]:
         response = await self._openai_client.chat.completions.create(
             model=self._openai_model,
             messages=[
@@ -38,7 +38,7 @@ class OpenAITextAnalyzer(AIBaseValidator):
                 {"role": "user", "content": prompt},
             ],
             response_format={"type": "json_object"},
-            temperature=0.9,
+            temperature=1,
         )
         if response.choices[0].message.content:
             return json.loads(response.choices[0].message.content)
