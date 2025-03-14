@@ -28,14 +28,6 @@ class TextBaseValidator(ABC):
         pass
 
     @abstractmethod
-    def address_validator(self, address: str) -> Tuple[bool, str]:
-        pass
-
-    @abstractmethod
-    def phone_number_validator(self, phone_number: str) -> Tuple[bool, str]:
-        pass
-
-    @abstractmethod
     async def validate_widgets(
         self, widgets: Dict[str, Dict[str, str]]
     ) -> Dict[str, str]:
@@ -48,12 +40,6 @@ class TextWidgetValidatorUseAI(TextBaseValidator):
 
     def __init__(self, ai_assistant: OpenAITextAnalyzer) -> None:
         self._ai_assistant = ai_assistant
-
-    def address_validator(self, address: str) -> Tuple[bool, str]:
-        pass
-
-    def phone_number_validator(self, phone_number: str) -> Tuple[bool, str]:
-        pass
 
     @staticmethod
     def validate_line_length(line: str, max_length: int) -> Tuple[bool, str]:
