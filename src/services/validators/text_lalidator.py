@@ -75,7 +75,7 @@ class TextWidgetValidatorUseAI(TextBaseValidator):
 
     async def validate_widgets(
         self, widgets: Dict[str, Dict[str, str]]
-    ) -> Dict[str, Dict[str, str]]:
+    ) -> Dict[str, str]:
         errors_in_widgets = {}
         widgets_for_ai = {}
         for place_of_widget, value in widgets.items():
@@ -85,20 +85,16 @@ class TextWidgetValidatorUseAI(TextBaseValidator):
                         widget_value
                     )
                     if not is_valid_email:
-                        errors_in_widgets[widget_name] = {
-                            "Email": error_message
-                        }
+                        errors_in_widgets[widget_name] = error_message
                 elif not self.validate_line_length(
                     widget_value, self._get_widget_max_length(place_of_widget)
                 ):
-                    errors_in_widgets[widget_name] = {
-                        "Max length": "Perhaps the line is too long"
-                    }
+                    errors_in_widgets[widget_name] = (
+                        "Perhaps the line is too long"
+                    )
 
                 elif self.is_caps_lock_on(widget_value):
-                    errors_in_widgets[widget_name] = {
-                        "Caps lock": "Caps lock is on"
-                    }
+                    errors_in_widgets[widget_name] = "Caps lock is on"
                 else:
                     widgets_for_ai[widget_name] = widget_value
         errors_from_ai = await self._check_widget_with_ai(
@@ -106,9 +102,8 @@ class TextWidgetValidatorUseAI(TextBaseValidator):
             ai_assistant=self._ai_assistant,
             assistant_prompt=VALIDATE_DATA_FORMAT_PROMPT,
         )
-        errors_in_widgets.update(errors_from_ai["address"])
-        errors_in_widgets.update(errors_from_ai["date"])
-        errors_in_widgets.update(errors_from_ai["phone_number"])
+        errors_in_widgets.update(errors_from_ai)
+
         return errors_in_widgets
 
     @staticmethod
@@ -116,7 +111,7 @@ class TextWidgetValidatorUseAI(TextBaseValidator):
         widgets: Dict[str, str],
         ai_assistant: AIBaseValidator,
         assistant_prompt: str,
-    ) -> Dict[str, Dict[str, str]]:
+    ) -> Dict[str, str]:
         prompt = (
             f"Analyze the following data and return a JSON object with "
             f"errors only:\n"
