@@ -27,7 +27,7 @@ class OpenAITextAnalyzer(AIBaseValidator):
         self,
         prompt: str,
         assistant_prompt: str,
-    ) -> Dict[str, Union[str, Dict[str, str]]]:
+    ) -> Dict[str, str]:
         response = await self._openai_client.chat.completions.create(
             model=self._openai_model,
             messages=[
