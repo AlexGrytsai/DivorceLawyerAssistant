@@ -25,15 +25,9 @@ Once identified, check if they comply with official U.S. formatting standards:
 Return a JSON dictionary **containing only the keys with errors**, in the following format:
 
 {
-  "address": {
+    "old_key": "description of the issue",
+    "old_key": "description of the issue",
     "old_key": "description of the issue"
-  },
-  "date": {
-    "old_key": "description of the issue"
-  },
-  "phone_number": {
-    "old_key": "description of the issue"
-  }
 }
 
 If there are no errors, return {}.
@@ -46,12 +40,8 @@ Example input:
 }
 Expected output:
 {
-  "address": {
-    "fl_address_street": "The street name should be capitalized, and 'Rd' should be shortened to 'Rd.'"
-  },
-  "phone_number": {
+    "fl_address_street": "The street name should be capitalized, and 'Rd' should be shortened to 'Rd.'",
     "fl_phone_number": "The phone number should be in the format (XXX) XXX-XXXX"
-  }
 }
 Important:
 Ignore values that already comply with the standards.
