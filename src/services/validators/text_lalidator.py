@@ -1,9 +1,8 @@
 import json
 from abc import ABC, abstractmethod
-from typing import Dict, Tuple, AnyStr, Union
+from typing import Dict, Tuple
 
 from email_validator import validate_email, EmailNotValidError
-from openai import AsyncOpenAI
 
 from src.services.ai_service.ai_text_validator import (
     OpenAITextAnalyzer,
@@ -49,6 +48,12 @@ class TextWidgetValidatorUseAI(TextBaseValidator):
 
     def __init__(self, ai_assistant: OpenAITextAnalyzer) -> None:
         self._ai_assistant = ai_assistant
+
+    def address_validator(self, address: str) -> bool:
+        pass
+
+    def phone_number_validator(self, phone_number: str) -> bool:
+        pass
 
     @staticmethod
     def validate_line_length(line: str, max_length: int) -> bool:
@@ -96,11 +101,14 @@ class TextWidgetValidatorUseAI(TextBaseValidator):
                     }
                 else:
                     widgets_for_ai[widget_name] = widget_value
-        address, date, phone_number = await self._check_widget_with_ai(
+        errors_from_ai = await self._check_widget_with_ai(
             widgets=widgets_for_ai,
             ai_assistant=self._ai_assistant,
             assistant_prompt=VALIDATE_DATA_FORMAT_PROMPT,
         )
+        errors_in_widgets.update(errors_from_ai["address"])
+        errors_in_widgets.update(errors_from_ai["date"])
+        errors_in_widgets.update(errors_from_ai["phone_number"])
         return errors_in_widgets
 
     @staticmethod
@@ -108,7 +116,7 @@ class TextWidgetValidatorUseAI(TextBaseValidator):
         widgets: Dict[str, str],
         ai_assistant: AIBaseValidator,
         assistant_prompt: str,
-    ) -> Dict[str, str]:
+    ) -> Dict[str, Dict[str, str]]:
         prompt = (
             f"Analyze the following data and return a JSON object with "
             f"errors only:\n"
