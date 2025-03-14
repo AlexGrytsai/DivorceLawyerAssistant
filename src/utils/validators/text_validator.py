@@ -1,5 +1,6 @@
 import json
 from abc import ABC, abstractmethod
+from datetime import datetime
 from typing import Dict, Tuple
 
 from email_validator import validate_email, EmailNotValidError
@@ -8,7 +9,7 @@ from src.services.ai_service.ai_text_validator import (
     OpenAITextAnalyzer,
     AIBaseValidator,
 )
-from src.services.ai_service.prompts import VALIDATE_DATA_FORMAT_PROMPT
+from src.services.ai_service.prompts import GET_ADDRESS_PHONE_NUMBER_PROMPT
 
 
 class TextBaseValidator(ABC):
@@ -27,6 +28,11 @@ class TextBaseValidator(ABC):
     @staticmethod
     @abstractmethod
     async def email_validator(email: str) -> Tuple[bool, str]:
+        pass
+
+    @staticmethod
+    @abstractmethod
+    async def date_validator(email: str) -> Tuple[bool, str]:
         pass
 
     @abstractmethod
@@ -62,10 +68,30 @@ class TextWidgetValidatorUseAI(TextBaseValidator):
         try:
             validate_email(email, check_deliverability=True)
             if not email.islower():
-                return False, "Email should be in lowercase"
+                return (
+                    False,
+                    "All letters in the email address must be lowercase.",
+                )
             return True, ""
         except EmailNotValidError as exc:
             return False, str(exc)
+
+    @staticmethod
+    async def date_validator(date_str: str) -> Tuple[bool, str]:
+        print(date_str)
+        try:
+            datetime.strptime(date_str, "%m/%d/%Y")
+            return True, ""
+        except ValueError:
+            pass
+
+        try:
+            datetime.strptime(date_str, "%B %d, %Y")
+            return True, ""
+        except ValueError:
+            pass
+
+        return False, "The date is indicated in the wrong format"
 
     async def validate_widgets(
         self, widgets: Dict[str, Dict[str, str]]
@@ -98,13 +124,16 @@ class TextWidgetValidatorUseAI(TextBaseValidator):
                     elif is_valid_length and not is_caps_locked:
                         widgets_for_ai[widget_name] = widget_value
 
-        errors_from_ai = await self._check_widget_with_ai(
+        address_dates_phones = await self._check_widget_with_ai(
             widgets=widgets_for_ai,
             ai_assistant=self._ai_assistant,
-            assistant_prompt=VALIDATE_DATA_FORMAT_PROMPT,
+            assistant_prompt=GET_ADDRESS_PHONE_NUMBER_PROMPT,
         )
-
-        errors_in_widgets.update(errors_from_ai)
+        if address_dates_phones.get("dates"):
+            for date in address_dates_phones["dates"].values():
+                is_valid_date, error_message = await self.date_validator(date)
+                if not is_valid_date:
+                    errors_in_widgets[date] = error_message
 
         return errors_in_widgets
 
@@ -113,7 +142,7 @@ class TextWidgetValidatorUseAI(TextBaseValidator):
         widgets: Dict[str, str],
         ai_assistant: AIBaseValidator,
         assistant_prompt: str,
-    ) -> Dict[str, str]:
+    ) -> Dict[str, Dict[str, str]]:
         prompt = (
             f"Analyze the following data and return a JSON object with "
             f"errors only:\n"
