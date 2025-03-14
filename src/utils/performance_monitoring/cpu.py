@@ -48,9 +48,10 @@ def cpu_monitor_decorator(
 ) -> Callable:
     def decorator(func: Callable) -> Callable:
         @functools.wraps(func)
-        def wrapper(*args, **kwargs):
+        async def wrapper(*args, **kwargs):
             if not is_enabled:
-                return func(*args, **kwargs)
+                result = await func(*args, **kwargs)
+                return result
 
             global running, cpu_usage_data
 
@@ -62,7 +63,7 @@ def cpu_monitor_decorator(
             cpu_thread.start()
 
             start_time = time.perf_counter()
-            result = func(*args, **kwargs)
+            result = await func(*args, **kwargs)
             end_time = time.perf_counter()
 
             running = False
