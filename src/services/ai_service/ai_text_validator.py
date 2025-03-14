@@ -1,6 +1,6 @@
 import json
 from abc import ABC
-from typing import Dict
+from typing import Dict, Union
 
 from openai import (
     AsyncOpenAI,
@@ -23,7 +23,7 @@ class OpenAITextAnalyzer(AIBaseValidator):
         self,
         prompt: str,
         assistant_prompt: str,
-    ) -> Dict[str, str]:
+    ) -> Dict[str, Union[str, Dict[str, str]]]:
         response = await self._openai_client.chat.completions.create(
             model=self._openai_model,
             messages=[
