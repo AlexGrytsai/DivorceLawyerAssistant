@@ -56,12 +56,16 @@ class TextWidgetValidatorUseAI(TextBaseValidator):
         pass
 
     @staticmethod
-    def validate_line_length(line: str, max_length: int) -> bool:
-        return len(line) <= max_length
+    def validate_line_length(line: str, max_length: int) -> Tuple[bool, str]:
+        if len(line) <= max_length:
+            return True, ""
+        return False, "Line length is too long"
 
     @staticmethod
-    def is_caps_lock_on(line: str) -> bool:
-        return line.isupper()
+    def is_caps_lock_on(line: str) -> Tuple[bool, str]:
+        if line.isupper():
+            return True, "Caps lock is on"
+        return False, ""
 
     @staticmethod
     def email_validator(email: str) -> Tuple[bool, str]:
@@ -86,22 +90,27 @@ class TextWidgetValidatorUseAI(TextBaseValidator):
                     )
                     if not is_valid_email:
                         errors_in_widgets[widget_name] = error_message
-                elif not self.validate_line_length(
-                    widget_value, self._get_widget_max_length(place_of_widget)
-                ):
-                    errors_in_widgets[widget_name] = (
-                        "Perhaps the line is too long"
-                    )
-
-                elif self.is_caps_lock_on(widget_value):
-                    errors_in_widgets[widget_name] = "Caps lock is on"
                 else:
-                    widgets_for_ai[widget_name] = widget_value
+                    is_valid_length, error_message = self.validate_line_length(
+                        widget_value, self._widget_max_length(place_of_widget)
+                    )
+                    if not is_valid_length:
+                        errors_in_widgets[widget_name] = error_message
+
+                    is_caps_locked, caps_message = self.is_caps_lock_on(
+                        widget_value
+                    )
+                    if is_caps_locked:
+                        errors_in_widgets[widget_name] = caps_message
+                    elif is_valid_length and not is_caps_locked:
+                        widgets_for_ai[widget_name] = widget_value
+
         errors_from_ai = await self._check_widget_with_ai(
             widgets=widgets_for_ai,
             ai_assistant=self._ai_assistant,
             assistant_prompt=VALIDATE_DATA_FORMAT_PROMPT,
         )
+
         errors_in_widgets.update(errors_from_ai)
 
         return errors_in_widgets
@@ -126,7 +135,7 @@ class TextWidgetValidatorUseAI(TextBaseValidator):
 
         return errors
 
-    def _get_widget_max_length(self, place_of_widget: str) -> int:
+    def _widget_max_length(self, place_of_widget: str) -> int:
         if place_of_widget == "Table":
             return self.MAX_LENGTH_IN_TABLE
         elif place_of_widget == "Text":
