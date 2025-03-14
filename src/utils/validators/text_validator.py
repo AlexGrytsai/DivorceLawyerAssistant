@@ -124,7 +124,7 @@ class TextWidgetValidatorUseAI(TextBaseValidator):
                     elif is_valid_length and not is_caps_locked:
                         widgets_for_ai[widget_name] = widget_value
 
-        address_dates_phones = await self._check_widget_with_ai(
+        address_dates_phones = await self._check_widget_data_with_ai(
             widgets=widgets_for_ai,
             ai_assistant=self._ai_assistant,
             assistant_prompt=GET_ADDRESS_PHONE_NUMBER_PROMPT,
@@ -138,24 +138,21 @@ class TextWidgetValidatorUseAI(TextBaseValidator):
         return errors_in_widgets
 
     @staticmethod
-    async def _check_widget_with_ai(
+    async def _check_widget_data_with_ai(
         widgets: Dict[str, str],
         ai_assistant: AIBaseValidator,
         assistant_prompt: str,
     ) -> Dict[str, Dict[str, str]]:
         prompt = (
-            f"Analyze the following data and return a JSON object with "
-            f"errors only:\n"
-            f"{json.dumps(widgets)}\n"
-            f"Check if addresses, dates, and phone numbers are correctly "
-            f"formatted according to U.S. official document standards."
+            f"Analyze the following JSON dictionary:\n"
+            f"{json.dumps(widgets)}"
         )
-        errors = await ai_assistant.analyze_text(
+        address_dates_phones = await ai_assistant.analyze_text(
             prompt=prompt,
             assistant_prompt=assistant_prompt,
         )
 
-        return errors
+        return address_dates_phones
 
     def _widget_max_length(self, place_of_widget: str) -> int:
         if place_of_widget == "Table":
