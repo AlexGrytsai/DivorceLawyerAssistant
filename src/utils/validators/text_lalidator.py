@@ -14,25 +14,25 @@ from src.services.ai_service.prompts import VALIDATE_DATA_FORMAT_PROMPT
 class TextBaseValidator(ABC):
     @staticmethod
     @abstractmethod
-    def validate_line_length(line: str, max_length: int) -> bool:
+    def validate_line_length(line: str, max_length: int) -> Tuple[bool, str]:
         pass
 
     @staticmethod
     @abstractmethod
-    def is_caps_lock_on(line: str) -> bool:
+    def is_caps_lock_on(line: str) -> Tuple[bool, str]:
         pass
 
     @staticmethod
     @abstractmethod
-    def email_validator(email: str) -> bool:
+    def email_validator(email: str) -> Tuple[bool, str]:
         pass
 
     @abstractmethod
-    def address_validator(self, address: str) -> bool:
+    def address_validator(self, address: str) -> Tuple[bool, str]:
         pass
 
     @abstractmethod
-    def phone_number_validator(self, phone_number: str) -> bool:
+    def phone_number_validator(self, phone_number: str) -> Tuple[bool, str]:
         pass
 
     @abstractmethod
@@ -49,10 +49,10 @@ class TextWidgetValidatorUseAI(TextBaseValidator):
     def __init__(self, ai_assistant: OpenAITextAnalyzer) -> None:
         self._ai_assistant = ai_assistant
 
-    def address_validator(self, address: str) -> bool:
+    def address_validator(self, address: str) -> Tuple[bool, str]:
         pass
 
-    def phone_number_validator(self, phone_number: str) -> bool:
+    def phone_number_validator(self, phone_number: str) -> Tuple[bool, str]:
         pass
 
     @staticmethod
