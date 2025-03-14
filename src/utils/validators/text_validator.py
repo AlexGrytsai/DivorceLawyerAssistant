@@ -14,17 +14,19 @@ from src.services.ai_service.prompts import VALIDATE_DATA_FORMAT_PROMPT
 class TextBaseValidator(ABC):
     @staticmethod
     @abstractmethod
-    def validate_line_length(line: str, max_length: int) -> Tuple[bool, str]:
+    async def validate_line_length(
+        line: str, max_length: int
+    ) -> Tuple[bool, str]:
         pass
 
     @staticmethod
     @abstractmethod
-    def is_caps_lock_on(line: str) -> Tuple[bool, str]:
+    async def is_caps_lock_on(line: str) -> Tuple[bool, str]:
         pass
 
     @staticmethod
     @abstractmethod
-    def email_validator(email: str) -> Tuple[bool, str]:
+    async def email_validator(email: str) -> Tuple[bool, str]:
         pass
 
     @abstractmethod
@@ -42,19 +44,21 @@ class TextWidgetValidatorUseAI(TextBaseValidator):
         self._ai_assistant = ai_assistant
 
     @staticmethod
-    def validate_line_length(line: str, max_length: int) -> Tuple[bool, str]:
+    async def validate_line_length(
+        line: str, max_length: int
+    ) -> Tuple[bool, str]:
         if len(line) <= max_length:
             return True, ""
         return False, "Line length is too long"
 
     @staticmethod
-    def is_caps_lock_on(line: str) -> Tuple[bool, str]:
+    async def is_caps_lock_on(line: str) -> Tuple[bool, str]:
         if line.isupper():
             return True, "Caps lock is on"
         return False, ""
 
     @staticmethod
-    def email_validator(email: str) -> Tuple[bool, str]:
+    async def email_validator(email: str) -> Tuple[bool, str]:
         try:
             validate_email(email, check_deliverability=True)
             if not email.islower():
@@ -71,19 +75,22 @@ class TextWidgetValidatorUseAI(TextBaseValidator):
         for place_of_widget, value in widgets.items():
             for widget_name, widget_value in value.items():
                 if "email" in widget_name:
-                    is_valid_email, error_message = self.email_validator(
+                    is_valid_email, error_message = await self.email_validator(
                         widget_value
                     )
                     if not is_valid_email:
                         errors_in_widgets[widget_name] = error_message
                 else:
-                    is_valid_length, error_message = self.validate_line_length(
-                        widget_value, self._widget_max_length(place_of_widget)
+                    is_valid_length, error_message = (
+                        await self.validate_line_length(
+                            widget_value,
+                            self._widget_max_length(place_of_widget),
+                        )
                     )
                     if not is_valid_length:
                         errors_in_widgets[widget_name] = error_message
 
-                    is_caps_locked, caps_message = self.is_caps_lock_on(
+                    is_caps_locked, caps_message = await self.is_caps_lock_on(
                         widget_value
                     )
                     if is_caps_locked:
