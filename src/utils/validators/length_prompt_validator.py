@@ -6,7 +6,7 @@ from src.core import settings
 def is_length_prompt_valid(prompt: str) -> bool:
     if (
         len(tiktoken.encoding_for_model(settings.BASE_AI_MODEL).encode(prompt))
-        > settings.MODEL_TOKEN_LIMITS
+        > settings.get_token_limit
     ):
         return False
 
