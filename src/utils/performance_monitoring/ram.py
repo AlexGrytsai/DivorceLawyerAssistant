@@ -48,9 +48,10 @@ def ram_monitor_decorator(
 ) -> Callable:
     def decorator(func: Callable) -> Callable:
         @functools.wraps(func)
-        def wrapper(*args, **kwargs):
+        async def wrapper(*args, **kwargs):
             if not is_enabled:
-                return func(*args, **kwargs)
+                result = await func(*args, **kwargs)
+                return result
 
             global monitoring, ram_usage
 
@@ -62,7 +63,7 @@ def ram_monitor_decorator(
 
             try:
                 start_time = time.perf_counter()
-                result = func(*args, **kwargs)
+                result = await func(*args, **kwargs)
                 end_time = time.perf_counter()
             finally:
                 monitoring = False
