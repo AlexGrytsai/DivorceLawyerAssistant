@@ -68,33 +68,6 @@ class TextWidgetValidatorUseAI(TextBaseValidator):
         except EmailNotValidError as exc:
             return False, str(exc)
 
-    def _get_widget_max_length(self, place_of_widget: str) -> int:
-        if place_of_widget == "Table":
-            return self.MAX_LENGTH_IN_TABLE
-        elif place_of_widget == "Text":
-            return self.MAX_LENGTH_IN_TEXT
-        raise ValueError(f"Unknown widget type: {place_of_widget}")
-
-    @staticmethod
-    async def _check_widget_with_ai(
-        widgets: Dict[str, str],
-        ai_assistant: AIBaseValidator,
-        assistant_prompt: str,
-    ) -> Dict[str, Union[str, Dict[str, str]]]:
-        prompt = (
-            f"Analyze the following data and return a JSON object with "
-            f"errors only:\n"
-            f"{json.dumps(widgets)}\n"
-            f"Check if addresses, dates, and phone numbers are correctly "
-            f"formatted according to U.S. official document standards."
-        )
-        errors = await ai_assistant.analyze_text(
-            prompt=prompt,
-            assistant_prompt=assistant_prompt,
-        )
-
-        return errors
-
     async def validate_widgets(
         self, widgets: Dict[str, Dict[str, str]]
     ) -> Dict[str, Dict[str, str]]:
@@ -123,9 +96,36 @@ class TextWidgetValidatorUseAI(TextBaseValidator):
                     }
                 else:
                     widgets_for_ai[widget_name] = widget_value
-        await self._check_widget_with_ai(
+        address, date, phone_number = await self._check_widget_with_ai(
             widgets=widgets_for_ai,
             ai_assistant=self._ai_assistant,
             assistant_prompt=VALIDATE_DATA_FORMAT_PROMPT,
         )
         return errors_in_widgets
+
+    @staticmethod
+    async def _check_widget_with_ai(
+        widgets: Dict[str, str],
+        ai_assistant: AIBaseValidator,
+        assistant_prompt: str,
+    ) -> Dict[str, str]:
+        prompt = (
+            f"Analyze the following data and return a JSON object with "
+            f"errors only:\n"
+            f"{json.dumps(widgets)}\n"
+            f"Check if addresses, dates, and phone numbers are correctly "
+            f"formatted according to U.S. official document standards."
+        )
+        errors = await ai_assistant.analyze_text(
+            prompt=prompt,
+            assistant_prompt=assistant_prompt,
+        )
+
+        return errors
+
+    def _get_widget_max_length(self, place_of_widget: str) -> int:
+        if place_of_widget == "Table":
+            return self.MAX_LENGTH_IN_TABLE
+        elif place_of_widget == "Text":
+            return self.MAX_LENGTH_IN_TEXT
+        raise ValueError(f"Unknown widget type: {place_of_widget}")
