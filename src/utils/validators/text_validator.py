@@ -84,7 +84,6 @@ class TextWidgetValidatorUseAI(TextBaseValidator):
 
     @staticmethod
     async def date_validator(date_str: str) -> Tuple[bool, str]:
-        print(date_str)
         try:
             datetime.strptime(date_str, "%m/%d/%Y")
             return True, ""
@@ -144,21 +143,23 @@ class TextWidgetValidatorUseAI(TextBaseValidator):
             assistant_prompt=GET_ADDRESS_PHONE_NUMBER_PROMPT,
         )
         if address_dates_phones.get("dates"):
-            for date in address_dates_phones["dates"].values():
+            for key, date in address_dates_phones["dates"].items():
                 is_valid_date, error_message = await self.date_validator(date)
                 if not is_valid_date:
-                    errors_in_widgets[date] = error_message
+                    errors_in_widgets[key] = error_message
 
         if address_dates_phones.get("addresses"):
             pass
 
         if address_dates_phones.get("phone_numbers"):
-            for phone_number in address_dates_phones["phone_numbers"].values():
+            for key, phone_number in address_dates_phones[
+                "phone_numbers"
+            ].items():
                 is_valid_phone, error_message = (
                     await self.phone_number_validator(phone_number)
                 )
                 if not is_valid_phone:
-                    errors_in_widgets[phone_number] = error_message
+                    errors_in_widgets[key] = error_message
 
         return errors_in_widgets
 
