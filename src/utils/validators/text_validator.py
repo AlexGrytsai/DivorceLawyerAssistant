@@ -1,4 +1,5 @@
 import json
+import re
 from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Dict, Tuple
@@ -33,6 +34,11 @@ class TextBaseValidator(ABC):
     @staticmethod
     @abstractmethod
     async def date_validator(email: str) -> Tuple[bool, str]:
+        pass
+
+    @staticmethod
+    @abstractmethod
+    async def phone_number_validator(email: str) -> Tuple[bool, str]:
         pass
 
     @abstractmethod
@@ -93,6 +99,14 @@ class TextWidgetValidatorUseAI(TextBaseValidator):
 
         return False, "The date is indicated in the wrong format"
 
+    @staticmethod
+    async def phone_number_validator(phone_number: str) -> Tuple[bool, str]:
+        pattern = r"^\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}$"
+
+        if re.match(pattern, phone_number):
+            return True, ""
+        return False, "Phone number is not valid"
+
     async def validate_widgets(
         self, widgets: Dict[str, Dict[str, str]]
     ) -> Dict[str, str]:
@@ -134,6 +148,17 @@ class TextWidgetValidatorUseAI(TextBaseValidator):
                 is_valid_date, error_message = await self.date_validator(date)
                 if not is_valid_date:
                     errors_in_widgets[date] = error_message
+
+        if address_dates_phones.get("addresses"):
+            pass
+
+        if address_dates_phones.get("phone_numbers"):
+            for phone_number in address_dates_phones["phone_numbers"].values():
+                is_valid_phone, error_message = (
+                    await self.phone_number_validator(phone_number)
+                )
+                if not is_valid_phone:
+                    errors_in_widgets[phone_number] = error_message
 
         return errors_in_widgets
 
