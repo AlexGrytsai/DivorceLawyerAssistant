@@ -45,6 +45,11 @@ class TextBaseValidator(ABC):
     async def phone_number_validator(email: str) -> Tuple[bool, str]:
         pass
 
+    @staticmethod
+    @abstractmethod
+    async def address_validator(email: str) -> Tuple[bool, str]:
+        pass
+
     @abstractmethod
     async def validate_widgets(
         self, widgets: Dict[str, Dict[str, str]]
@@ -111,6 +116,57 @@ class TextWidgetValidatorUseAI(TextBaseValidator):
             return True, ""
         return False, "Phone number is not valid"
 
+    @staticmethod
+    async def address_validator(address: str) -> Tuple[bool, str]:
+        full_address_pattern = re.compile(
+            r"^(?P<number>\d+)\s+"
+            r"(?P<street>[A-Z][a-z]+(?:\s[A-Z][a-z]+)*)\s"
+            r"(?P<type>Road|Rd|Street|St|Avenue|Ave|Boulevard|Blvd|Lane|Ln|"
+            r"Drive|Dr|Court|Ct|Place|Pl|Terrace|Ter)\s*"
+            r"(?P<direction>N|S|E|W|NE|NW|SE|SW)?\s+"
+            r"(?P<city>[A-Z][a-z]+(?:\s[A-Z][a-z]+)*)\s*,\s*"
+            r"(?P<state>[A-Z]{2})\s+"
+            r"(?P<zip>\d{5}(?:-\d{4})?)$"
+        )
+
+        street_address_pattern = re.compile(
+            r"^(?P<number>\d+)\s+"
+            r"(?P<street>[A-Z][a-z]+(?:\s[A-Z][a-z]+)*)\s"
+            r"(?P<type>Road|Rd|Street|St|Avenue|Ave|Boulevard|Blvd|Lane|Ln|"
+            r"Drive|Dr|Court|Ct|Place|Pl|Terrace|Ter)\s*"
+            r"(?P<direction>N|S|E|W|NE|NW|SE|SW)?$"
+        )
+
+        city_state_zip_pattern = re.compile(
+            r"^(?P<city>[A-Z][a-z]+(?:\s[A-Z][a-z]+)*)\s*,\s*"
+            r"(?P<state>[A-Z]{2})\s+"
+            r"(?P<zip>\d{5}(?:-\d{4})?)$"
+        )
+
+        if full_address_pattern.match(address):
+            return True, "Valid full address"
+
+        if street_address_pattern.match(address):
+            return True, "Valid street address"
+
+        if city_state_zip_pattern.match(address):
+            return True, "Valid city, state, and ZIP"
+
+        if "," in address and not re.search(r"\b[A-Z]{2}\b", address):
+            return False, "State abbreviation is missing or incorrect"
+
+        if "," in address and not re.search(r"\b\d{5}(-\d{4})?\b$", address):
+            return False, "ZIP code is missing or incorrect"
+
+        if re.search(r"^\d+", address) and not re.search(
+            r"\b(Road|Rd|Street|St|Avenue|Ave|Boulevard|Blvd|Lane|Ln|"
+            r"Drive|Dr|Court|Ct|Place|Pl|Terrace|Ter)\b",
+            address,
+        ):
+            return False, "Street type is missing or incorrect"
+
+        return False, "Invalid address format"
+
     async def validate_widgets(
         self, widgets: Dict[str, Dict[str, Union[str, fitz.Widget]]]
     ) -> Dict[str, str]:
@@ -164,7 +220,15 @@ class TextWidgetValidatorUseAI(TextBaseValidator):
                     await self._add_error_to_dict(widget_name, error_message)
 
         if address_dates_phones.get("addresses"):
-            pass
+            for widget_name, address in address_dates_phones[
+                "addresses"
+            ].items():
+                is_valid_address, error_message = await self.address_validator(
+                    address
+                )
+                if not is_valid_address:
+                    logger.debug(f"{widget_name}: {error_message}")
+                    await self._add_error_to_dict(widget_name, error_message)
 
         if address_dates_phones.get("phone_numbers"):
             for widget_name, phone_number in address_dates_phones[
