@@ -10,6 +10,8 @@ from src.services.pdf_tools.text_processor import TextBaseProcessor
 
 
 class WidgetSpanBaseProcessor(ABC):
+    __slots__ = ("_geometry_utils", "_text_processor")
+
     def __init__(
         self,
         geometry_utils: GeometryBaseUtils,
@@ -41,6 +43,7 @@ class WidgetSpanBaseProcessor(ABC):
 
 
 class WidgetSpanProcessor(WidgetSpanBaseProcessor):
+    __slots__ = ()
 
     @staticmethod
     def extract_text_widgets(

@@ -18,6 +18,8 @@ logger = logging.getLogger(__name__)
 
 
 class TextBaseValidator(ABC):
+    __slots__ = ()
+
     @staticmethod
     @abstractmethod
     async def validate_line_length(
@@ -58,6 +60,8 @@ class TextBaseValidator(ABC):
 
 
 class TextWidgetValidatorUseAI(TextBaseValidator):
+    __slots__ = ("_ai_assistant", "_errors_in_widgets")
+
     def __init__(self, ai_assistant: OpenAITextAnalyzer) -> None:
         self._ai_assistant = ai_assistant
         self._errors_in_widgets = {}

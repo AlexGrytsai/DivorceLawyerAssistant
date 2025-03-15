@@ -29,6 +29,7 @@ class BaseScraperPDF(ABC):
 
 
 class ScraperPDF(BaseScraperPDF):
+    __slots__ = ()
 
     @staticmethod
     def __extract_text_from_page(page: fitz.Page) -> List[Dict[str, Any]]:
@@ -72,6 +73,8 @@ class ScraperPDF(BaseScraperPDF):
 
 
 class ScraperWidgetFromPDF(BaseScraperPDF):
+    __slots__ = ()
+
     @handle_pymupdf_exceptions
     def scrap_data(self) -> List[ScrapedPage]:
         doc: fitz.Document = fitz.open(self.file_path)
