@@ -155,7 +155,7 @@ class TextWidgetValidatorUseAI(TextBaseValidator):
             for key, date in address_dates_phones["dates"].items():
                 is_valid_date, error_message = await self.date_validator(date)
                 if not is_valid_date:
-                    errors_in_widgets[key] = error_message
+                    await self._add_error_to_dict(key, error_message)
 
         if address_dates_phones.get("addresses"):
             pass
@@ -168,9 +168,9 @@ class TextWidgetValidatorUseAI(TextBaseValidator):
                     await self.phone_number_validator(phone_number)
                 )
                 if not is_valid_phone:
-                    errors_in_widgets[key] = error_message
+                    await self._add_error_to_dict(key, error_message)
 
-        return errors_in_widgets
+        return self._errors_in_widgets
 
     @staticmethod
     async def _check_widget_data_with_ai(
