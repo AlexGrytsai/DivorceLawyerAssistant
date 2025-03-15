@@ -1,3 +1,4 @@
+import logging
 from typing import List, Dict
 
 from src.services.pdf_tools.annotator import add_comments_to_widgets
@@ -7,6 +8,8 @@ from src.services.pdf_tools.scraper_pdf import (
     ScrapedPage,
 )
 from src.utils.validators.text_validator import TextBaseValidator
+
+logger = logging.getLogger(__name__)
 
 
 async def scrap_pdf_fields(path_to_pdf: str) -> List[ScrapedPage]:
@@ -34,11 +37,17 @@ async def main_check_pdf_fields(
     parser: ParserPDFBase,
     validator: TextBaseValidator,
 ) -> None:
+    logger.info(f"Check PDF fields for '{path_to_pdf}'...")
+
     fields = await scrap_pdf_fields(path_to_pdf)
+    logger.debug(f"Scraped fields: {fields}")
+
     await prepare_scraped_data(parser, fields)
 
     errors_in_fields = await validate_pdf_fields(
         parser.widget_data_dict, validator
     )
+
+    logger.info(f"Errors in fields on '{path_to_pdf}': {errors_in_fields}")
 
     add_comments_to_widgets(pdf_path=path_to_pdf, comments=errors_in_fields)
