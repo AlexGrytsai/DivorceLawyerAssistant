@@ -115,11 +115,12 @@ class ParserPDFWidget(ParserPDFBase):
         self, scraped_data: List[ScrapedPage], use_widget_label: bool = True
     ) -> None:
         for page in scraped_data:
-            for widget in page.widgets:
-                self._widget_dict[widget.field_name] = {
-                    "value": widget.field_value,
-                    "rect": widget.rect,
-                }
+            if page.widgets:
+                for widget in page.widgets:
+                    self._widget_dict[widget.field_name] = {
+                        "value": widget.field_value,
+                        "rect": widget.rect,
+                    }
 
     @property
     def document_as_text(self) -> str:
