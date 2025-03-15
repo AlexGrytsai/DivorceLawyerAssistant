@@ -1,3 +1,4 @@
+import json
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any, TypeAlias
 
@@ -104,3 +105,26 @@ class ParserPDF(ParserPDFBase):
                 ]
             )
         )
+
+
+class ParserPDFWidget(ParserPDFBase):
+    def __init__(self) -> None:
+        self._widget_dict: Dict[str, Dict[str, str]] = {}
+
+    def prepare_data(
+        self, scraped_data: List[ScrapedPage], use_widget_label: bool = True
+    ) -> None:
+        for page in scraped_data:
+            for widget in page.widgets:
+                self._widget_dict[widget.field_name] = {
+                    "value": widget.field_value,
+                    "rect": widget.rect,
+                }
+
+    @property
+    def document_as_text(self) -> str:
+        return json.dumps(self._widget_dict)
+
+    @property
+    def widget_data_dict(self) -> Dict[str, Dict[str, str]]:
+        return self._widget_dict
