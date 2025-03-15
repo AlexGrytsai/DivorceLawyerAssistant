@@ -111,7 +111,6 @@ class TextWidgetValidatorUseAI(TextBaseValidator):
     async def validate_widgets(
         self, widgets: Dict[str, Dict[str, Union[str, fitz.Widget]]]
     ) -> Dict[str, str]:
-        errors_in_widgets = {}
         widgets_for_ai = {}
         for widget_name, values_dict in widgets.items():
             if values_dict.get("value"):
