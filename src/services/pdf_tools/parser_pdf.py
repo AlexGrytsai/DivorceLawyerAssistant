@@ -119,7 +119,7 @@ class ParserPDFWidget(ParserPDFBase):
                 for widget in page.widgets:
                     self._widget_dict[widget.field_name] = {
                         "value": widget.field_value,
-                        "rect": widget.rect,
+                        "widget_instance": widget,
                     }
 
     @property
