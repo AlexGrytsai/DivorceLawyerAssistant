@@ -18,21 +18,15 @@ class BaseScraperPDF(ABC):
         self._file_path = file_path
 
     @property
-    @abstractmethod
     def file_path(self) -> str:
         return self._file_path
 
     @abstractmethod
-    def scrap_data(
-        self
-    ) -> List[ScrapedPage]:
+    def scrap_data(self) -> List[ScrapedPage]:
         pass
 
 
 class ScraperPDF(BaseScraperPDF):
-    @property
-    def file_path(self) -> str:
-        return self._file_path
 
     @staticmethod
     def __extract_text_from_page(page: fitz.Page) -> List[Dict[str, Any]]:
@@ -69,6 +63,19 @@ class ScraperPDF(BaseScraperPDF):
         scraped_pages: List[ScrapedPage] = []
         for page in doc:
             scraped_pages.append(self._scrap_page(page))
+        doc.close()
+
+        return scraped_pages
+
+
+class ScraperWidgetFromPDF(BaseScraperPDF):
+    def scrap_data(self) -> List[ScrapedPage]:
+        doc: fitz.Document = fitz.open(self.file_path)
+        scraped_pages: List[ScrapedPage] = []
+        for page in doc:
+            scraped_pages.append(
+                ScrapedPage([], [widget for widget in page.widgets()], [])
+            )
         doc.close()
 
         return scraped_pages
