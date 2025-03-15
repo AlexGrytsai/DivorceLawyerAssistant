@@ -1,7 +1,9 @@
 import os
-from typing import Dict, Any
+from typing import Dict
 
 import pymupdf as fitz
+
+from src.services.pdf_tools.decorators import handle_pymupdf_exceptions
 
 
 def create_new_file_name(pdf_path: str) -> str:
@@ -15,6 +17,7 @@ def get_comment_position(
     return page_width - 50, widget.rect.y0
 
 
+@handle_pymupdf_exceptions
 def add_comments_to_widgets(
     pdf_path: str,
     comments: Dict[str, str],

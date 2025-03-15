@@ -4,6 +4,8 @@ from typing import List, Dict, Any, NamedTuple
 import pymupdf as fitz  # type: ignore
 from pymupdf.table import Table  # type: ignore
 
+from src.services.pdf_tools.decorators import handle_pymupdf_exceptions
+
 
 class ScrapedPage(NamedTuple):
     text_data: List[Dict[str, Any]]
@@ -56,6 +58,7 @@ class ScraperPDF(BaseScraperPDF):
             self.__extract_tables_from_page(page),
         )
 
+    @handle_pymupdf_exceptions
     def scrap_data(
         self,
     ) -> List[ScrapedPage]:
@@ -69,6 +72,7 @@ class ScraperPDF(BaseScraperPDF):
 
 
 class ScraperWidgetFromPDF(BaseScraperPDF):
+    @handle_pymupdf_exceptions
     def scrap_data(self) -> List[ScrapedPage]:
         doc: fitz.Document = fitz.open(self.file_path)
         scraped_pages: List[ScrapedPage] = []
