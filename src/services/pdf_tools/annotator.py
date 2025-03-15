@@ -14,7 +14,7 @@ def create_new_file_name(pdf_path: str) -> str:
 def get_comment_position(
     page_width: int, widget: fitz.Widget
 ) -> tuple[int, int]:
-    return page_width - 50, widget.rect.y0
+    return page_width - 25, widget.rect.y0
 
 
 @handle_pymupdf_exceptions
