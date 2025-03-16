@@ -15,7 +15,6 @@ from src.utils.performance_monitoring.cpu import cpu_monitor_decorator
 from src.utils.performance_monitoring.ram import ram_monitor_decorator
 from src.utils.validators.text_validator import (
     TextWidgetValidatorUseAI,
-    TextBaseValidator,
 )
 
 
@@ -24,7 +23,7 @@ from src.utils.validators.text_validator import (
 async def main(
     path_to_pdf: List[str],
     parser_type: Type[ParserPDFBase],
-    validator_type: Type[TextBaseValidator],
+    validator_type: Type[TextWidgetValidatorUseAI],
     assistant_instance: OpenAITextAnalyzer,
 ) -> None:
     await main_check_pdf_fields(
