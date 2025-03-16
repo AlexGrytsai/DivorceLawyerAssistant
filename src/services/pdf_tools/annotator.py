@@ -1,7 +1,7 @@
 import os
 from typing import Dict
 
-import pymupdf as fitz
+import pymupdf as fitz  # type: ignore
 
 from src.services.pdf_tools.decorators import handle_pymupdf_exceptions
 

@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Dict, Tuple, Union
 
-import pymupdf as fitz
+import pymupdf as fitz  # type: ignore
 from email_validator import validate_email, EmailNotValidError
 
 from src.services.ai_service.ai_text_validator import (

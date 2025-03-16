@@ -3,8 +3,8 @@ import logging
 from typing import Callable
 
 from fastapi import HTTPException, status
-from pymupdf import FileNotFoundError
-from pymupdf.mupdf import FzErrorBase, FzErrorSystem
+from pymupdf import FileNotFoundError  # type: ignore
+from pymupdf.mupdf import FzErrorBase, FzErrorSystem  # type: ignore
 
 logger = logging.getLogger(__name__)
 
