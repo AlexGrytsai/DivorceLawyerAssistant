@@ -1,13 +1,18 @@
+import asyncio
 import logging
-from typing import List, Dict
+from typing import List, Dict, Type
 
+from src.services.ai_service.ai_text_validator import AIBaseValidator
 from src.services.pdf_tools.annotator import add_comments_to_widgets
 from src.services.pdf_tools.parser_pdf import ParserPDFBase
 from src.services.pdf_tools.scraper_pdf import (
     ScraperWidgetFromPDF,
     ScrapedPage,
 )
-from src.utils.validators.text_validator import TextBaseValidator
+from src.utils.validators.text_validator import (
+    TextBaseValidator,
+    TextWidgetValidatorUseAI,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -34,18 +39,18 @@ async def validate_pdf_fields(
 
 async def check_fields_in_pdf_file(
     path_to_pdf: str,
-    parser: ParserPDFBase,
-    validator: TextBaseValidator,
+    parser_instance: ParserPDFBase,
+    validator_instance: TextBaseValidator,
 ) -> None:
     logger.info(f"Check PDF fields for '{path_to_pdf}'...")
 
     fields = await scrap_pdf_fields(path_to_pdf)
     logger.debug(f"Scraped fields: {fields}")
 
-    await prepare_scraped_data(parser, fields)
+    await prepare_scraped_data(parser_instance, fields)
 
     errors_in_fields = await validate_pdf_fields(
-        parser.widget_data_dict, validator
+        parser_instance.widget_data_dict, validator_instance
     )
 
     logger.info(f"Mistakes in fields on '{path_to_pdf}': {errors_in_fields}")
@@ -60,7 +65,17 @@ async def check_fields_in_pdf_file(
 
 async def main_check_pdf_fields(
     paths_to_pdf: List[str],
-    parser: ParserPDFBase,
-    validator: TextBaseValidator,
+    widget_parser_type: Type[ParserPDFBase],
+    validator_type: Type[TextWidgetValidatorUseAI],
+    ai_assistant: AIBaseValidator,
 ) -> None:
-    pass
+    tasks = [
+        check_fields_in_pdf_file(
+            path_to_pdf=pdf,
+            parser_instance=widget_parser_type(),
+            validator_instance=validator_type(ai_assistant=ai_assistant),
+        )
+        for pdf in paths_to_pdf
+    ]
+
+    await asyncio.gather(*tasks)
