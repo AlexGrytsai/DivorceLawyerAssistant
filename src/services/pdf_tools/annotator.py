@@ -18,7 +18,7 @@ def get_comment_position(
 
 
 @handle_pymupdf_exceptions
-def add_comments_to_widgets(
+async def add_comments_to_widgets(
     pdf_path: str,
     comments: Dict[str, str],
 ) -> None:
