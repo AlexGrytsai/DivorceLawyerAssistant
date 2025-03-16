@@ -51,6 +51,16 @@ async def check_fields_in_pdf_file(
     logger.info(f"Mistakes in fields on '{path_to_pdf}': {errors_in_fields}")
 
     logger.info(f"Add comments to PDF '{path_to_pdf}'...")
-    add_comments_to_widgets(pdf_path=path_to_pdf, comments=errors_in_fields)
+    await add_comments_to_widgets(
+        pdf_path=path_to_pdf, comments=errors_in_fields
+    )
 
     logger.info(f"PDF '{path_to_pdf}' checked successfully")
+
+
+async def main_check_pdf_fields(
+    paths_to_pdf: List[str],
+    parser: ParserPDFBase,
+    validator: TextBaseValidator,
+) -> None:
+    pass
