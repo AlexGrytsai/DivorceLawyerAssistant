@@ -32,7 +32,7 @@ async def validate_pdf_fields(
     return result
 
 
-async def main_check_pdf_fields(
+async def check_fields_in_pdf_file(
     path_to_pdf: str,
     parser: ParserPDFBase,
     validator: TextBaseValidator,
