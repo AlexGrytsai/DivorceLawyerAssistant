@@ -1,6 +1,11 @@
 import logging.config
+import os
+from types import MappingProxyType
 
+from dotenv import load_dotenv
 from redis import Redis
+
+load_dotenv()
 
 redis_client_for_performance_monitoring = Redis(
     host="localhost",
@@ -12,6 +17,25 @@ redis_client_for_performance_monitoring = Redis(
 
 class Settings:
     DEBUG: bool = True
+
+    BASE_AI_MODEL: str = os.environ["BASE_AI_MODEL"]
+    OPENAI_API_KEY: str = os.environ["OPENAI_API_KEY"]
+
+    _MODEL_TOKEN_LIMITS = {
+        "gpt-4": 10000,
+        "gpt-4o": 30000,
+        "gpt-4o-2024-08-06": 30000,
+        "gpt-4o-realtime-preview": 20000,
+        "gpt-4-turbo": 30000,
+        "gpt-3.5-turbo": 200000,
+        "gpt-3.5-turbo-16k": 160000,
+    }
+
+    MODEL_TOKEN_LIMITS = MappingProxyType(_MODEL_TOKEN_LIMITS)
+
+    @property
+    def get_token_limit(self) -> int:
+        return self.MODEL_TOKEN_LIMITS.get(self.BASE_AI_MODEL, 0)
 
 
 LOGGING_CONFIG = {
@@ -33,7 +57,7 @@ LOGGING_CONFIG = {
     },
     "root": {
         "handlers": ["console"],
-        "level": "INFO",
+        "level": "DEBUG",
     },
     "loggers": {
         "main": {

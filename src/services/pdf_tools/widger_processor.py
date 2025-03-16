@@ -1,15 +1,17 @@
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Optional, List, Dict
 
 import pymupdf as fitz  # type: ignore
 from pymupdf import Widget  # type: ignore
 
-from src.pdf_extractor.geometry_utils import GeometryBaseUtils
-from src.pdf_extractor.schemas import SpanPDF, LinePDF
-from src.pdf_extractor.text_processor import TextBaseProcessor
+from src.services.pdf_tools.geometry_utils import GeometryBaseUtils
+from src.services.pdf_tools.schemas import LinePDF, SpanPDF
+from src.services.pdf_tools.text_processor import TextBaseProcessor
 
 
 class WidgetSpanBaseProcessor(ABC):
+    __slots__ = ("_geometry_utils", "_text_processor")
+
     def __init__(
         self,
         geometry_utils: GeometryBaseUtils,
@@ -21,8 +23,15 @@ class WidgetSpanBaseProcessor(ABC):
     @staticmethod
     @abstractmethod
     def get_widget_value(
-        widget: fitz.Widget, is_for_ai: bool = True
+        widget: fitz.Widget, use_widget_label: bool = False
     ) -> Optional[str]:
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def extract_text_widgets(
+        widgets: List[fitz.Widget],
+    ) -> Dict[str, str]:
         pass
 
     @abstractmethod
@@ -34,13 +43,24 @@ class WidgetSpanBaseProcessor(ABC):
 
 
 class WidgetSpanProcessor(WidgetSpanBaseProcessor):
+    __slots__ = ()
+
+    @staticmethod
+    def extract_text_widgets(
+        widgets: List[fitz.Widget],
+    ) -> Dict[str, str]:
+        return {
+            widget.field_name: widget.field_value
+            for widget in widgets
+            if widget.field_type_string in {"Text"} and widget.field_value
+        }
 
     @staticmethod
     def get_widget_value(
         widget: fitz.Widget,
-        is_for_ai: bool = True,
+        use_widget_label: bool = True,
     ) -> Optional[str]:
-        if is_for_ai:
+        if use_widget_label:
             if widget.field_type_string in ("Text", "ComboBox"):
                 return (
                     f"{widget.field_name}: {widget.field_value}"

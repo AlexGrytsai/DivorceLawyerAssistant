@@ -1,15 +1,22 @@
 from abc import ABC, abstractmethod
 from typing import List, Union
 
-from src.pdf_extractor.schemas import PagePDF, TableParsed, LinePDF, SpanPDF
-from src.pdf_extractor.table_processor import TableBaseProcessor
-from src.pdf_extractor.text_processor import TextBaseProcessor
-from src.pdf_extractor.widger_processor import WidgetSpanBaseProcessor
+from src.services.pdf_tools.schemas import (
+    PagePDF,
+    LinePDF,
+    TableParsed,
+    SpanPDF,
+)
+from src.services.pdf_tools.table_processor import TableBaseProcessor
+from src.services.pdf_tools.text_processor import TextBaseProcessor
+from src.services.pdf_tools.widger_processor import WidgetSpanBaseProcessor
 
 
 class PageFormatterBase(ABC):
     @abstractmethod
-    def format_page(self, page: PagePDF, is_for_ai: bool = True) -> str:
+    def format_page(
+        self, page: PagePDF, use_widget_label: bool = False
+    ) -> str:
         pass
 
 
@@ -26,7 +33,11 @@ class PageFormatter(PageFormatterBase):
         self._table_processor = table_processor
         self._widget_processor = widget_processor
 
-    def format_page(self, page: PagePDF, is_for_ai: bool = True) -> str:
+    def format_page(
+        self,
+        page: PagePDF,
+        use_widget_label: bool = False,
+    ) -> str:
         result = [f"Page # {page.page_number}\n"]
 
         liens: List[LinePDF] = page.lines if page.lines else []
@@ -40,7 +51,7 @@ class PageFormatter(PageFormatterBase):
         element: Union[LinePDF, TableParsed]
         for element in elements:  # type: ignore[assignment]
             if isinstance(element, TableParsed):
-                if is_for_ai:
+                if use_widget_label:
 
                     result.append(
                         self._table_processor.format_table_to_string_for_ai(

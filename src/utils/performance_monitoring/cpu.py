@@ -7,6 +7,8 @@ from typing import Callable, List, Tuple, Optional, Dict
 import psutil
 from redis import Redis
 
+from src.core import settings
+
 running = False
 cpu_usage_data = []
 cpu_usage_results: Dict[str, List[Tuple[List[float], float]]] = {}
@@ -41,14 +43,15 @@ def save_data_to_usage_results(
 
 def cpu_monitor_decorator(
     save_data: bool = True,
-    is_enabled: bool = True,
+    is_enabled: bool = settings.DEBUG,
     r_client: Optional[Redis] = None,
 ) -> Callable:
     def decorator(func: Callable) -> Callable:
         @functools.wraps(func)
-        def wrapper(*args, **kwargs):
+        async def wrapper(*args, **kwargs):
             if not is_enabled:
-                return func(*args, **kwargs)
+                result = await func(*args, **kwargs)
+                return result
 
             global running, cpu_usage_data
 
@@ -60,7 +63,7 @@ def cpu_monitor_decorator(
             cpu_thread.start()
 
             start_time = time.perf_counter()
-            result = func(*args, **kwargs)
+            result = await func(*args, **kwargs)
             end_time = time.perf_counter()
 
             running = False
