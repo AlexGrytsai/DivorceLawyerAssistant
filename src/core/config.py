@@ -62,7 +62,7 @@ LOGGING_CONFIG = {
     "loggers": {
         "main": {
             "handlers": ["console"],
-            "level": "DEBUG",
+            "level": "INFO",
             "propagate": False,
         }
     },
