@@ -6,7 +6,7 @@ from openai import (
     AsyncOpenAI,
 )
 
-from src.services.ai_service.decorators_for_ai import reconnection_async
+from src.services.ai_service.decorators import reconnection_async
 
 
 class AIBaseValidator(ABC):
