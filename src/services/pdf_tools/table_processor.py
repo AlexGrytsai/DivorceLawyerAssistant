@@ -20,6 +20,8 @@ TableType: TypeAlias = List[List[List[Widget | SpanPDF]]]
 
 
 class TableBaseProcessor(ABC):
+    __slots__ = ("_value_widgets_in_table",)
+
     def __init__(self) -> None:
         self._value_widgets_in_table: Dict[str, str] = {}
 
@@ -51,7 +53,7 @@ class TableBaseProcessor(ABC):
 
 
 class TableProcessor(TableBaseProcessor):
-    __slots__ = ("_geometry_utils",)
+    __slots__ = ("_geometry_utils", "_widget_processor")
 
     def __init__(
         self,

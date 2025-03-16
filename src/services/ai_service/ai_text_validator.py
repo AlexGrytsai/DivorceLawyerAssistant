@@ -1,12 +1,12 @@
 import json
 from abc import ABC, abstractmethod
-from typing import Dict, Union
+from typing import Dict
 
 from openai import (
     AsyncOpenAI,
 )
 
-from src.services.ai_service.decorators_for_ai import reconnection_async
+from src.services.ai_service.decorators import reconnection_async
 
 
 class AIBaseValidator(ABC):
@@ -18,6 +18,8 @@ class AIBaseValidator(ABC):
 
 
 class OpenAITextAnalyzer(AIBaseValidator):
+    __slots__ = ("_openai_client", "_openai_model")
+
     def __init__(self, openai_client: AsyncOpenAI, openai_model: str) -> None:
         self._openai_client = openai_client
         self._openai_model = openai_model

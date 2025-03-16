@@ -1,10 +1,11 @@
 import json
+import logging
 import re
 from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Dict, Tuple, Union
 
-import pymupdf as fitz
+import pymupdf as fitz  # type: ignore
 from email_validator import validate_email, EmailNotValidError
 
 from src.services.ai_service.ai_text_validator import (
@@ -13,8 +14,12 @@ from src.services.ai_service.ai_text_validator import (
 )
 from src.services.ai_service.prompts import GET_ADDRESS_PHONE_NUMBER_PROMPT
 
+logger = logging.getLogger(__name__)
+
 
 class TextBaseValidator(ABC):
+    __slots__ = ()
+
     @staticmethod
     @abstractmethod
     async def validate_line_length(
@@ -42,6 +47,11 @@ class TextBaseValidator(ABC):
     async def phone_number_validator(email: str) -> Tuple[bool, str]:
         pass
 
+    @staticmethod
+    @abstractmethod
+    async def address_validator(email: str) -> Tuple[bool, str]:
+        pass
+
     @abstractmethod
     async def validate_widgets(
         self, widgets: Dict[str, Dict[str, str]]
@@ -50,9 +60,11 @@ class TextBaseValidator(ABC):
 
 
 class TextWidgetValidatorUseAI(TextBaseValidator):
+    __slots__ = ("_ai_assistant", "_errors_in_widgets")
+
     def __init__(self, ai_assistant: OpenAITextAnalyzer) -> None:
         self._ai_assistant = ai_assistant
-        self._errors_in_widgets = {}
+        self._errors_in_widgets: Dict[str, str] = {}
 
     @staticmethod
     async def validate_line_length(
@@ -108,6 +120,57 @@ class TextWidgetValidatorUseAI(TextBaseValidator):
             return True, ""
         return False, "Phone number is not valid"
 
+    @staticmethod
+    async def address_validator(address: str) -> Tuple[bool, str]:
+        full_address_pattern = re.compile(
+            r"^(?P<number>\d+)\s+"
+            r"(?P<street>[A-Z][a-z]+(?:\s[A-Z][a-z]+)*)\s"
+            r"(?P<type>Road|Rd|Street|St|Avenue|Ave|Boulevard|Blvd|Lane|Ln|"
+            r"Drive|Dr|Court|Ct|Place|Pl|Terrace|Ter)\s*"
+            r"(?P<direction>N|S|E|W|NE|NW|SE|SW)?\s+"
+            r"(?P<city>[A-Z][a-z]+(?:\s[A-Z][a-z]+)*)\s*,\s*"
+            r"(?P<state>[A-Z]{2})\s+"
+            r"(?P<zip>\d{5}(?:-\d{4})?)$"
+        )
+
+        street_address_pattern = re.compile(
+            r"^(?P<number>\d+)\s+"
+            r"(?P<street>[A-Z][a-z]+(?:\s[A-Z][a-z]+)*)\s"
+            r"(?P<type>Road|Rd|Street|St|Avenue|Ave|Boulevard|Blvd|Lane|Ln|"
+            r"Drive|Dr|Court|Ct|Place|Pl|Terrace|Ter)\s*"
+            r"(?P<direction>N|S|E|W|NE|NW|SE|SW)?$"
+        )
+
+        city_state_zip_pattern = re.compile(
+            r"^(?P<city>[A-Z][a-z]+(?:\s[A-Z][a-z]+)*)\s*,\s*"
+            r"(?P<state>[A-Z]{2})\s+"
+            r"(?P<zip>\d{5}(?:-\d{4})?)$"
+        )
+
+        if full_address_pattern.match(address):
+            return True, "Valid full address"
+
+        if street_address_pattern.match(address):
+            return True, "Valid street address"
+
+        if city_state_zip_pattern.match(address):
+            return True, "Valid city, state, and ZIP"
+
+        if "," in address and not re.search(r"\b[A-Z]{2}\b", address):
+            return False, "State abbreviation is missing or incorrect"
+
+        if "," in address and not re.search(r"\b\d{5}(-\d{4})?\b$", address):
+            return False, "ZIP code is missing or incorrect"
+
+        if re.search(r"^\d+", address) and not re.search(
+            r"\b(Road|Rd|Street|St|Avenue|Ave|Boulevard|Blvd|Lane|Ln|"
+            r"Drive|Dr|Court|Ct|Place|Pl|Terrace|Ter)\b",
+            address,
+        ):
+            return False, "Street type is missing or incorrect"
+
+        return False, "Invalid address format"
+
     async def validate_widgets(
         self, widgets: Dict[str, Dict[str, Union[str, fitz.Widget]]]
     ) -> Dict[str, str]:
@@ -123,6 +186,7 @@ class TextWidgetValidatorUseAI(TextBaseValidator):
                         widget_value
                     )
                     if not is_valid_email:
+                        logger.debug(f"{widget_name}: {error_message}")
                         await self._add_error_to_dict(
                             widget_name, error_message
                         )
@@ -131,6 +195,7 @@ class TextWidgetValidatorUseAI(TextBaseValidator):
                         await self.validate_line_length(widget_instance)
                     )
                     if not is_valid_length:
+                        logger.debug(f"{widget_name}: {error_message}")
                         await self._add_error_to_dict(
                             widget_name, error_message
                         )
@@ -139,6 +204,7 @@ class TextWidgetValidatorUseAI(TextBaseValidator):
                         widget_value
                     )
                     if is_caps_locked:
+                        logger.debug(f"{widget_name}: {error_message}")
                         await self._add_error_to_dict(
                             widget_name, caps_message
                         )
@@ -151,23 +217,33 @@ class TextWidgetValidatorUseAI(TextBaseValidator):
             assistant_prompt=GET_ADDRESS_PHONE_NUMBER_PROMPT,
         )
         if address_dates_phones.get("dates"):
-            for key, date in address_dates_phones["dates"].items():
+            for widget_name, date in address_dates_phones["dates"].items():
                 is_valid_date, error_message = await self.date_validator(date)
                 if not is_valid_date:
-                    await self._add_error_to_dict(key, error_message)
+                    logger.debug(f"{widget_name}: {error_message}")
+                    await self._add_error_to_dict(widget_name, error_message)
 
         if address_dates_phones.get("addresses"):
-            pass
+            for widget_name, address in address_dates_phones[
+                "addresses"
+            ].items():
+                is_valid_address, error_message = await self.address_validator(
+                    address
+                )
+                if not is_valid_address:
+                    logger.debug(f"{widget_name}: {error_message}")
+                    await self._add_error_to_dict(widget_name, error_message)
 
         if address_dates_phones.get("phone_numbers"):
-            for key, phone_number in address_dates_phones[
+            for widget_name, phone_number in address_dates_phones[
                 "phone_numbers"
             ].items():
                 is_valid_phone, error_message = (
                     await self.phone_number_validator(phone_number)
                 )
                 if not is_valid_phone:
-                    await self._add_error_to_dict(key, error_message)
+                    logger.debug(f"{widget_name}: {error_message}")
+                    await self._add_error_to_dict(widget_name, error_message)
 
         return self._errors_in_widgets
 

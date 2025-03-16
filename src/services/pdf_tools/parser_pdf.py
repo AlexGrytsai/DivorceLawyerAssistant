@@ -108,6 +108,8 @@ class ParserPDF(ParserPDFBase):
 
 
 class ParserPDFWidget(ParserPDFBase):
+    __slots__ = ("_widget_dict",)
+
     def __init__(self) -> None:
         self._widget_dict: Dict[str, Dict[str, str]] = {}
 

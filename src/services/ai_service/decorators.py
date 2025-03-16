@@ -25,8 +25,8 @@ def reconnection_async(attempts: int = 10) -> Callable:
                     remaining_attempts -= 1
                     if remaining_attempts == 0:
                         logger.error(
-                            f"Request timeout. Please try again later. "
-                            f"Message: {exc}"
+                            f"OpenAI Service unavailable. Request timeout. "
+                            f"Please try again later. Message: {exc}"
                         )
                         raise HTTPException(
                             status_code=status.HTTP_408_REQUEST_TIMEOUT,
@@ -44,7 +44,9 @@ def reconnection_async(attempts: int = 10) -> Callable:
                     )
                 except HTTPException as exc:
                     logger.error(
-                        f"Error with fetching data from OpenAI: {exc}"
+                        f"OpenAI Service unavailable. "
+                        f"Error with fetching data from OpenAI API. "
+                        f"Message: {exc}"
                     )
                     raise exc
 
