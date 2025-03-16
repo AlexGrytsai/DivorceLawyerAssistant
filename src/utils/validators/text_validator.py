@@ -64,7 +64,7 @@ class TextWidgetValidatorUseAI(TextBaseValidator):
 
     def __init__(self, ai_assistant: OpenAITextAnalyzer) -> None:
         self._ai_assistant = ai_assistant
-        self._errors_in_widgets = {}
+        self._errors_in_widgets: Dict[str, str] = {}
 
     @staticmethod
     async def validate_line_length(
