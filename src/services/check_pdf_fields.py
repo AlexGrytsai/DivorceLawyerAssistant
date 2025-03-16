@@ -48,6 +48,9 @@ async def main_check_pdf_fields(
         parser.widget_data_dict, validator
     )
 
-    logger.info(f"Errors in fields on '{path_to_pdf}': {errors_in_fields}")
+    logger.info(f"Mistakes in fields on '{path_to_pdf}': {errors_in_fields}")
 
+    logger.info(f"Add comments to PDF '{path_to_pdf}'...")
     add_comments_to_widgets(pdf_path=path_to_pdf, comments=errors_in_fields)
+
+    logger.info(f"PDF '{path_to_pdf}' checked successfully")
