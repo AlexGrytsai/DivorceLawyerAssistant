@@ -1,6 +1,7 @@
 import asyncio
 import logging
 from abc import ABC, abstractmethod
+from pathlib import Path
 from typing import List, Optional, Union
 
 from fastapi import UploadFile
@@ -59,7 +60,12 @@ class LocalStorage(BaseStorage):
         try:
             file_object = await file.read()
 
-            with open(f"{self._path_to_storage}", "wb") as fh:
+            storage_path = Path(self._path_to_storage)
+            storage_path.mkdir(parents=True, exist_ok=True)
+
+            file_path = Path(self._path_to_storage) / file.filename
+
+            with open(file_path, "wb") as fh:
                 fh.write(file_object)
             await file.close()
 
