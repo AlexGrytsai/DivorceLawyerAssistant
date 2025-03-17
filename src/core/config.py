@@ -25,7 +25,7 @@ class Settings:
     BASE_AI_MODEL: str = os.environ["BASE_AI_MODEL"]
     OPENAI_API_KEY: str = os.environ["OPENAI_API_KEY"]
 
-    PATH_TO_STORAGE: str = Path("uploads") / "forms"
+    PATH_TO_STORAGE: str = Path("uploads") / "forms/"
     STORAGE: BaseStorage = LocalStorage(path_to_storage=PATH_TO_STORAGE)
 
     _MODEL_TOKEN_LIMITS = {
