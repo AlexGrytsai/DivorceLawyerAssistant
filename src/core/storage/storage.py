@@ -70,7 +70,7 @@ class LocalStorage(BaseStorage):
             await file.close()
 
             return FileData(
-                path=self._path_to_storage,
+                path=f"{self._path_to_storage}/{file.filename}",
                 message=f"{file.filename} saved successfully",
                 content_type=file.content_type,
                 size=file.size,
