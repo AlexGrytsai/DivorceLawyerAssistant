@@ -22,6 +22,8 @@ python-dotenv = "^1.0.1"
 openai = "^1.65.4"
 fastapi = "^0.115.11"
 email-validator = "^2.2.0"
+uvicorn = "^0.34.0"
+python-multipart = "^0.0.20"
 
 
 [tool.poetry.group.dev.dependencies]
