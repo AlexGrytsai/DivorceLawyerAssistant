@@ -1,4 +1,5 @@
 import magic
+from fastapi import UploadFile
 
 ALLOWED_MIME_TYPES_FOR_FORMS = (
     "application/pdf",
@@ -12,6 +13,7 @@ def get_real_mime_type(file: bytes) -> str:
     return mime.from_buffer(file)
 
 
-def is_allowed_mime_type_for_forms(file_bytes: bytes) -> bool:
-    real_mime = get_real_mime_type(file_bytes)
-    return real_mime in ALLOWED_MIME_TYPES_FOR_FORMS
+async def is_allowed_mime_type_for_forms(file: UploadFile) -> bool:
+    file_bytes = await file.read()
+
+    return get_real_mime_type(file_bytes) in ALLOWED_MIME_TYPES_FOR_FORMS
