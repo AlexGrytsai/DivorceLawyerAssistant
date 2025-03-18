@@ -1,10 +1,12 @@
 import asyncio
 import logging
+import os
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import List, Optional, Union
 
-from fastapi import UploadFile
+from fastapi import UploadFile, status
+from starlette.responses import JSONResponse
 
 from core.storage.exceptions import ErrorSavingFile, ErrorUploadingFile
 from core.storage.shemas import FileData
@@ -47,6 +49,10 @@ class BaseStorage(ABC):
     async def multi_upload(
         self, *args, files: List[UploadFile]
     ) -> List[FileData]:
+        pass
+
+    @abstractmethod
+    async def delete(self, *args, filename: str) -> JSONResponse:
         pass
 
 
@@ -92,3 +98,38 @@ class LocalStorage(BaseStorage):
             *[self.upload(file=file) for file in files]
         )
         return list(uploaded)
+
+    async def delete(self, *args, filename: str) -> JSONResponse:
+        try:
+            file_path = Path(self._path_to_storage) / filename
+
+            if file_path.exists():
+                os.remove(file_path)
+                logger.info(f"{filename} deleted successfully")
+
+                return JSONResponse(
+                    content={"message": f"{filename} deleted successfully"},
+                    status_code=status.HTTP_200_OK,
+                )
+            else:
+                logger.warning(
+                    f"{filename} not found in {self._path_to_storage} "
+                    f"for deletion"
+                )
+                return JSONResponse(
+                    content={
+                        "error": "File not found",
+                        "message": f"{filename} not found",
+                    },
+                    status_code=status.HTTP_404_NOT_FOUND,
+                )
+
+        except Exception as exc:
+            logger.error(f"Error deleting file {filename}: {exc}")
+            return JSONResponse(
+                content={
+                    "error": str(exc),
+                    "message": f"Error deleting {filename}",
+                },
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
