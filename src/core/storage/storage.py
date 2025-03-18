@@ -19,26 +19,30 @@ class BaseStorage(ABC):
         self,
         file: Optional[UploadFile] = None,
         files: Optional[List[UploadFile]] = None,
-    ) -> Union[FileData, List[FileData]]:
+    ) -> Union[FileData, List[FileData], JSONResponse]:
         try:
             if file:
                 return await self.upload(file=file)
 
             elif files:
                 return await self.multi_upload(files=files)
-            else:
-                logger.warning("No file or files provided")
-                return FileData(
-                    status=False,
-                    error="No file or files provided",
-                    message="No file or files provided",
-                )
+
+            logger.warning("No file or files provided")
+            return JSONResponse(
+                content={
+                    "error": "No file or files provided",
+                    "message": "No file or files provided",
+                },
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
         except ErrorSavingFile as exc:
             logger.warning(f"Error saving file: {exc}")
-            return FileData(
-                status=False,
-                error=str(exc),
-                message="File upload was unsuccessful",
+            return JSONResponse(
+                content={
+                    "error": str(exc),
+                    "message": "File upload was unsuccessful",
+                },
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
     @abstractmethod
