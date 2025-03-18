@@ -42,7 +42,7 @@ class BaseStorage(ABC):
             )
 
     @abstractmethod
-    async def upload(self, *args, file: UploadFile) -> FileData:
+    async def upload(self, file: UploadFile, *args, **kwargs) -> FileData:
         pass
 
     @abstractmethod
@@ -62,7 +62,7 @@ class LocalStorage(BaseStorage):
     def __init__(self, path_to_storage: str) -> None:
         self._path_to_storage = path_to_storage
 
-    async def upload(self, *args, file: UploadFile) -> FileData:
+    async def upload(self, file: UploadFile, *args, **kwargs) -> FileData:
         try:
             file_object = await file.read()
 
