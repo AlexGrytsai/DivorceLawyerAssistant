@@ -37,7 +37,7 @@ async def validate_files(files: List[UploadFile]) -> List[UploadFile]:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=(
-                    f"File {file} has wrong MIME type. "
+                    f"File {file.filename} has wrong MIME type. "
                     f"Allowed MIME types: "
                     f"{', '.join(ALLOWED_MIME_TYPES_FOR_FORMS)}"
                 ),
