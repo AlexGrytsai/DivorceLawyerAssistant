@@ -8,8 +8,9 @@ import psutil
 from redis import Redis
 
 from src.core import settings
-from utils.performance_monitoring import \
-    redis_client_for_performance_monitoring
+from utils.performance_monitoring import (
+    redis_client_for_performance_monitoring,
+)
 
 monitoring = False
 ram_usage = []
