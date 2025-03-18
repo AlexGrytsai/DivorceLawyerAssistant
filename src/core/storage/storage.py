@@ -8,8 +8,8 @@ from typing import List, Optional, Union
 from fastapi import UploadFile, status
 from starlette.responses import JSONResponse
 
-from core.storage.exceptions import ErrorSavingFile, ErrorUploadingFile
-from core.storage.shemas import FileData
+from src.core.storage.exceptions import ErrorSavingFile, ErrorUploadingFile
+from src.core.storage.shemas import FileData
 
 logger = logging.getLogger(__name__)
 
