@@ -5,8 +5,8 @@ from types import MappingProxyType
 
 from dotenv import load_dotenv
 
-from core.storage import LocalStorage
-from core.storage.storage import BaseStorage
+from src.core.storage import LocalStorage
+from src.core.storage.storage import BaseStorage
 
 load_dotenv()
 
