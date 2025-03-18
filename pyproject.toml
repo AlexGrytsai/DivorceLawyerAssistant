@@ -35,6 +35,7 @@ mypy = "^1.15.0"
 psutil = "^7.0.0"
 matplotlib = "^3.10.1"
 types-psutil = "^7.0.0.20250218"
+python-magic-bin = "^0.4.14"
 
 [build-system]
 requires = ["poetry-core"]
