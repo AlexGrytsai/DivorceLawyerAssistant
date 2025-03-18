@@ -20,9 +20,9 @@ logger = logging.getLogger(__name__)
 class BaseStorage(ABC):
     async def __call__(
         self,
+        request: Request,
         file: Optional[UploadFile] = None,
         files: Optional[List[UploadFile]] = None,
-        request: Request = None,
     ) -> Union[FileDataSchema, List[FileDataSchema]]:
         try:
             if file:
