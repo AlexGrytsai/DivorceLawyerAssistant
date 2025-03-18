@@ -4,7 +4,7 @@ from typing import List, Dict, Type
 
 from src.services.ai_service.ai_text_validator import OpenAITextAnalyzer
 from src.services.pdf_tools.annotator import add_comments_to_widgets
-from src.services.pdf_tools.parser_pdf import ParserPDFBase
+from src.services.pdf_tools.parser_pdf import ParserPDFBase, ParserPDFWidget
 from src.services.pdf_tools.scraper_pdf import (
     ScraperWidgetFromPDF,
     ScrapedPage,
@@ -65,9 +65,9 @@ async def check_fields_in_pdf_file(
 
 async def main_check_pdf_fields(
     paths_to_pdf: List[str],
-    widget_parser_type: Type[ParserPDFBase],
-    validator_type: Type[TextWidgetValidatorUseAI],
     ai_assistant: OpenAITextAnalyzer,
+    widget_parser_type: Type[ParserPDFBase] = ParserPDFWidget,
+    validator_type: Type[TextWidgetValidatorUseAI] = TextWidgetValidatorUseAI,
 ) -> None:
     tasks = [
         check_fields_in_pdf_file(
