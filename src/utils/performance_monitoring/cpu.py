@@ -8,6 +8,9 @@ import psutil
 from redis import Redis
 
 from src.core import settings
+from utils.performance_monitoring import (
+    redis_client_for_performance_monitoring,
+)
 
 running = False
 cpu_usage_data = []
@@ -44,7 +47,7 @@ def save_data_to_usage_results(
 def cpu_monitor_decorator(
     save_data: bool = True,
     is_enabled: bool = settings.DEBUG,
-    r_client: Optional[Redis] = None,
+    r_client: Optional[Redis] = redis_client_for_performance_monitoring,
 ) -> Callable:
     def decorator(func: Callable) -> Callable:
         @functools.wraps(func)

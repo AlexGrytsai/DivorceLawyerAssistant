@@ -4,19 +4,11 @@ from pathlib import Path
 from types import MappingProxyType
 
 from dotenv import load_dotenv
-from redis import Redis
 
 from core.storage import LocalStorage
 from core.storage.storage import BaseStorage
 
 load_dotenv()
-
-redis_client_for_performance_monitoring = Redis(
-    host="localhost",
-    port=6379,
-    db=10,
-    decode_responses=True,
-)
 
 
 class Settings:

@@ -8,6 +8,8 @@ import psutil
 from redis import Redis
 
 from src.core import settings
+from utils.performance_monitoring import \
+    redis_client_for_performance_monitoring
 
 monitoring = False
 ram_usage = []
@@ -42,7 +44,7 @@ def monitor_ram_usage(interval: float = 0.1) -> None:
 
 
 def ram_monitor_decorator(
-    r_client: Optional[Redis] = None,
+    r_client: Optional[Redis] = redis_client_for_performance_monitoring,
     save_data: Optional[bool] = True,
     is_enabled: Optional[bool] = settings.DEBUG,
 ) -> Callable:
