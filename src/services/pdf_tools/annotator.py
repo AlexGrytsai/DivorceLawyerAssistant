@@ -4,6 +4,7 @@ from typing import Dict
 
 import pymupdf as fitz  # type: ignore
 from fastapi import UploadFile
+from starlette.datastructures import Headers
 
 from src.core import settings
 from src.core.storage.shemas import FileDataSchema
@@ -11,9 +12,7 @@ from src.services.pdf_tools.decorators import handle_pymupdf_exceptions
 
 
 def create_new_file_name(pdf_path: str) -> str:
-    print(pdf_path)
     file_name, extension = os.path.splitext(os.path.basename(pdf_path))
-    print(file_name, extension)
     return f"{file_name}_checked{extension}"
 
 
@@ -41,15 +40,21 @@ async def add_comments_to_widgets(
 
     pdf_buffer = io.BytesIO()
     doc.save(pdf_buffer)
+    pdf_buffer.seek(0, io.SEEK_END)
+    file_size = pdf_buffer.tell()
     pdf_buffer.seek(0)
 
     doc.close()
 
+    file = UploadFile(
+        filename=create_new_file_name(pdf_path),
+        file=pdf_buffer,
+        size=file_size,
+        headers=Headers({"Content-Type": "application/pdf"}),
+    )
+
     upload_file = await settings.STORAGE(
-        file=UploadFile(
-            filename=create_new_file_name(pdf_path),
-            file=pdf_buffer,
-        ),
+        file=file,
         request=kwargs.get("request"),
     )
 
