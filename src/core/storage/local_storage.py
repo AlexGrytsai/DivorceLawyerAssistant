@@ -11,7 +11,7 @@ from starlette.responses import JSONResponse
 
 from src.core.storage.decorators import handle_upload_file_exceptions
 from src.core.storage.exceptions import ErrorUploadingFile, ErrorDeletingFile
-from src.core.storage.shemas import FileDataSchema
+from src.core.storage.shemas import FileDataSchema, FileDeleteSchema
 from src.core.storage.storage import BaseStorage
 
 logger = logging.getLogger(__name__)
@@ -91,17 +91,22 @@ class LocalStorage(BaseStorage):
         )
         return list(uploaded)
 
-    async def delete(self, *args, file_path: str) -> JSONResponse:
+    async def delete(
+        self, file_path: str, request: Request, *args, **kwargs
+    ) -> FileDeleteSchema:
         try:
-            file_path = Path(file_path)
-
-            if file_path.exists():
-                os.remove(file_path)
+            if Path(file_path).exists():
+                os.remove(Path(file_path))
                 logger.info(f"{file_path} deleted successfully")
 
-                return JSONResponse(
-                    content={"message": f"{file_path} deleted successfully"},
+                return FileDeleteSchema(
+                    file=file_path,
+                    message=f"{file_path} deleted successfully",
                     status_code=status.HTTP_204_NO_CONTENT,
+                    date_deleted=datetime.datetime.now().strftime(
+                        "%H:%M:%S %m-%d-%Y"
+                    ),
+                    deleted_by=self._get_user_identifier(request),
                 )
             else:
                 logger.warning(
