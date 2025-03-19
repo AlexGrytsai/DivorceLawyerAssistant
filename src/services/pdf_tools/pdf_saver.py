@@ -1,0 +1,61 @@
+import asyncio
+import io
+import os
+from typing import Optional, List, Tuple
+
+from fastapi import UploadFile
+from starlette.datastructures import Headers
+
+from src.core import settings
+from src.core.storage.shemas import FileDataSchema
+
+
+def create_new_file_name(
+    pdf_path: str,
+    suffix_for_new_file: Optional[str] = "",
+) -> str:
+    file_name, extension = os.path.splitext(os.path.basename(pdf_path))
+    if suffix_for_new_file:
+        return f"{file_name}_{suffix_for_new_file}{extension}"
+    return f"{file_name}{extension}"
+
+
+def determination_file_size(file_in_bytes: io.BytesIO) -> int:
+    file_in_bytes.seek(0, io.SEEK_END)
+    file_size = file_in_bytes.tell()
+    file_in_bytes.seek(0)
+
+    return file_size
+
+
+async def save_pdf_to_new_file(
+    pdf_buffer: io.BytesIO,
+    old_pdf_path: str,
+    **kwargs,
+) -> FileDataSchema:
+    file = UploadFile(
+        filename=create_new_file_name(old_pdf_path),
+        file=pdf_buffer,
+        size=determination_file_size(pdf_buffer),
+        headers=Headers({"Content-Type": "application/pdf"}),
+    )
+
+    upload_file = await settings.STORAGE(
+        file=file,
+        request=kwargs.get("request"),
+    )
+
+    return upload_file
+
+
+async def multi_save_pdf_to_new_file(
+    list_pdf_buffer: List[Tuple[io.BytesIO, str]],
+) -> List[FileDataSchema]:
+    tasks = [
+        save_pdf_to_new_file(pdf_buffer=pdf[0], old_pdf_path=pdf[1])
+        for pdf in list_pdf_buffer
+    ]
+
+    saved_new_pdf = await asyncio.gather(*tasks)
+
+    return saved_new_pdf
