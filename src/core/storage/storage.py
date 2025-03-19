@@ -3,10 +3,9 @@ from abc import ABC, abstractmethod
 from typing import List, Optional, Union
 
 from fastapi import UploadFile, status, HTTPException, Request
-from starlette.responses import JSONResponse
 
 from src.core.storage.exceptions import ErrorSavingFile
-from src.core.storage.shemas import FileDataSchema
+from src.core.storage.shemas import FileDataSchema, FileDeleteSchema
 
 logger = logging.getLogger(__name__)
 
@@ -55,5 +54,7 @@ class BaseStorage(ABC):
         pass
 
     @abstractmethod
-    async def delete(self, *args, filename: str) -> JSONResponse:
+    async def delete(
+        self, file_path: str, request: Request, *args, **kwargs
+    ) -> FileDeleteSchema:
         pass
