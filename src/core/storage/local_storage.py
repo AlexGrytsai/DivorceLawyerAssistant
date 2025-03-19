@@ -12,7 +12,6 @@ from src.core.storage.decorators import (
     handle_upload_file_exceptions,
     handle_delete_file_exceptions,
 )
-from src.core.storage.exceptions import ErrorDeletingFile
 from src.core.storage.shemas import FileDataSchema, FileDeleteSchema
 from src.core.storage.storage import BaseStorage
 
@@ -24,32 +23,6 @@ class LocalStorage(BaseStorage):
 
     def __init__(self, path_to_storage: str) -> None:
         self._path_to_storage = path_to_storage
-
-    @staticmethod
-    def _get_user_identifier(request: Request) -> str:
-        user_identifier = request.scope.get("user", request.client.host)
-        if isinstance(user_identifier, dict):
-            user_identifier = user_identifier.get("id", request.client.host)
-
-        user_identifier = str(user_identifier).replace(" ", "_")
-
-        return user_identifier
-
-    def _create_directory(self, request: Request) -> Path:
-        storage_path = Path(self._path_to_storage) / self._get_user_identifier(
-            request
-        )
-
-        storage_path.mkdir(parents=True, exist_ok=True)
-
-        return storage_path
-
-    @staticmethod
-    def _create_url_path(file_path: str, request: Request) -> str:
-        base_url = str(request.base_url).rstrip("/")
-        url_path = urllib.parse.quote(file_path.replace(os.sep, "/"))
-
-        return f"{base_url}/{url_path}"
 
     @handle_upload_file_exceptions
     async def upload(
@@ -122,3 +95,29 @@ class LocalStorage(BaseStorage):
                     "message": f"{file_path} not found",
                 },
             )
+
+    @staticmethod
+    def _get_user_identifier(request: Request) -> str:
+        user_identifier = request.scope.get("user", request.client.host)
+        if isinstance(user_identifier, dict):
+            user_identifier = user_identifier.get("id", request.client.host)
+
+        user_identifier = str(user_identifier).replace(" ", "_")
+
+        return user_identifier
+
+    def _create_directory(self, request: Request) -> Path:
+        storage_path = Path(self._path_to_storage) / self._get_user_identifier(
+            request
+        )
+
+        storage_path.mkdir(parents=True, exist_ok=True)
+
+        return storage_path
+
+    @staticmethod
+    def _create_url_path(file_path: str, request: Request) -> str:
+        base_url = str(request.base_url).rstrip("/")
+        url_path = urllib.parse.quote(file_path.replace(os.sep, "/"))
+
+        return f"{base_url}/{url_path}"
