@@ -4,3 +4,6 @@ class ErrorSavingFile(Exception):
 
 class ErrorUploadingFile(Exception):
     pass
+
+class ErrorDeletingFile(Exception):
+    pass

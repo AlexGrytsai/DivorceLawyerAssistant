@@ -9,7 +9,7 @@ from typing import List
 from fastapi import UploadFile, Request, status, HTTPException
 from starlette.responses import JSONResponse
 
-from src.core.storage.exceptions import ErrorUploadingFile
+from src.core.storage.exceptions import ErrorUploadingFile, ErrorDeletingFile
 from src.core.storage.shemas import FileDataSchema
 from src.core.storage.storage import BaseStorage
 
@@ -106,7 +106,7 @@ class LocalStorage(BaseStorage):
                     },
                 )
 
-        except Exception as exc:
+        except ErrorDeletingFile as exc:
             logger.error(f"Error deleting file {filename}: {exc}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
