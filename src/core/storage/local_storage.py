@@ -7,10 +7,12 @@ from pathlib import Path
 from typing import List
 
 from fastapi import UploadFile, Request, status, HTTPException
-from starlette.responses import JSONResponse
 
-from src.core.storage.decorators import handle_upload_file_exceptions
-from src.core.storage.exceptions import ErrorUploadingFile, ErrorDeletingFile
+from src.core.storage.decorators import (
+    handle_upload_file_exceptions,
+    handle_delete_file_exceptions,
+)
+from src.core.storage.exceptions import ErrorDeletingFile
 from src.core.storage.shemas import FileDataSchema, FileDeleteSchema
 from src.core.storage.storage import BaseStorage
 
@@ -91,42 +93,32 @@ class LocalStorage(BaseStorage):
         )
         return list(uploaded)
 
+    @handle_delete_file_exceptions
     async def delete(
         self, file_path: str, request: Request, *args, **kwargs
     ) -> FileDeleteSchema:
-        try:
-            if Path(file_path).exists():
-                os.remove(Path(file_path))
-                logger.info(f"{file_path} deleted successfully")
+        if Path(file_path).exists():
+            os.remove(Path(file_path))
+            logger.info(f"{file_path} deleted successfully")
 
-                return FileDeleteSchema(
-                    file=file_path,
-                    message=f"{file_path} deleted successfully",
-                    status_code=status.HTTP_204_NO_CONTENT,
-                    date_deleted=datetime.datetime.now().strftime(
-                        "%H:%M:%S %m-%d-%Y"
-                    ),
-                    deleted_by=self._get_user_identifier(request),
-                )
-            else:
-                logger.warning(
-                    f"{file_path} not found in {self._path_to_storage} "
-                    f"for deletion"
-                )
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail={
-                        "error": "File not found",
-                        "message": f"{file_path} not found",
-                    },
-                )
-
-        except ErrorDeletingFile as exc:
-            logger.error(f"Error deleting file {file_path}: {exc}")
+            return FileDeleteSchema(
+                file=file_path,
+                message=f"{file_path} deleted successfully",
+                status_code=status.HTTP_204_NO_CONTENT,
+                date_deleted=datetime.datetime.now().strftime(
+                    "%H:%M:%S %m-%d-%Y"
+                ),
+                deleted_by=self._get_user_identifier(request),
+            )
+        else:
+            logger.warning(
+                f"{file_path} not found in {self._path_to_storage} "
+                f"for deletion"
+            )
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                status_code=status.HTTP_404_NOT_FOUND,
                 detail={
-                    "error": str(exc),
-                    "message": f"Error deleting {file_path}",
+                    "error": "File not found",
+                    "message": f"{file_path} not found",
                 },
             )
