@@ -34,7 +34,7 @@ async def save_pdf_to_new_file(
     **kwargs,
 ) -> FileDataSchema:
     file = UploadFile(
-        filename=create_new_file_name(old_pdf_path),
+        filename=create_new_file_name(old_pdf_path, "with_simple_check"),
         file=pdf_buffer,
         size=determination_file_size(pdf_buffer),
         headers=Headers({"Content-Type": "application/pdf"}),
