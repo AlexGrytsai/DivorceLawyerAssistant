@@ -1,4 +1,5 @@
 import asyncio
+import datetime
 import logging
 import os
 import urllib
@@ -51,6 +52,10 @@ class LocalStorage(BaseStorage):
                 size=file.size,
                 filename=file.filename,
                 status_code=status.HTTP_201_CREATED,
+                date_created=datetime.datetime.now().strftime(
+                    "%H:%M:%S %m-%d-%Y"
+                ),
+                creator=request.scope.get("user", request.client.host),
             )
         except ErrorUploadingFile as exc:
             logger.warning(
