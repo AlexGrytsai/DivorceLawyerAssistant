@@ -14,3 +14,11 @@ class FileDataSchema(BaseModel):
     message: str
     date_created: str
     creator: str
+
+
+class FileDeleteSchema(BaseModel):
+    file: Path | str
+    message: str
+    status_code: int
+    date_deleted: str
+    deleted_by: str
