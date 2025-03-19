@@ -49,10 +49,10 @@ async def save_pdf_to_new_file(
 
 
 async def multi_save_pdf_to_new_file(
-    list_pdf_buffer: List[Tuple[io.BytesIO, str]],
+    list_pdf_buffer: List[Tuple[io.BytesIO, str]], **kwargs
 ) -> List[FileDataSchema]:
     tasks = [
-        save_pdf_to_new_file(pdf_buffer=pdf[0], old_pdf_path=pdf[1])
+        save_pdf_to_new_file(pdf_buffer=pdf[0], old_pdf_path=pdf[1], **kwargs)
         for pdf in list_pdf_buffer
     ]
 
