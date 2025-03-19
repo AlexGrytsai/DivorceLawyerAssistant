@@ -1,13 +1,9 @@
 import io
 import os
-from typing import Dict
+from typing import Dict, Tuple
 
 import pymupdf as fitz  # type: ignore
-from fastapi import UploadFile
-from starlette.datastructures import Headers
 
-from src.core import settings
-from src.core.storage.shemas import FileDataSchema
 from src.services.pdf_tools.decorators import handle_pymupdf_exceptions
 
 
@@ -27,7 +23,7 @@ async def add_comments_to_widgets(
     pdf_path: str,
     comments: Dict[str, str],
     **kwargs,
-) -> FileDataSchema:
+) -> Tuple[io.BytesIO, str]:
     doc = fitz.open(pdf_path)
     for page in doc:
         for widget in page.widgets():
@@ -40,22 +36,5 @@ async def add_comments_to_widgets(
 
     pdf_buffer = io.BytesIO()
     doc.save(pdf_buffer)
-    pdf_buffer.seek(0, io.SEEK_END)
-    file_size = pdf_buffer.tell()
-    pdf_buffer.seek(0)
 
-    doc.close()
-
-    file = UploadFile(
-        filename=create_new_file_name(pdf_path),
-        file=pdf_buffer,
-        size=file_size,
-        headers=Headers({"Content-Type": "application/pdf"}),
-    )
-
-    upload_file = await settings.STORAGE(
-        file=file,
-        request=kwargs.get("request"),
-    )
-
-    return upload_file
+    return pdf_buffer, pdf_path
