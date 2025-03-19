@@ -2,6 +2,7 @@ import asyncio
 import logging
 from typing import List, Dict, Type
 
+from src.core.storage.shemas import FileDataSchema
 from src.services.ai_service.ai_text_validator import OpenAITextAnalyzer
 from src.services.pdf_tools.annotator import add_comments_to_widgets
 from src.services.pdf_tools.parser_pdf import ParserPDFBase, ParserPDFWidget
@@ -42,7 +43,7 @@ async def check_fields_in_pdf_file(
     parser_instance: ParserPDFBase,
     validator_instance: TextBaseValidator,
     **kwargs,
-) -> None:
+) -> List[FileDataSchema]:
     logger.info(f"Check PDF fields for '{path_to_pdf}'...")
 
     fields = await scrap_pdf_fields(path_to_pdf)
@@ -53,11 +54,12 @@ async def check_fields_in_pdf_file(
         parser_instance.widget_data_dict, validator_instance
     )
 
-    await add_comments_to_widgets(
+    files_with_comments = await add_comments_to_widgets(
         pdf_path=path_to_pdf, comments=errors_in_fields, **kwargs
     )
 
     logger.info(f"PDF '{path_to_pdf}' checked successfully")
+    return files_with_comments
 
 
 async def main_check_pdf_fields(
@@ -66,7 +68,7 @@ async def main_check_pdf_fields(
     widget_parser_type: Type[ParserPDFBase] = ParserPDFWidget,
     validator_type: Type[TextWidgetValidatorUseAI] = TextWidgetValidatorUseAI,
     **kwargs,
-) -> None:
+) -> List[FileDataSchema]:
     tasks = [
         check_fields_in_pdf_file(
             path_to_pdf=pdf,
@@ -77,4 +79,6 @@ async def main_check_pdf_fields(
         for pdf in paths_to_pdf
     ]
 
-    await asyncio.gather(*tasks)
+    checked_forms = await asyncio.gather(*tasks)
+
+    return checked_forms
