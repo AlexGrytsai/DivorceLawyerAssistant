@@ -91,37 +91,37 @@ class LocalStorage(BaseStorage):
         )
         return list(uploaded)
 
-    async def delete(self, *args, filename: str) -> JSONResponse:
+    async def delete(self, *args, file_path: str) -> JSONResponse:
         try:
-            file_path = Path(self._path_to_storage) / filename
+            file_path = Path(file_path)
 
             if file_path.exists():
                 os.remove(file_path)
-                logger.info(f"{filename} deleted successfully")
+                logger.info(f"{file_path} deleted successfully")
 
                 return JSONResponse(
-                    content={"message": f"{filename} deleted successfully"},
+                    content={"message": f"{file_path} deleted successfully"},
                     status_code=status.HTTP_204_NO_CONTENT,
                 )
             else:
                 logger.warning(
-                    f"{filename} not found in {self._path_to_storage} "
+                    f"{file_path} not found in {self._path_to_storage} "
                     f"for deletion"
                 )
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail={
                         "error": "File not found",
-                        "message": f"{filename} not found",
+                        "message": f"{file_path} not found",
                     },
                 )
 
         except ErrorDeletingFile as exc:
-            logger.error(f"Error deleting file {filename}: {exc}")
+            logger.error(f"Error deleting file {file_path}: {exc}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail={
                     "error": str(exc),
-                    "message": f"Error deleting {filename}",
+                    "message": f"Error deleting {file_path}",
                 },
             )
