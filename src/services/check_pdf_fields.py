@@ -41,11 +41,11 @@ async def check_fields_in_pdf_file(
     path_to_pdf: str,
     parser_instance: ParserPDFBase,
     validator_instance: TextBaseValidator,
+    **kwargs,
 ) -> None:
     logger.info(f"Check PDF fields for '{path_to_pdf}'...")
 
     fields = await scrap_pdf_fields(path_to_pdf)
-    logger.debug(f"Scraped fields: {fields}")
 
     await prepare_scraped_data(parser_instance, fields)
 
@@ -53,11 +53,8 @@ async def check_fields_in_pdf_file(
         parser_instance.widget_data_dict, validator_instance
     )
 
-    logger.info(f"Mistakes in fields on '{path_to_pdf}': {errors_in_fields}")
-
-    logger.info(f"Add comments to PDF '{path_to_pdf}'...")
     await add_comments_to_widgets(
-        pdf_path=path_to_pdf, comments=errors_in_fields
+        pdf_path=path_to_pdf, comments=errors_in_fields, **kwargs
     )
 
     logger.info(f"PDF '{path_to_pdf}' checked successfully")
@@ -68,12 +65,14 @@ async def main_check_pdf_fields(
     ai_assistant: OpenAITextAnalyzer,
     widget_parser_type: Type[ParserPDFBase] = ParserPDFWidget,
     validator_type: Type[TextWidgetValidatorUseAI] = TextWidgetValidatorUseAI,
+    **kwargs,
 ) -> None:
     tasks = [
         check_fields_in_pdf_file(
             path_to_pdf=pdf,
             parser_instance=widget_parser_type(),
             validator_instance=validator_type(ai_assistant=ai_assistant),
+            **kwargs,
         )
         for pdf in paths_to_pdf
     ]
