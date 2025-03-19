@@ -6,6 +6,7 @@ from src.core.storage.shemas import FileDataSchema
 from src.services.ai_service.ai_text_validator import OpenAITextAnalyzer
 from src.services.pdf_tools.annotator import add_comments_to_widgets
 from src.services.pdf_tools.parser_pdf import ParserPDFBase, ParserPDFWidget
+from src.services.pdf_tools.pdf_saver import multi_save_pdf_to_new_file
 from src.services.pdf_tools.scraper_pdf import (
     ScraperWidgetFromPDF,
     ScrapedPage,
@@ -54,12 +55,12 @@ async def check_fields_in_pdf_file(
         parser_instance.widget_data_dict, validator_instance
     )
 
-    files_with_comments = await add_comments_to_widgets(
+    files_with_comments_in_buffer = await add_comments_to_widgets(
         pdf_path=path_to_pdf, comments=errors_in_fields, **kwargs
     )
 
     logger.info(f"PDF '{path_to_pdf}' checked successfully")
-    return files_with_comments
+    return files_with_comments_in_buffer
 
 
 async def main_check_pdf_fields(
@@ -79,6 +80,10 @@ async def main_check_pdf_fields(
         for pdf in paths_to_pdf
     ]
 
-    checked_forms = await asyncio.gather(*tasks)
+    files_with_comments_in_buffer = await asyncio.gather(*tasks)
 
-    return checked_forms
+    saved_new_forms = await multi_save_pdf_to_new_file(
+        list_pdf_buffer=files_with_comments_in_buffer, **kwargs
+    )
+
+    return saved_new_forms
