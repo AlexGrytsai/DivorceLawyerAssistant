@@ -9,6 +9,7 @@ from typing import List
 from fastapi import UploadFile, Request, status, HTTPException
 from starlette.responses import JSONResponse
 
+from src.core.storage.decorators import handle_upload_file_exceptions
 from src.core.storage.exceptions import ErrorUploadingFile, ErrorDeletingFile
 from src.core.storage.shemas import FileDataSchema
 from src.core.storage.storage import BaseStorage
@@ -48,6 +49,7 @@ class LocalStorage(BaseStorage):
 
         return f"{base_url}/{url_path}"
 
+    @handle_upload_file_exceptions
     async def upload(
         self,
         file: UploadFile,
@@ -55,41 +57,27 @@ class LocalStorage(BaseStorage):
         *args,
         **kwargs,
     ) -> FileDataSchema:
-        try:
-            file_object = await file.read()
+        file_object = await file.read()
 
-            file_path = os.path.join(
-                self._create_directory(request), file.filename
-            )
+        file_path = os.path.join(
+            self._create_directory(request), file.filename
+        )
 
-            with open(file_path, "wb") as fh:
-                fh.write(file_object)
-            await file.close()
+        with open(file_path, "wb") as fh:
+            fh.write(file_object)
+        await file.close()
 
-            return FileDataSchema(
-                path=file_path,
-                url=self._create_url_path(file_path, request),
-                message=f"{file.filename} saved successfully",
-                content_type=file.content_type,
-                size=file.size,
-                filename=file.filename,
-                status_code=status.HTTP_201_CREATED,
-                date_created=datetime.datetime.now().strftime(
-                    "%H:%M:%S %m-%d-%Y"
-                ),
-                creator=request.scope.get("user", request.client.host),
-            )
-        except ErrorUploadingFile as exc:
-            logger.warning(
-                f"Error uploading file: {exc} in {self.__class__.__name__}"
-            )
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail={
-                    "error": str(exc),
-                    "message": "File upload was unsuccessful",
-                },
-            )
+        return FileDataSchema(
+            path=file_path,
+            url=self._create_url_path(file_path, request),
+            message=f"{file.filename} saved successfully",
+            content_type=file.content_type,
+            size=file.size,
+            filename=file.filename,
+            status_code=status.HTTP_201_CREATED,
+            date_created=datetime.datetime.now().strftime("%H:%M:%S %m-%d-%Y"),
+            creator=request.scope.get("user", request.client.host),
+        )
 
     async def multi_upload(
         self,
