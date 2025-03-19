@@ -1,13 +1,19 @@
+import io
 import os
 from typing import Dict
 
 import pymupdf as fitz  # type: ignore
+from fastapi import UploadFile
 
+from src.core import settings
+from src.core.storage.shemas import FileDataSchema
 from src.services.pdf_tools.decorators import handle_pymupdf_exceptions
 
 
 def create_new_file_name(pdf_path: str) -> str:
-    file_name, extension = os.path.splitext(pdf_path)
+    print(pdf_path)
+    file_name, extension = os.path.splitext(os.path.basename(pdf_path))
+    print(file_name, extension)
     return f"{file_name}_checked{extension}"
 
 
@@ -21,7 +27,8 @@ def get_comment_position(
 async def add_comments_to_widgets(
     pdf_path: str,
     comments: Dict[str, str],
-) -> None:
+    **kwargs,
+) -> FileDataSchema:
     doc = fitz.open(pdf_path)
     for page in doc:
         for widget in page.widgets():
@@ -32,5 +39,18 @@ async def add_comments_to_widgets(
                     icon="Note",
                 )
 
-    doc.save(create_new_file_name(pdf_path))
+    pdf_buffer = io.BytesIO()
+    doc.save(pdf_buffer)
+    pdf_buffer.seek(0)
+
     doc.close()
+
+    upload_file = await settings.STORAGE(
+        file=UploadFile(
+            filename=create_new_file_name(pdf_path),
+            file=pdf_buffer,
+        ),
+        request=kwargs.get("request"),
+    )
+
+    return upload_file
