@@ -22,6 +22,32 @@ class LocalStorage(BaseStorage):
     def __init__(self, path_to_storage: str) -> None:
         self._path_to_storage = path_to_storage
 
+    @staticmethod
+    def _get_user_identifier(request: Request) -> str:
+        user_identifier = request.scope.get("user", request.client.host)
+        if isinstance(user_identifier, dict):
+            user_identifier = user_identifier.get("id", request.client.host)
+
+        user_identifier = str(user_identifier).replace(" ", "_")
+
+        return user_identifier
+
+    def _create_directory(self, request: Request) -> Path:
+        storage_path = Path(self._path_to_storage) / self._get_user_identifier(
+            request
+        )
+
+        storage_path.mkdir(parents=True, exist_ok=True)
+
+        return storage_path
+
+    @staticmethod
+    def _create_url_path(file_path: str, request: Request) -> str:
+        base_url = str(request.base_url).rstrip("/")
+        url_path = urllib.parse.quote(file_path.replace(os.sep, "/"))
+
+        return f"{base_url}/{url_path}"
+
     async def upload(
         self,
         file: UploadFile,
@@ -32,21 +58,17 @@ class LocalStorage(BaseStorage):
         try:
             file_object = await file.read()
 
-            storage_path = Path(self._path_to_storage)
-            storage_path.mkdir(parents=True, exist_ok=True)
-
-            file_path = os.path.join(storage_path, file.filename)
+            file_path = os.path.join(
+                self._create_directory(request), file.filename
+            )
 
             with open(file_path, "wb") as fh:
                 fh.write(file_object)
             await file.close()
 
-            base_url = str(request.base_url).rstrip("/")
-            url_path = urllib.parse.quote(file_path.replace(os.sep, "/"))
-
             return FileDataSchema(
                 path=file_path,
-                url=f"{base_url}/{url_path}",
+                url=self._create_url_path(file_path, request),
                 message=f"{file.filename} saved successfully",
                 content_type=file.content_type,
                 size=file.size,
