@@ -1,15 +1,9 @@
 import io
-import os
 from typing import Dict, Tuple
 
 import pymupdf as fitz  # type: ignore
 
 from src.services.pdf_tools.decorators import handle_pymupdf_exceptions
-
-
-def create_new_file_name(pdf_path: str) -> str:
-    file_name, extension = os.path.splitext(os.path.basename(pdf_path))
-    return f"{file_name}_checked{extension}"
 
 
 def get_comment_position(
