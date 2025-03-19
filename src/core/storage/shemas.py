@@ -12,3 +12,5 @@ class FileDataSchema(BaseModel):
     content_type: Optional[str] = None
     status_code: int
     message: str
+    date_created: str
+    creator: str
