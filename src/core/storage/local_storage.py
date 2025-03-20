@@ -101,7 +101,9 @@ class LocalStorage(BaseStorage):
         user_identifier = request.scope.get("user")
         if user_identifier is None and request.client:
             user_identifier = request.client.host
-        return user_identifier
+        return (
+            str(user_identifier) if user_identifier is not None else "Unknown"
+        )
 
     def _create_directory(self, request: Request) -> Path:
         storage_path = Path(self._path_to_storage) / self._get_user_identifier(
