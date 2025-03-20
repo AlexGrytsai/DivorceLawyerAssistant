@@ -1,10 +1,11 @@
 from typing import List
 
 from fastapi import APIRouter, File, UploadFile, Request
+from fastapi.params import Body
 
 from src.api.v1.check_pdf_forms.validate_file import validate_files
 from src.core import settings
-from src.core.storage.shemas import FileDataSchema
+from src.core.storage.shemas import FileDataSchema, FileDeleteSchema
 from src.services.ai_service.ai_text_validator import OpenAITextAnalyzer
 from src.services.check_pdf_fields import main_check_pdf_fields
 
@@ -35,3 +36,19 @@ async def simple_check_pdf_forms(
     )
 
     return checked_forms
+
+
+@router_pdf_check.delete(
+    "/delete-file",
+    status_code=200,
+    name="delete_file",
+    response_model=FileDeleteSchema,
+    tags=["Check PDF forms"],
+)
+async def delete_file(
+    request: Request, file_path: str = Body(..., embed=True)
+) -> FileDeleteSchema:
+    deleted_file = await settings.STORAGE.delete(
+        file_path=file_path, request=request
+    )
+    return deleted_file
