@@ -32,7 +32,6 @@ async def simple_check_pdf_forms(
     if isinstance(uploaded, FileDataSchema):
         uploaded = [uploaded]
 
-    file: FileDataSchema
     checked_forms = await main_check_pdf_fields(
         [str(file.path) for file in uploaded],
         ai_assistant=OpenAITextAnalyzer(),
