@@ -35,7 +35,7 @@ class LocalStorage(BaseStorage):
         file_object = await file.read()
 
         file_path = os.path.join(
-            self._create_directory(request), file.filename
+            self._create_directory(request), file.filename or "file"
         )
 
         with open(file_path, "wb") as fh:
@@ -51,7 +51,7 @@ class LocalStorage(BaseStorage):
             filename=file.filename,
             status_code=status.HTTP_201_CREATED,
             date_created=datetime.datetime.now().strftime("%H:%M:%S %m-%d-%Y"),
-            creator=request.scope.get("user", request.client.host),
+            creator=self._get_user_identifier(request),
         )
 
     async def multi_upload(
@@ -98,12 +98,9 @@ class LocalStorage(BaseStorage):
 
     @staticmethod
     def _get_user_identifier(request: Request) -> str:
-        user_identifier = request.scope.get("user", request.client.host)
-        if isinstance(user_identifier, dict):
-            user_identifier = user_identifier.get("id", request.client.host)
-
-        user_identifier = str(user_identifier).replace(" ", "_")
-
+        user_identifier = request.scope.get("user")
+        if user_identifier is None and request.client:
+            user_identifier = request.client.host
         return user_identifier
 
     def _create_directory(self, request: Request) -> Path:
