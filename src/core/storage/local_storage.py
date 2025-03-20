@@ -21,8 +21,8 @@ logger = logging.getLogger(__name__)
 class LocalStorage(BaseStorage):
     __slots__ = ("_path_to_storage",)
 
-    def __init__(self, path_to_storage: str) -> None:
-        self._path_to_storage = path_to_storage
+    def __init__(self, path_to_upload_dir: str) -> None:
+        self._path_to_storage = path_to_upload_dir
 
     @handle_upload_file_exceptions
     async def upload(
