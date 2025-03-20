@@ -1,5 +1,4 @@
 import json
-import logging
 import re
 from abc import ABC, abstractmethod
 from datetime import datetime
@@ -13,8 +12,6 @@ from src.services.ai_service.ai_text_validator import (
     AIBaseValidator,
 )
 from src.services.ai_service.prompts import GET_ADDRESS_PHONE_NUMBER_PROMPT
-
-logger = logging.getLogger(__name__)
 
 
 class TextBaseValidator(ABC):
@@ -186,7 +183,6 @@ class TextWidgetValidatorUseAI(TextBaseValidator):
                         widget_value
                     )
                     if not is_valid_email:
-                        logger.debug(f"{widget_name}: {error_message}")
                         await self._add_error_to_dict(
                             widget_name, error_message
                         )
@@ -195,7 +191,6 @@ class TextWidgetValidatorUseAI(TextBaseValidator):
                         await self.validate_line_length(widget_instance)
                     )
                     if not is_valid_length:
-                        logger.debug(f"{widget_name}: {error_message}")
                         await self._add_error_to_dict(
                             widget_name, error_message
                         )
@@ -204,7 +199,6 @@ class TextWidgetValidatorUseAI(TextBaseValidator):
                         widget_value
                     )
                     if is_caps_locked:
-                        logger.debug(f"{widget_name}: {error_message}")
                         await self._add_error_to_dict(
                             widget_name, caps_message
                         )
@@ -220,7 +214,6 @@ class TextWidgetValidatorUseAI(TextBaseValidator):
             for widget_name, date in address_dates_phones["dates"].items():
                 is_valid_date, error_message = await self.date_validator(date)
                 if not is_valid_date:
-                    logger.debug(f"{widget_name}: {error_message}")
                     await self._add_error_to_dict(widget_name, error_message)
 
         if address_dates_phones.get("addresses"):
@@ -231,7 +224,6 @@ class TextWidgetValidatorUseAI(TextBaseValidator):
                     address
                 )
                 if not is_valid_address:
-                    logger.debug(f"{widget_name}: {error_message}")
                     await self._add_error_to_dict(widget_name, error_message)
 
         if address_dates_phones.get("phone_numbers"):
@@ -242,7 +234,6 @@ class TextWidgetValidatorUseAI(TextBaseValidator):
                     await self.phone_number_validator(phone_number)
                 )
                 if not is_valid_phone:
-                    logger.debug(f"{widget_name}: {error_message}")
                     await self._add_error_to_dict(widget_name, error_message)
 
         return self._errors_in_widgets

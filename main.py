@@ -1,52 +1,29 @@
-import asyncio
-from typing import Type, List
+import logging
+from pathlib import Path
 
-from openai import AsyncOpenAI
+from fastapi import FastAPI, Request
+from fastapi.staticfiles import StaticFiles
+from starlette.responses import HTMLResponse
+from starlette.templating import Jinja2Templates
 
+from src.api.v1.check_pdf_forms.router import router_pdf_check
 from src.core import settings
-from src.core.config import redis_client_for_performance_monitoring
-from src.services.ai_service.ai_text_validator import OpenAITextAnalyzer
-from src.services.check_pdf_fields import main_check_pdf_fields
-from src.services.pdf_tools.parser_pdf import (
-    ParserPDFBase,
-    ParserPDFWidget,
+
+logger = logging.getLogger(__name__)
+
+app = FastAPI(title="Divorce Lawyer Assistant API", version="1.0.0")
+
+app.include_router(router_pdf_check)
+
+app.mount(
+    f"/{settings.STATIC_DIR}",
+    StaticFiles(directory=settings.STATIC_DIR),
+    name="static",
 )
-from src.utils.performance_monitoring.cpu import cpu_monitor_decorator
-from src.utils.performance_monitoring.ram import ram_monitor_decorator
-from src.utils.validators.text_validator import (
-    TextWidgetValidatorUseAI,
-)
+
+templates = Jinja2Templates(directory=Path("src/templates"))
 
 
-@cpu_monitor_decorator(r_client=redis_client_for_performance_monitoring)
-@ram_monitor_decorator(r_client=redis_client_for_performance_monitoring)
-async def main(
-    path_to_pdf: List[str],
-    parser_type: Type[ParserPDFBase],
-    validator_type: Type[TextWidgetValidatorUseAI],
-    assistant_instance: OpenAITextAnalyzer,
-) -> None:
-    await main_check_pdf_fields(
-        paths_to_pdf=path_to_pdf,
-        widget_parser_type=parser_type,
-        validator_type=validator_type,
-        ai_assistant=assistant_instance,
-    )
-
-
-if __name__ == "__main__":
-    ai_assistant = OpenAITextAnalyzer(
-        openai_client=AsyncOpenAI(
-            api_key=settings.OPENAI_API_KEY, max_retries=5
-        ),
-        openai_model=settings.BASE_AI_MODEL,
-    )
-
-    asyncio.run(
-        main(
-            path_to_pdf=["test_pdf.pdf", "document mi.pdf"],
-            parser_type=ParserPDFWidget,
-            validator_type=TextWidgetValidatorUseAI,
-            assistant_instance=ai_assistant,
-        )
-    )
+@app.get("/", response_class=HTMLResponse)
+async def serve_ui(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})

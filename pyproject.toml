@@ -22,16 +22,24 @@ python-dotenv = "^1.0.1"
 openai = "^1.65.4"
 fastapi = "^0.115.11"
 email-validator = "^2.2.0"
+uvicorn = "^0.34.0"
+python-multipart = "^0.0.20"
+python-magic = "^0.4.27"
+jinja2 = "^3.1.6"
 
 
 [tool.poetry.group.dev.dependencies]
+pympler = "^1.1"
+psutil = "^7.0.0"
+python-magic-bin = "^0.4.14"
+
+
+[tool.poetry.group.test.dependencies]
 black = "^25.1.0"
 flake8 = "^7.1.2"
-pympler = "^1.1"
 mypy = "^1.15.0"
-psutil = "^7.0.0"
-matplotlib = "^3.10.1"
 types-psutil = "^7.0.0.20250218"
+matplotlib = "^3.10.1"
 
 [build-system]
 requires = ["poetry-core"]

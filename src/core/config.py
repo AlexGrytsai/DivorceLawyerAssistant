@@ -1,18 +1,14 @@
 import logging.config
 import os
+from pathlib import Path
 from types import MappingProxyType
 
 from dotenv import load_dotenv
-from redis import Redis
+
+from src.core.storage import LocalStorage
+from src.core.storage.storage import BaseStorage
 
 load_dotenv()
-
-redis_client_for_performance_monitoring = Redis(
-    host="localhost",
-    port=6379,
-    db=10,
-    decode_responses=True,
-)
 
 
 class Settings:
@@ -20,6 +16,12 @@ class Settings:
 
     BASE_AI_MODEL: str = os.environ["BASE_AI_MODEL"]
     OPENAI_API_KEY: str = os.environ["OPENAI_API_KEY"]
+
+    STATIC_DIR: str = "static"
+    UPLOAD_DIR: str = (
+        f"{STATIC_DIR}/uploads/forms"  # str(Path("uploads") / "forms/")
+    )
+    STORAGE: BaseStorage = LocalStorage(path_to_upload_dir=UPLOAD_DIR)
 
     _MODEL_TOKEN_LIMITS = {
         "gpt-4": 10000,
