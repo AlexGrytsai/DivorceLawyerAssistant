@@ -3,7 +3,7 @@ import io
 import os
 from typing import Optional, List, Tuple
 
-from fastapi import UploadFile
+from fastapi import UploadFile, Request, HTTPException, status
 from starlette.datastructures import Headers
 
 from src.core import settings
@@ -33,19 +33,26 @@ async def save_pdf_to_new_file(
     old_pdf_path: str,
     **kwargs,
 ) -> FileDataSchema:
-    file = UploadFile(
-        filename=create_new_file_name(old_pdf_path, "with_simple_check"),
-        file=pdf_buffer,
-        size=determination_file_size(pdf_buffer),
-        headers=Headers({"Content-Type": "application/pdf"}),
-    )
+    request: Optional[Request] = kwargs.get("request")
+    if request:
+        file = UploadFile(
+            filename=create_new_file_name(old_pdf_path, "with_simple_check"),
+            file=pdf_buffer,
+            size=determination_file_size(pdf_buffer),
+            headers=Headers({"Content-Type": "application/pdf"}),
+        )
 
-    upload_file = await settings.STORAGE(
-        file=file,
-        request=kwargs.get("request"),
-    )
+        upload_file = await settings.STORAGE(
+            file=file,
+            request=request,
+        )
 
-    return upload_file
+        return upload_file
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Request is not provided in function save_pdf_to_new_file",
+        )
 
 
 async def multi_save_pdf_to_new_file(
