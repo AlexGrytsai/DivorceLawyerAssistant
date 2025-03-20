@@ -1,6 +1,7 @@
 import asyncio
+import io
 import logging
-from typing import List, Dict, Type
+from typing import List, Dict, Type, Tuple
 
 from src.core.storage.shemas import FileDataSchema
 from src.services.ai_service.ai_text_validator import OpenAITextAnalyzer
@@ -44,7 +45,7 @@ async def check_fields_in_pdf_file(
     parser_instance: ParserPDFBase,
     validator_instance: TextBaseValidator,
     **kwargs,
-) -> List[FileDataSchema]:
+) -> Tuple[io.BytesIO, str]:
     logger.info(f"Check PDF fields for '{path_to_pdf}'...")
 
     fields = await scrap_pdf_fields(path_to_pdf)
