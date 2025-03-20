@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check PDF Forms</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='/styles.css') }}">
+    <script src="{{ url_for('static', path='/script.js') }}" defer></script>
+</head>
+<body>
+    <h1>Check PDF Forms</h1>
+    <input type="file" id="fileInput" multiple accept="application/pdf">
+    <button onclick="uploadFiles()">Check</button>
+    <div id="results"></div>
+</body>
+</html>
