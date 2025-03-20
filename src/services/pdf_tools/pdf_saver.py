@@ -1,5 +1,6 @@
 import asyncio
 import io
+import logging
 import os
 from typing import Optional, List, Tuple
 
@@ -8,6 +9,8 @@ from starlette.datastructures import Headers
 
 from src.core import settings
 from src.core.storage.shemas import FileDataSchema
+
+logger = logging.getLogger(__name__)
 
 
 def create_new_file_name(
@@ -46,13 +49,16 @@ async def save_pdf_to_new_file(
             file=file,
             request=request,
         )
-
-        return upload_file
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Request is not provided in function save_pdf_to_new_file",
-        )
+        if isinstance(upload_file, FileDataSchema):
+            return upload_file
+    logger.warning(
+        "Request is not provided in function save_pdf_to_new_file "
+        "or file was not saved"
+    )
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail="Request is not provided in function save_pdf_to_new_file",
+    )
 
 
 async def multi_save_pdf_to_new_file(
