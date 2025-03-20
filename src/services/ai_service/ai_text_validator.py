@@ -6,7 +6,10 @@ from openai import (
     AsyncOpenAI,
 )
 
+from src.core import settings
 from src.services.ai_service.decorators import reconnection_async
+
+BASE_AI_CLIENT = AsyncOpenAI(api_key=settings.OPENAI_API_KEY, max_retries=5)
 
 
 class AIBaseValidator(ABC):
@@ -20,7 +23,11 @@ class AIBaseValidator(ABC):
 class OpenAITextAnalyzer(AIBaseValidator):
     __slots__ = ("_openai_client", "_openai_model")
 
-    def __init__(self, openai_client: AsyncOpenAI, openai_model: str) -> None:
+    def __init__(
+        self,
+        openai_client: AsyncOpenAI = BASE_AI_CLIENT,
+        openai_model: str = settings.BASE_AI_MODEL,
+    ) -> None:
         self._openai_client = openai_client
         self._openai_model = openai_model
 
