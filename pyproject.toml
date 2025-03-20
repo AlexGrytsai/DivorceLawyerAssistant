@@ -29,14 +29,17 @@ jinja2 = "^3.1.6"
 
 
 [tool.poetry.group.dev.dependencies]
-black = "^25.1.0"
-flake8 = "^7.1.2"
 pympler = "^1.1"
-mypy = "^1.15.0"
 psutil = "^7.0.0"
 matplotlib = "^3.10.1"
-types-psutil = "^7.0.0.20250218"
 python-magic-bin = "^0.4.14"
+
+
+[tool.poetry.group.test.dependencies]
+black = "^25.1.0"
+flake8 = "^7.1.2"
+mypy = "^1.15.0"
+types-psutil = "^7.0.0.20250218"
 
 [build-system]
 requires = ["poetry-core"]
