@@ -17,8 +17,8 @@ class Settings:
     BASE_AI_MODEL: str = os.environ["BASE_AI_MODEL"]
     OPENAI_API_KEY: str = os.environ["OPENAI_API_KEY"]
 
-    PATH_TO_STORAGE: str = str(Path("uploads") / "forms/")
-    STORAGE: BaseStorage = LocalStorage(path_to_storage=PATH_TO_STORAGE)
+    UPLOAD_DIR: str = str(Path("uploads") / "forms/")
+    STORAGE: BaseStorage = LocalStorage(path_to_upload_dir=UPLOAD_DIR)
 
     _MODEL_TOKEN_LIMITS = {
         "gpt-4": 10000,
