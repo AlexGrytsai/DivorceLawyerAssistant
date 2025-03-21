@@ -12,7 +12,7 @@ load_dotenv()
 
 
 class Settings:
-    DEBUG: bool = True
+    DEBUG: bool = os.getenv("DEBUG", "True") == "True"
 
     BASE_AI_MODEL: str = os.environ["BASE_AI_MODEL"]
     OPENAI_API_KEY: str = os.environ["OPENAI_API_KEY"]
