@@ -1,4 +1,7 @@
 import unittest
+import shutil
+import os
+from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
 from fastapi import HTTPException, status
@@ -43,6 +46,14 @@ class TestUploadFileExceptionsDecorator(unittest.TestCase):
         self.decorated_error_func = handle_upload_file_exceptions(
             self.mock_error_func
         )
+        
+        # Path to static directory that needs to be cleaned up after tests
+        self.static_dir = Path("src/test/static")
+
+    def tearDown(self):
+        # Clean up the static directory after tests
+        if self.static_dir.exists():
+            shutil.rmtree(self.static_dir, ignore_errors=True)
 
     async def test_successful_function_execution(self):
         """Test decorator passes through the result when no exception occurs"""
@@ -120,6 +131,14 @@ class TestDeleteFileExceptionsDecorator(unittest.TestCase):
         self.decorated_error_func = handle_delete_file_exceptions(
             self.mock_error_func
         )
+        
+        # Path to static directory that needs to be cleaned up after tests
+        self.static_dir = Path("src/test/static")
+
+    def tearDown(self):
+        # Clean up the static directory after tests
+        if self.static_dir.exists():
+            shutil.rmtree(self.static_dir, ignore_errors=True)
 
     async def test_successful_function_execution(self):
         """Test decorator passes through the result when no exception occurs"""
