@@ -3,11 +3,11 @@ from typing import List
 from fastapi import APIRouter, File, UploadFile, Request
 from fastapi.params import Body
 
-from src.api.v1.check_pdf_forms.validate_file import validate_files
 from src.core import settings
 from src.core.storage.shemas import FileDataSchema, FileDeleteSchema
 from src.services.ai_service.ai_text_validator import OpenAITextAnalyzer
 from src.services.check_pdf_fields import main_check_pdf_fields
+from src.utils.validators.validate_file_mime import validate_files
 
 router_pdf_check = APIRouter(
     prefix="/api/v1/pdf-forms-check", tags=["Check PDF forms"]
