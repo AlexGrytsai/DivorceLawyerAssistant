@@ -127,7 +127,9 @@ class ParserPDFWidget(ParserPDFBase):
 
     @property
     def document_as_text(self) -> str:
-        return json.dumps(self._widget_dict)
+        return json.dumps(
+            {key: value["value"] for key, value in self._widget_dict.items()}
+        )
 
     @property
     def widget_data_dict(self) -> Dict[str, Dict[str, str]]:
