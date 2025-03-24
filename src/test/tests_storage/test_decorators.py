@@ -1,6 +1,5 @@
-import unittest
 import shutil
-import os
+import unittest
 from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
@@ -46,7 +45,7 @@ class TestUploadFileExceptionsDecorator(unittest.TestCase):
         self.decorated_error_func = handle_upload_file_exceptions(
             self.mock_error_func
         )
-        
+
         # Path to static directory that needs to be cleaned up after tests
         self.static_dir = Path("src/test/static")
 
@@ -131,7 +130,7 @@ class TestDeleteFileExceptionsDecorator(unittest.TestCase):
         self.decorated_error_func = handle_delete_file_exceptions(
             self.mock_error_func
         )
-        
+
         # Path to static directory that needs to be cleaned up after tests
         self.static_dir = Path("src/test/static")
 
