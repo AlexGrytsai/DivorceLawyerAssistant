@@ -1,0 +1,7 @@
+[run]
+source = src
+omit =
+    */__init__.py
+    src/test/*
+    src/utils/performance_monitoring/*
+    src/core/config.py
