@@ -1,6 +1,5 @@
 import logging.config
 import os
-from pathlib import Path
 from types import MappingProxyType
 
 from dotenv import load_dotenv
@@ -12,7 +11,7 @@ load_dotenv()
 
 
 class Settings:
-    DEBUG: bool = True
+    DEBUG: bool = os.getenv("DEBUG", "True") == "True"
 
     BASE_AI_MODEL: str = os.environ["BASE_AI_MODEL"]
     OPENAI_API_KEY: str = os.environ["OPENAI_API_KEY"]
@@ -28,6 +27,7 @@ class Settings:
         "gpt-4o": 30000,
         "gpt-4o-2024-08-06": 30000,
         "gpt-4o-realtime-preview": 20000,
+        "gpt-4o-mini": 128_000,
         "gpt-4-turbo": 30000,
         "gpt-3.5-turbo": 200000,
         "gpt-3.5-turbo-16k": 160000,

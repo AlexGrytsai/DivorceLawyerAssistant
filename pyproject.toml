@@ -40,6 +40,11 @@ flake8 = "^7.1.2"
 mypy = "^1.15.0"
 types-psutil = "^7.0.0.20250218"
 matplotlib = "^3.10.1"
+coverage = "^7.7.0"
+
+[tool.pytest.ini_options]
+asyncio_mode = "strict"
+asyncio_default_fixture_loop_scope = "function"
 
 [build-system]
 requires = ["poetry-core"]
