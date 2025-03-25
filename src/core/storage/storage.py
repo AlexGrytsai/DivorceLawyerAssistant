@@ -15,8 +15,12 @@ from src.core.storage.shemas import (
 logger = logging.getLogger(__name__)
 
 
-class BaseStorage(ABC):
-    """Base class for storage implementations"""
+class BaseStorageInterface(ABC):
+    """Interface for storage implementations.
+
+    This abstract class defines the contract for all storage implementations,
+    providing methods for file and folder operations.
+    """
 
     async def __call__(
         self,
@@ -26,15 +30,15 @@ class BaseStorage(ABC):
     ) -> Union[FileDataSchema, List[FileDataSchema]]:
         """
         Handle file upload requests
-        
+
         Args:
             request: FastAPI request object
             file: Optional single file to upload
             files: Optional list of files to upload
-            
+
         Returns:
             Union[FileDataSchema, List[FileDataSchema]]: Upload result(s)
-            
+
         Raises:
             HTTPException: If no files provided or upload fails
         """
@@ -68,13 +72,13 @@ class BaseStorage(ABC):
     ) -> FileDataSchema:
         """
         Upload a single file to storage
-        
+
         Args:
             file: File to upload
             request: FastAPI request object
             *args: Additional positional arguments
             **kwargs: Additional keyword arguments
-            
+
         Returns:
             FileDataSchema: Upload result
         """
@@ -86,13 +90,13 @@ class BaseStorage(ABC):
     ) -> List[FileDataSchema]:
         """
         Upload multiple files to storage
-        
+
         Args:
             files: List of files to upload
             request: FastAPI request object
             *args: Additional positional arguments
             **kwargs: Additional keyword arguments
-            
+
         Returns:
             List[FileDataSchema]: List of upload results
         """
@@ -104,13 +108,13 @@ class BaseStorage(ABC):
     ) -> FileDeleteSchema:
         """
         Delete a file from storage
-        
+
         Args:
             file_path: Path to file to delete
             request: FastAPI request object
             *args: Additional positional arguments
             **kwargs: Additional keyword arguments
-            
+
         Returns:
             FileDeleteSchema: Delete operation result
         """
@@ -122,13 +126,13 @@ class BaseStorage(ABC):
     ) -> FolderDataSchema:
         """
         Create a new folder in storage
-        
+
         Args:
             folder_path: Path to create folder at
             request: FastAPI request object
             *args: Additional positional arguments
             **kwargs: Additional keyword arguments
-            
+
         Returns:
             FolderDataSchema: Folder creation result
         """
@@ -140,14 +144,14 @@ class BaseStorage(ABC):
     ) -> FolderDataSchema:
         """
         Rename existing folder
-        
+
         Args:
             old_path: Current folder path
             new_path: New folder path
             request: FastAPI request object
             *args: Additional positional arguments
             **kwargs: Additional keyword arguments
-            
+
         Returns:
             FolderDataSchema: Folder rename result
         """
@@ -159,15 +163,15 @@ class BaseStorage(ABC):
     ) -> FolderDeleteSchema:
         """
         Delete folder and all its contents
-        
+
         Args:
             folder_path: Path to folder to delete
             request: FastAPI request object
             *args: Additional positional arguments
             **kwargs: Additional keyword arguments
-            
+
         Returns:
-            FolderDeleteSchema: Folder deletion result with count of deleted files
+            FolderDeleteSchema: Result with count of deleted files
         """
         pass
 
@@ -177,14 +181,14 @@ class BaseStorage(ABC):
     ) -> FileDataSchema:
         """
         Rename existing file
-        
+
         Args:
             old_path: Current file path
             new_path: New file path
             request: FastAPI request object
             *args: Additional positional arguments
             **kwargs: Additional keyword arguments
-            
+
         Returns:
             FileDataSchema: File rename result
         """
