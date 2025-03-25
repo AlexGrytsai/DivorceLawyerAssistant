@@ -12,13 +12,15 @@ from src.core.storage.decorators import (
     handle_upload_file_exceptions,
     handle_delete_file_exceptions,
 )
+from src.core.storage.interfaces.base_storage_interface import (
+    BaseStorageInterface,
+)
 from src.core.storage.shemas import (
     FileDataSchema,
     FileDeleteSchema,
     FolderDataSchema,
     FolderDeleteSchema,
 )
-from src.core.storage.storage import BaseStorageInterface
 
 logger = logging.getLogger(__name__)
 
@@ -116,7 +118,7 @@ class LocalStorage(BaseStorageInterface):
                 for name in dirs:
                     os.rmdir(os.path.join(root, name))
             os.rmdir(folder)
-            
+
             logger.info(f"{folder_path} deleted successfully")
             return FolderDeleteSchema(
                 folder=folder_path,
@@ -150,7 +152,7 @@ class LocalStorage(BaseStorageInterface):
         if not folder.exists():
             folder.mkdir(parents=True, exist_ok=True)
             logger.info(f"Folder {folder_path} created successfully")
-            
+
             return FolderDataSchema(
                 path=str(folder),
                 name=folder.name,
@@ -180,12 +182,12 @@ class LocalStorage(BaseStorageInterface):
         """Rename existing folder"""
         old_folder = Path(old_path)
         new_folder = Path(new_path)
-        
+
         if old_folder.exists():
             if not new_folder.exists():
                 old_folder.rename(new_folder)
                 logger.info(f"Folder renamed from {old_path} to {new_path}")
-                
+
                 return FolderDataSchema(
                     path=str(new_folder),
                     name=new_folder.name,
@@ -224,12 +226,12 @@ class LocalStorage(BaseStorageInterface):
         """Rename existing file"""
         old_file = Path(old_path)
         new_file = Path(new_path)
-        
+
         if old_file.exists():
             if not new_file.exists():
                 old_file.rename(new_file)
                 logger.info(f"File renamed from {old_path} to {new_path}")
-                
+
                 return FileDataSchema(
                     path=str(new_file),
                     url=self._create_url_path(str(new_file), request),
