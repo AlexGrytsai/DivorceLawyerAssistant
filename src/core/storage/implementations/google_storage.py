@@ -19,12 +19,6 @@ class GoogleCloudStorage(CloudStorageInterface):
         self,
         bucket_name: str,
     ):
-        """
-        Initialize Google Cloud Storage
-
-        Args:
-            bucket_name: Name of the bucket
-        """
         self.bucket_name = bucket_name
         self._client = None
         self._bucket = None
