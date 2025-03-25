@@ -4,12 +4,17 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from fastapi import UploadFile, Request, HTTPException
 
 from src.core.storage.exceptions import ErrorSavingFile
-from src.core.storage.shemas import FileDataSchema, FileDeleteSchema
-from src.core.storage.storage import BaseStorage
+from src.core.storage.shemas import (
+    FileDataSchema,
+    FileDeleteSchema,
+    FolderDataSchema,
+    FolderDeleteSchema,
+)
+from src.core.storage.storage import BaseStorageInterface
 
 
 class TestBaseStorage(unittest.TestCase):
-    class MockStorage(BaseStorage):
+    class MockStorage(BaseStorageInterface):
         """Mock implementation of BaseStorage for testing"""
 
         async def upload(self, file, request, *args, **kwargs):
@@ -46,6 +51,51 @@ class TestBaseStorage(unittest.TestCase):
                 status_code=200,
                 date_deleted="2023-01-01",
                 deleted_by="test",
+            )
+
+        async def create_folder(self, folder_path, request, *args, **kwargs):
+            return FolderDataSchema(
+                path=folder_path,
+                name="mock_folder",
+                status_code=200,
+                message="Folder created",
+                date_created="2023-01-01",
+                creator="test",
+                parent_folder="/mock",
+                is_empty=True,
+            )
+
+        async def rename_folder(self, old_path, new_path, request, *args, **kwargs):
+            return FolderDataSchema(
+                path=new_path,
+                name="renamed_folder",
+                status_code=200,
+                message="Folder renamed",
+                date_created="2023-01-01",
+                creator="test",
+                parent_folder="/mock",
+                is_empty=True,
+            )
+
+        async def delete_folder(self, folder_path, request, *args, **kwargs):
+            return FolderDeleteSchema(
+                folder=folder_path,
+                message="Folder deleted",
+                status_code=200,
+                date_deleted="2023-01-01",
+                deleted_by="test",
+                deleted_files_count=0,
+            )
+
+        async def rename_file(self, old_path, new_path, request, *args, **kwargs):
+            return FileDataSchema(
+                path=new_path,
+                url=f"http://example.com/mock/{new_path}",
+                filename="renamed.txt",
+                status_code=200,
+                message="File renamed",
+                date_created="2023-01-01",
+                creator="test",
             )
 
     def setUp(self):
@@ -121,7 +171,3 @@ class TestBaseStorage(unittest.TestCase):
         mock_logger.warning.assert_called_once_with(
             f"Error saving file: {error_message}"
         )
-
-
-if __name__ == "__main__":
-    unittest.main()
