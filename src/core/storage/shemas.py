@@ -34,3 +34,12 @@ class FileDeleteSchema(BaseModel):
     status_code: int = 200
     date_deleted: str = datetime.now().isoformat()
     deleted_by: str = "system"
+
+
+class FolderDeleteSchema(BaseModel):
+    folder: Path | str
+    message: str = "Folder deleted successfully"
+    status_code: int = 200
+    date_deleted: str = datetime.now().isoformat()
+    deleted_by: str = "system"
+    deleted_files_count: int = 0
