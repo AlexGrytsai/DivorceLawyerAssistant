@@ -1,44 +1,29 @@
-from src.core.config import redis_client_for_performance_monitoring
-from src.pdf_extractor.geometry_utils import GeometryUtils
-from src.pdf_extractor.page_formatter import PageFormatter
-from src.pdf_extractor.parser_pdf import ParserPDF
-from src.pdf_extractor.scraper_pdf import ScraperPDF
-from src.pdf_extractor.table_processor import TableProcessor
-from src.pdf_extractor.text_processor import TextProcessor
-from src.pdf_extractor.widger_processor import WidgetSpanProcessor
-from src.utils.performance_monitoring.cpu import cpu_monitor_decorator
-from src.utils.performance_monitoring.ram import ram_monitor_decorator
+import logging
+from pathlib import Path
+
+from fastapi import FastAPI, Request
+from fastapi.staticfiles import StaticFiles
+from starlette.responses import HTMLResponse
+from starlette.templating import Jinja2Templates
+
+from src.api.v1.check_pdf_forms.router import router_pdf_check
+from src.core import settings
+
+logger = logging.getLogger(__name__)
+
+app = FastAPI(title="Divorce Lawyer Assistant API", version="1.0.0")
+
+app.include_router(router_pdf_check)
+
+app.mount(
+    f"/{settings.STATIC_DIR}",
+    StaticFiles(directory=settings.STATIC_DIR),
+    name="static",
+)
+
+templates = Jinja2Templates(directory=Path("src/templates"))
 
 
-@cpu_monitor_decorator(r_client=redis_client_for_performance_monitoring)
-@ram_monitor_decorator(r_client=redis_client_for_performance_monitoring)
-def main(path_to_pdf: str) -> None:
-    scrap_pdf = ScraperPDF(path_to_pdf)
-
-    geometric_utils = GeometryUtils()
-
-    text_processor = TextProcessor(geometry_utils=geometric_utils)
-    table_processor = TableProcessor(geometry_utils=geometric_utils)
-    widget_processor = WidgetSpanProcessor(
-        geometry_utils=geometric_utils,
-        text_processor=text_processor,
-    )
-
-    page_formatter = PageFormatter(
-        text_processor=text_processor,
-        table_processor=table_processor,
-        widget_processor=widget_processor,
-    )
-
-    parser = ParserPDF(
-        text_processor=text_processor,
-        table_processor=TableProcessor(geometry_utils=geometric_utils),
-        page_formatter=page_formatter,
-    )
-    parser.prepare_data(scrap_pdf.scrap_data(), is_for_ai=True)
-    a = parser.document_as_text
-    print(a)
-
-
-if __name__ == "__main__":
-    main(path_to_pdf="test_pdf.pdf")
+@app.get("/", response_class=HTMLResponse)
+async def serve_ui(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})

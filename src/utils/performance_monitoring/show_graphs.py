@@ -6,7 +6,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.lines import Line2D
 
-from src.core.config import redis_client_for_performance_monitoring
+from src.utils.performance_monitoring import (
+    redis_client_for_performance_monitoring,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +21,7 @@ def load_usage_data_from_redis(key_prefix: str):
         data = {
             key: [
                 json.loads(value)
-                for value in redis_client_for_performance_monitoring.lrange(  # type: ignore # noqa: E501
+                for value in redis_client_for_performance_monitoring.lrange(  # type: ignore # noqa
                     key, 0, -1
                 )
             ]

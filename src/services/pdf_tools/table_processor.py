@@ -6,14 +6,24 @@ from pymupdf import Widget  # type: ignore
 from pymupdf.table import Table  # type: ignore
 from tabulate import tabulate
 
-from src.pdf_extractor.geometry_utils import GeometryBaseUtils
-from src.pdf_extractor.schemas import PagePDF, LinePDF, SpanPDF, TableParsed
-from src.pdf_extractor.scraper_pdf import ScrapedPage
+from src.services.pdf_tools.geometry_utils import GeometryBaseUtils
+from src.services.pdf_tools.schemas import (
+    SpanPDF,
+    TableParsed,
+    PagePDF,
+    LinePDF,
+)
+from src.services.pdf_tools.scraper_pdf import ScrapedPage
+from src.services.pdf_tools.widger_processor import WidgetSpanBaseProcessor
 
 TableType: TypeAlias = List[List[List[Widget | SpanPDF]]]
 
 
 class TableBaseProcessor(ABC):
+    __slots__ = ("_value_widgets_in_table",)
+
+    def __init__(self) -> None:
+        self._value_widgets_in_table: Dict[str, str] = {}
 
     @abstractmethod
     def format_table_to_dict(
@@ -30,6 +40,11 @@ class TableBaseProcessor(ABC):
     def format_table_to_string_for_ai(self, table: TableParsed) -> str:
         pass
 
+    @property
+    @abstractmethod
+    def value_widgets_in_table(self) -> Dict[str, str]:
+        pass
+
     @abstractmethod
     def process_tables(
         self, pages: List[PagePDF], scraped_data: List[ScrapedPage]
@@ -38,10 +53,80 @@ class TableBaseProcessor(ABC):
 
 
 class TableProcessor(TableBaseProcessor):
-    __slots__ = ("_geometry_utils",)
+    __slots__ = ("_geometry_utils", "_widget_processor")
 
-    def __init__(self, geometry_utils: GeometryBaseUtils) -> None:
+    def __init__(
+        self,
+        geometry_utils: GeometryBaseUtils,
+        widget_processor: WidgetSpanBaseProcessor,
+    ) -> None:
+        super().__init__()
         self._geometry_utils = geometry_utils
+        self._widget_processor = widget_processor
+
+    def process_tables(
+        self,
+        pages: List[PagePDF],
+        scraped_data: List[ScrapedPage],
+    ) -> None:
+        for i, page in enumerate(pages):
+            if scraped_data[i].tables:
+                page.scraped_tables = scraped_data[i].tables
+                table_lines = self._find_text_lines_in_tables(page)
+                self._collect_widgets_from_table(table_lines)
+                self._remove_table_lines_from_page(table_lines, page)
+                self._process_scraped_tables(table_lines, page)
+
+    def format_table_to_string_for_ai(
+        self,
+        table: TableParsed,
+    ) -> str:
+        table_data = self.format_table_to_dict(table)
+
+        if not table_data:
+            return ""
+
+        headers = table_data[0].keys()
+
+        rows = [" | ".join(headers), "-" * (len(" | ".join(headers)) + 5)]
+
+        for row in table_data:
+            row_str = " | ".join(row.get(header, "N/A") for header in headers)
+            rows.append(row_str)
+
+        return "\n".join(rows)
+
+    def format_table_to_dict(
+        self,
+        table: TableParsed,
+        use_widget_label: bool = False,
+    ) -> List[Dict[str, str]]:
+        rows = []
+        for row in table.table:
+            row_data = {}
+            for i, cell in enumerate(row):
+                cell_str = self._extract_text(cell, use_widget_label)
+                if table.header:
+                    if cell_str:
+                        row_data[table.header[i]] = cell_str
+                    else:
+                        row_data[table.header[i]] = "N/A"
+            rows.append(row_data)
+
+        return rows
+
+    @property
+    def value_widgets_in_table(self) -> Dict[str, str]:
+        return self._value_widgets_in_table
+
+    def _collect_widgets_from_table(self, table_lines: List[LinePDF]) -> None:
+        for line in table_lines:
+            widget_list = [
+                widget for widget in line.text if isinstance(widget, Widget)
+            ]
+            self._value_widgets_in_table.update(
+                self._widget_processor.extract_text_widgets(widget_list)
+            )
 
     def _find_text_lines_in_tables(self, page: PagePDF) -> List[LinePDF]:
         if page.scraped_tables:
@@ -147,13 +232,13 @@ class TableProcessor(TableBaseProcessor):
     @staticmethod
     def _extract_text(
         cell_data: List[fitz.Widget | SpanPDF],
-        is_for_ai: bool = False,
+        use_widget_label: bool = False,
     ) -> Optional[str]:
         cell_words = []
 
         for text in cell_data:
             if isinstance(text, fitz.Widget):
-                if is_for_ai:
+                if use_widget_label:
                     if text.field_value:
                         value = text.field_value
                     else:
@@ -170,14 +255,14 @@ class TableProcessor(TableBaseProcessor):
     def _table_to_text_rows(
         self,
         table: TableParsed,
-        is_for_ai: bool = True,
+        use_widget_label: bool = False,
     ) -> List[Tuple[str, ...]]:
         text_rows = []
 
         for row in table.table:
             text_row = []
             for cell in row:
-                cell_str = self._extract_text(cell, is_for_ai)
+                cell_str = self._extract_text(cell, use_widget_label)
                 if cell_str:
                     text_row.append(cell_str)
             if text_row:
@@ -192,44 +277,6 @@ class TableProcessor(TableBaseProcessor):
             tablefmt="grid",
         )
 
-    def format_table_to_string_for_ai(
-        self,
-        table: TableParsed,
-    ) -> str:
-        table_data = self.format_table_to_dict(table, is_widget=True)
-
-        if not table_data:
-            return ""
-
-        headers = table_data[0].keys()
-
-        rows = [" | ".join(headers), "-" * (len(" | ".join(headers)) + 5)]
-
-        for row in table_data:
-            row_str = " | ".join(row.get(header, "N/A") for header in headers)
-            rows.append(row_str)
-
-        return "\n".join(rows)
-
-    def format_table_to_dict(
-        self,
-        table: TableParsed,
-        is_widget: bool = False,
-    ) -> List[Dict[str, str]]:
-        rows = []
-        for row in table.table:
-            row_data = {}
-            for i, cell in enumerate(row):
-                cell_str = self._extract_text(cell, is_widget)
-                if table.header:
-                    if cell_str:
-                        row_data[table.header[i]] = cell_str
-                    else:
-                        row_data[table.header[i]] = "N/A"
-            rows.append(row_data)
-
-        return rows
-
     def _process_scraped_tables(
         self, table_rows: List[LinePDF], page: PagePDF
     ) -> None:
@@ -238,22 +285,8 @@ class TableProcessor(TableBaseProcessor):
                 self._parse_scraped_table(table_rows, table)
                 for table in page.scraped_tables
             ]
-            page.scraped_tables = None
+            page.scraped_tables = []
 
             for table in page.parsed_tables:
                 table.table_str_rows = self._table_to_text_rows(table)
-                table.table_str_rows_for_ai = self._table_to_text_rows(
-                    table, is_for_ai=True
-                )
-
-    def process_tables(
-        self,
-        pages: List[PagePDF],
-        scraped_data: List[ScrapedPage],
-    ) -> None:
-        for i, page in enumerate(pages):
-            if scraped_data[i].tables:
-                page.scraped_tables = scraped_data[i].tables
-                table_lines = self._find_text_lines_in_tables(page)
-                self._remove_table_lines_from_page(table_lines, page)
-                self._process_scraped_tables(table_lines, page)
+                table.table_str_rows_for_ai = self._table_to_text_rows(table)

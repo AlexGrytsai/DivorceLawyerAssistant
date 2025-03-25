@@ -4,6 +4,8 @@ from typing import List, Dict, Any, NamedTuple
 import pymupdf as fitz  # type: ignore
 from pymupdf.table import Table  # type: ignore
 
+from src.services.pdf_tools.decorators import handle_pymupdf_exceptions
+
 
 class ScrapedPage(NamedTuple):
     text_data: List[Dict[str, Any]]
@@ -18,15 +20,16 @@ class BaseScraperPDF(ABC):
         self._file_path = file_path
 
     @property
-    @abstractmethod
     def file_path(self) -> str:
         return self._file_path
+
+    @abstractmethod
+    def scrap_data(self) -> List[ScrapedPage]:
+        pass
 
 
 class ScraperPDF(BaseScraperPDF):
-    @property
-    def file_path(self) -> str:
-        return self._file_path
+    __slots__ = ()
 
     @staticmethod
     def __extract_text_from_page(page: fitz.Page) -> List[Dict[str, Any]]:
@@ -56,6 +59,7 @@ class ScraperPDF(BaseScraperPDF):
             self.__extract_tables_from_page(page),
         )
 
+    @handle_pymupdf_exceptions
     def scrap_data(
         self,
     ) -> List[ScrapedPage]:
@@ -63,6 +67,22 @@ class ScraperPDF(BaseScraperPDF):
         scraped_pages: List[ScrapedPage] = []
         for page in doc:
             scraped_pages.append(self._scrap_page(page))
+        doc.close()
+
+        return scraped_pages
+
+
+class ScraperWidgetFromPDF(BaseScraperPDF):
+    __slots__ = ()
+
+    @handle_pymupdf_exceptions
+    def scrap_data(self) -> List[ScrapedPage]:
+        doc: fitz.Document = fitz.open(self.file_path)
+        scraped_pages: List[ScrapedPage] = []
+        for page in doc:
+            scraped_pages.append(
+                ScrapedPage([], [widget for widget in page.widgets()], [])
+            )
         doc.close()
 
         return scraped_pages
