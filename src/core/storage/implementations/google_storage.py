@@ -15,10 +15,7 @@ logger = logging.getLogger(__name__)
 
 class GoogleCloudStorage(CloudStorageInterface):
 
-    def __init__(
-        self,
-        bucket_name: str,
-    ):
+    def __init__(self, bucket_name: str):
         self.bucket_name = bucket_name
         self._client = None
         self._bucket = None
