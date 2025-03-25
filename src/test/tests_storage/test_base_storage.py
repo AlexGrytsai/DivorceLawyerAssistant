@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from fastapi import UploadFile, Request, HTTPException
 
-from src.core.storage.exceptions import ErrorSavingFile
+from src.core.exceptions.storage import ErrorSavingFile
 from src.core.storage.interfaces.base_storage_interface import (
     BaseStorageInterface,
 )

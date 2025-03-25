@@ -4,7 +4,7 @@ from typing import List, Optional, Union
 
 from fastapi import UploadFile, status, HTTPException, Request
 
-from src.core.storage.exceptions import ErrorSavingFile
+from src.core.exceptions.storage import ErrorSavingFile
 from src.core.storage.shemas import (
     FileDataSchema,
     FileDeleteSchema,

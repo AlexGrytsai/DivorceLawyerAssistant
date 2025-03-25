@@ -5,7 +5,7 @@ from google.api_core import exceptions
 from google.cloud import storage  # type: ignore
 from google.cloud.storage import Blob, Bucket  # type: ignore
 
-from src.core.storage.exceptions import ErrorSavingFile
+from src.core.exceptions.storage import ErrorSavingFile
 from src.core.storage.interfaces.cloud_storage_interface import (
     CloudStorageInterface,
 )

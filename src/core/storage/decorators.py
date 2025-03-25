@@ -4,7 +4,7 @@ from typing import Callable
 
 from fastapi import HTTPException, status
 
-from src.core.storage.exceptions import ErrorUploadingFile, ErrorDeletingFile
+from src.core.exceptions.storage import ErrorUploadingFile, ErrorDeletingFile
 
 logger = logging.getLogger(__name__)
 
