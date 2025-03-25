@@ -258,7 +258,7 @@ class TestTextWidgetValidatorUseAI(unittest.TestCase):
         )
 
     @patch(
-        "src.utils.validators.text_validator.TextWidgetValidatorUseAI._check_widget_data_with_ai"
+        "src.utils.validators.text_validator.TextWidgetValidatorUseAI._check_widget_data_with_ai"  # noqa
     )
     async def test_validate_widgets_comprehensive(self, mock_check_with_ai):
         # Setup
@@ -272,9 +272,12 @@ class TestTextWidgetValidatorUseAI(unittest.TestCase):
                 "widget_instance": MockWidget(field_value="ALL CAPS TEXT"),
             },
             "fl_long_field": {
-                "value": "This is a very long text that should exceed the widget width",
+                "value": "This is a very long text that should exceed the widget width",  # noqa
                 "widget_instance": MockWidget(
-                    field_value="This is a very long text that should exceed the widget width"
+                    field_value=(
+                        "This is a very long text that should exceed "
+                        "the widget width"
+                    )
                 ),
             },
         }
@@ -310,7 +313,7 @@ class TestTextWidgetValidatorUseAI(unittest.TestCase):
             self.assertIn("date", result["fl_long_field"].lower())
 
     @patch(
-        "src.utils.validators.text_validator.TextWidgetValidatorUseAI._check_widget_data_with_ai"
+        "src.utils.validators.text_validator.TextWidgetValidatorUseAI._check_widget_data_with_ai"  # noqa
     )
     async def test_validate_widgets_real_data(self, mock_check_with_ai):
         # Create widgets dictionary from test data
@@ -417,14 +420,14 @@ class TestTextWidgetValidatorUseAI(unittest.TestCase):
         mock_ai.analyze_text.assert_not_called()
 
     @patch(
-        "src.utils.validators.text_validator.TextWidgetValidatorUseAI._check_widget_data_with_ai"
+        "src.utils.validators.text_validator.TextWidgetValidatorUseAI._check_widget_data_with_ai"  # noqa
     )
     async def test_validate_widgets_empty_values(self, mock_check_with_ai):
         # Setup
         mock_check_with_ai.return_value = {}
         widgets = {
             "field1": {"value": "", "widget_instance": MockWidget()},
-            "field2": {"value": None, "widget_instance": MockWidget()}
+            "field2": {"value": None, "widget_instance": MockWidget()},
         }
 
         # Execute
@@ -435,7 +438,7 @@ class TestTextWidgetValidatorUseAI(unittest.TestCase):
         mock_check_with_ai.assert_called_once()
 
     @patch(
-        "src.utils.validators.text_validator.TextWidgetValidatorUseAI._check_widget_data_with_ai"
+        "src.utils.validators.text_validator.TextWidgetValidatorUseAI._check_widget_data_with_ai"  # noqa
     )
     async def test_validate_widgets_ai_error(self, mock_check_with_ai):
         # Setup
@@ -452,32 +455,32 @@ class TestTextWidgetValidatorUseAI(unittest.TestCase):
         mock_check_with_ai.assert_called_once()
 
     @patch(
-        "src.utils.validators.text_validator.TextWidgetValidatorUseAI._check_widget_data_with_ai"
+        "src.utils.validators.text_validator.TextWidgetValidatorUseAI._check_widget_data_with_ai"  # noqa
     )
     async def test_validate_widgets_multiple_errors(self, mock_check_with_ai):
         # Setup
         mock_check_with_ai.return_value = {
             "dates": {"date_field": "invalid_date"},
             "addresses": {"address_field": "invalid_address"},
-            "phone_numbers": {"phone_field": "invalid_phone"}
+            "phone_numbers": {"phone_field": "invalid_phone"},
         }
         widgets = {
             "email_field": {
                 "value": "TEST@EXAMPLE.COM",
-                "widget_instance": MockWidget()
+                "widget_instance": MockWidget(),
             },
             "date_field": {
                 "value": "invalid_date",
-                "widget_instance": MockWidget()
+                "widget_instance": MockWidget(),
             },
             "address_field": {
                 "value": "invalid_address",
-                "widget_instance": MockWidget()
+                "widget_instance": MockWidget(),
             },
             "phone_field": {
                 "value": "invalid_phone",
-                "widget_instance": MockWidget()
-            }
+                "widget_instance": MockWidget(),
+            },
         }
 
         # Execute
@@ -492,13 +495,15 @@ class TestTextWidgetValidatorUseAI(unittest.TestCase):
     async def test_check_widget_data_with_ai_error_handling(self):
         # Setup
         widgets = {"field1": "value1"}
-        self.ai_assistant.analyze_text.side_effect = Exception("AI Service Error")
+        self.ai_assistant.analyze_text.side_effect = Exception(
+            "AI Service Error"
+        )
 
         # Execute
         result = await TextWidgetValidatorUseAI._check_widget_data_with_ai(
             widgets=widgets,
             ai_assistant=self.ai_assistant,
-            assistant_prompt="test prompt"
+            assistant_prompt="test prompt",
         )
 
         # Assert
@@ -514,7 +519,7 @@ class TestTextWidgetValidatorUseAI(unittest.TestCase):
         result = await TextWidgetValidatorUseAI._check_widget_data_with_ai(
             widgets=widgets,
             ai_assistant=self.ai_assistant,
-            assistant_prompt="test prompt"
+            assistant_prompt="test prompt",
         )
 
         # Assert
@@ -531,8 +536,7 @@ class TestTextWidgetValidatorUseAI(unittest.TestCase):
 
         # Assert
         self.assertEqual(
-            self.validator._errors_in_widgets,
-            {"field1": "Error 1\nError 2"}
+            self.validator._errors_in_widgets, {"field1": "Error 1\nError 2"}
         )
 
     async def test_email_validator_special_characters(self):
@@ -549,7 +553,9 @@ class TestTextWidgetValidatorUseAI(unittest.TestCase):
         ]
 
         for email, expected_valid, expected_message in test_cases:
-            result, message = await TextWidgetValidatorUseAI.email_validator(email)
+            result, message = await TextWidgetValidatorUseAI.email_validator(
+                email
+            )
             self.assertEqual(result, expected_valid)
             if not expected_valid:
                 self.assertIn(expected_message, message)
@@ -564,12 +570,22 @@ class TestTextWidgetValidatorUseAI(unittest.TestCase):
             ("01/32/2020", False, "The date is indicated in the wrong format"),
             ("January 1, 2020", True, ""),
             ("December 31, 9999", True, ""),
-            ("Invalid Month 1, 2020", False, "The date is indicated in the wrong format"),
-            ("January 32, 2020", False, "The date is indicated in the wrong format"),
+            (
+                "Invalid Month 1, 2020",
+                False,
+                "The date is indicated in the wrong format",
+            ),
+            (
+                "January 32, 2020",
+                False,
+                "The date is indicated in the wrong format",
+            ),
         ]
 
         for date_str, expected_valid, expected_message in test_cases:
-            result, message = await TextWidgetValidatorUseAI.date_validator(date_str)
+            result, message = await TextWidgetValidatorUseAI.date_validator(
+                date_str
+            )
             self.assertEqual(result, expected_valid)
             if not expected_valid:
                 self.assertEqual(message, expected_message)
@@ -590,7 +606,9 @@ class TestTextWidgetValidatorUseAI(unittest.TestCase):
         ]
 
         for phone, expected_valid, expected_message in test_cases:
-            result, message = await TextWidgetValidatorUseAI.phone_number_validator(phone)
+            result, message = (
+                await TextWidgetValidatorUseAI.phone_number_validator(phone)
+            )
             self.assertEqual(result, expected_valid)
             if not expected_valid:
                 self.assertEqual(message, expected_message)
@@ -598,20 +616,54 @@ class TestTextWidgetValidatorUseAI(unittest.TestCase):
     async def test_address_validator_edge_cases(self):
         # Test cases for address validation edge cases
         test_cases = [
-            ("123 Main Street NW Atlanta, GA 30303", True, "Valid full address"),
+            (
+                "123 Main Street NW Atlanta, GA 30303",
+                True,
+                "Valid full address",
+            ),
             ("123 Main Street NW", True, "Valid street address"),
             ("Atlanta, GA 30303", True, "Valid city, state, and ZIP"),
-            ("123 Main Street NW Atlanta, GA 30303-1234", True, "Valid full address"),
-            ("123 Main Street NW Atlanta, GA 30303-12345", False, "ZIP code is missing or incorrect"),
-            ("123 Main Street NW Atlanta, GA 303", False, "ZIP code is missing or incorrect"),
-            ("123 Main Street NW Atlanta, XX 30303", False, "State abbreviation is missing or incorrect"),
-            ("123 Main Atlanta, GA 30303", False, "Street type is missing or incorrect"),
-            ("123 Main Street NW Atlanta, GA", False, "ZIP code is missing or incorrect"),
-            ("123 Main Street NW, GA 30303", False, "City, state, and ZIP format is incorrect"),
+            (
+                "123 Main Street NW Atlanta, GA 30303-1234",
+                True,
+                "Valid full address",
+            ),
+            (
+                "123 Main Street NW Atlanta, GA 30303-12345",
+                False,
+                "ZIP code is missing or incorrect",
+            ),
+            (
+                "123 Main Street NW Atlanta, GA 303",
+                False,
+                "ZIP code is missing or incorrect",
+            ),
+            (
+                "123 Main Street NW Atlanta, XX 30303",
+                False,
+                "State abbreviation is missing or incorrect",
+            ),
+            (
+                "123 Main Atlanta, GA 30303",
+                False,
+                "Street type is missing or incorrect",
+            ),
+            (
+                "123 Main Street NW Atlanta, GA",
+                False,
+                "ZIP code is missing or incorrect",
+            ),
+            (
+                "123 Main Street NW, GA 30303",
+                False,
+                "City, state, and ZIP format is incorrect",
+            ),
         ]
 
         for address, expected_valid, expected_message in test_cases:
-            result, message = await TextWidgetValidatorUseAI.address_validator(address)
+            result, message = await TextWidgetValidatorUseAI.address_validator(
+                address
+            )
             self.assertEqual(result, expected_valid)
             self.assertEqual(message, expected_message)
 
@@ -625,15 +677,37 @@ class TestTextWidgetValidatorUseAI(unittest.TestCase):
             ("", 10, 100, True, ""),  # Empty string
             ("a", 10, 100, True, ""),  # Single character
             ("a" * 100, 10, 100, True, ""),  # Exact width
-            ("a" * 101, 10, 100, False, "Line length is too long"),  # One character too long
-            ("a" * 1000, 10, 100, False, "Line length is too long"),  # Very long string
+            (
+                "a" * 101,
+                10,
+                100,
+                False,
+                "Line length is too long",
+            ),  # One character too long
+            (
+                "a" * 1000,
+                10,
+                100,
+                False,
+                "Line length is too long",
+            ),  # Very long string
         ]
 
-        for text, font_size, width, expected_valid, expected_message in test_cases:
+        for (
+            text,
+            font_size,
+            width,
+            expected_valid,
+            expected_message,
+        ) in test_cases:
             mock_font_instance.text_length.return_value = len(text) * font_size
-            widget = MockWidget(field_value=text, text_fontsize=font_size, rect_width=width)
-            
-            result, message = await TextWidgetValidatorUseAI.validate_line_length(widget)
+            widget = MockWidget(
+                field_value=text, text_fontsize=font_size, rect_width=width
+            )
+
+            result, message = (
+                await TextWidgetValidatorUseAI.validate_line_length(widget)
+            )
             self.assertEqual(result, expected_valid)
             self.assertEqual(message, expected_message)
 
@@ -647,8 +721,7 @@ class TestTextWidgetValidatorUseAI(unittest.TestCase):
         widgets = {
             "field1": {"invalid_key": "value"},
             "field2": {"value": "test", "widget_instance": None},
-            "field3": {"value": None, "widget_instance": MockWidget()}
+            "field3": {"value": None, "widget_instance": MockWidget()},
         }
-        
         result = await self.validator.validate_widgets(widgets)
         self.assertEqual(result, {})

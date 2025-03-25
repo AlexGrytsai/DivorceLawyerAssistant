@@ -109,7 +109,8 @@ class TestCheckPDFFormsRouter(unittest.TestCase):
         This test simulates a scenario where the storage returns
         a single object instead of a list.
         """
-        # Configure mocks to simulate return of a single object instead of a list
+        # Configure mocks to simulate return of a single object
+        # instead of a list
         mock_validate_files.return_value = [self.mock_file]
         # Return a single object
         mock_storage.return_value = self.uploaded_file_data

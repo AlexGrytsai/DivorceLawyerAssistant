@@ -48,7 +48,6 @@ class TestLengthPromptValidator(unittest.TestCase):
         mock_encode.return_value = [1]  # 1 token > 0 limit
 
         self.assertFalse(is_length_prompt_valid("any prompt"))
-        # Не проверяем вызов encoding_for_model, так как функция возвращает False сразу
         mock_encoding.assert_not_called()
 
     @patch("src.utils.validators.length_prompt_validator.settings")

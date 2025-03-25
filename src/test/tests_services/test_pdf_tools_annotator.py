@@ -2,7 +2,7 @@ import io
 import unittest
 from unittest.mock import MagicMock, patch
 
-import pymupdf as fitz
+import pymupdf as fitz  # type: ignore
 
 from src.services.pdf_tools.annotator import (
     add_comments_to_widgets,

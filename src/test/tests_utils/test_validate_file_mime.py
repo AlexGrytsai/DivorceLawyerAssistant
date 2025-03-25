@@ -78,7 +78,8 @@ class TestValidateFileMime(unittest.TestCase):
                 loop=asyncio.get_event_loop_policy().get_event_loop()
             )
 
-            # Create a mock that will run asynchronously but return a known value
+            # Create a mock that will run asynchronously but return
+            # a known value
             async def async_return(file):
                 return (True, file)
 
