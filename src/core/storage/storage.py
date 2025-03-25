@@ -11,6 +11,11 @@ logger = logging.getLogger(__name__)
 
 
 class BaseStorage(ABC):
+    @property
+    @abstractmethod
+    def path_to_storage(self) -> str:
+        pass
+
     async def __call__(
         self,
         request: Request,

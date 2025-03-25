@@ -24,6 +24,10 @@ class LocalStorage(BaseStorage):
     def __init__(self, path_to_upload_dir: str) -> None:
         self._path_to_storage = path_to_upload_dir
 
+    @property
+    def path_to_storage(self) -> str:
+        return self._path_to_storage
+
     @handle_upload_file_exceptions
     async def upload(
         self,
