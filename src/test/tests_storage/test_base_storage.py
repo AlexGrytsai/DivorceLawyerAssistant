@@ -4,13 +4,15 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from fastapi import UploadFile, Request, HTTPException
 
 from src.core.storage.exceptions import ErrorSavingFile
+from src.core.storage.interfaces.base_storage_interface import (
+    BaseStorageInterface,
+)
 from src.core.storage.shemas import (
     FileDataSchema,
     FileDeleteSchema,
     FolderDataSchema,
     FolderDeleteSchema,
 )
-from src.core.storage.storage import BaseStorageInterface
 
 
 class TestBaseStorage(unittest.TestCase):
@@ -65,7 +67,9 @@ class TestBaseStorage(unittest.TestCase):
                 is_empty=True,
             )
 
-        async def rename_folder(self, old_path, new_path, request, *args, **kwargs):
+        async def rename_folder(
+            self, old_path, new_path, request, *args, **kwargs
+        ):
             return FolderDataSchema(
                 path=new_path,
                 name="renamed_folder",
@@ -87,7 +91,9 @@ class TestBaseStorage(unittest.TestCase):
                 deleted_files_count=0,
             )
 
-        async def rename_file(self, old_path, new_path, request, *args, **kwargs):
+        async def rename_file(
+            self, old_path, new_path, request, *args, **kwargs
+        ):
             return FileDataSchema(
                 path=new_path,
                 url=f"http://example.com/mock/{new_path}",
