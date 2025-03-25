@@ -5,7 +5,7 @@ from types import MappingProxyType
 from dotenv import load_dotenv
 
 from src.core.storage import LocalStorage
-from src.core.storage.storage import BaseStorage
+from src.core.storage.storage import BaseStorageInterface
 
 load_dotenv()
 
@@ -20,7 +20,7 @@ class Settings:
     UPLOAD_DIR: str = (
         f"{STATIC_DIR}/uploads/forms"  # str(Path("uploads") / "forms/")
     )
-    STORAGE: BaseStorage = LocalStorage(path_to_upload_dir=UPLOAD_DIR)
+    STORAGE: BaseStorageInterface = LocalStorage(path_to_upload_dir=UPLOAD_DIR)
 
     _MODEL_TOKEN_LIMITS = {
         "gpt-4": 10000,
