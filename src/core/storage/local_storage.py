@@ -4,7 +4,7 @@ import logging
 import os
 import urllib
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 from fastapi import UploadFile, Request, status, HTTPException
 
@@ -21,6 +21,7 @@ from src.core.storage.shemas import (
     FolderDataSchema,
     FolderDeleteSchema,
 )
+from src.core.exceptions.storage import ErrorSavingFile
 
 logger = logging.getLogger(__name__)
 
@@ -261,6 +262,127 @@ class LocalStorage(BaseStorageInterface):
                     "message": f"Source file {old_path} not found",
                 },
             )
+
+    @handle_upload_file_exceptions
+    async def get_file(
+        self,
+        file_path: str,
+        request: Request,
+    ) -> FileDataSchema:
+        """Get file by path"""
+        file = Path(file_path)
+        if not file.exists():
+            raise ErrorSavingFile(f"File {file_path} not found")
+
+        return FileDataSchema(
+            path=str(file),
+            url=self._create_url_path(str(file), request),
+            filename=file.name,
+            content_type=None,
+            size=file.stat().st_size,
+            status_code=200,
+            message="File retrieved successfully",
+            date_created=datetime.datetime.fromtimestamp(
+                file.stat().st_ctime
+            ).isoformat(),
+            creator="",
+        )
+
+    @handle_upload_file_exceptions
+    async def list_files(
+        self,
+        request: Request,
+        prefix: Optional[str] = None,
+    ) -> List[FileDataSchema]:
+        """List all files in storage"""
+        storage_path = Path(self._path_to_storage)
+        if prefix:
+            storage_path = storage_path / prefix
+
+        files = []
+        for file_path in storage_path.rglob("*"):
+            if file_path.is_file():
+                created_time = datetime.datetime.fromtimestamp(
+                    file_path.stat().st_ctime
+                ).isoformat()
+                file_data = FileDataSchema(
+                    path=str(file_path),
+                    url=self._create_url_path(str(file_path), request),
+                    filename=file_path.name,
+                    content_type=None,
+                    size=file_path.stat().st_size,
+                    status_code=200,
+                    message="File listed successfully",
+                    date_created=created_time,
+                    creator="",
+                )
+                files.append(file_data)
+
+        return files
+
+    @handle_upload_file_exceptions
+    async def list_folders(
+        self, prefix: Optional[str] = None
+    ) -> List[FolderDataSchema]:
+        """List all folders in storage"""
+        storage_path = Path(self._path_to_storage)
+        if prefix:
+            storage_path = storage_path / prefix
+
+        folders = []
+        for folder_path in storage_path.rglob("*"):
+            if folder_path.is_dir():
+                created_time = datetime.datetime.fromtimestamp(
+                    folder_path.stat().st_ctime
+                ).isoformat()
+                folder_data = FolderDataSchema(
+                    path=str(folder_path),
+                    name=folder_path.name,
+                    status_code=200,
+                    message="Folder listed successfully",
+                    date_created=created_time,
+                    creator="",
+                    parent_folder=str(folder_path.parent),
+                    is_empty=not any(folder_path.iterdir()),
+                )
+                folders.append(folder_data)
+
+        return folders
+
+    @handle_upload_file_exceptions
+    async def get_folder_contents(self, folder_path: str) -> dict:
+        """Get contents of a specific folder"""
+        folder = Path(folder_path)
+        if not folder.exists() or not folder.is_dir():
+            raise ErrorSavingFile(f"Folder {folder_path} not found")
+
+        files = []
+        folders = []
+
+        for item in folder.iterdir():
+            if item.is_file():
+                files.append(
+                    {
+                        "name": item.name,
+                        "path": str(item),
+                        "size": item.stat().st_size,
+                        "updated": datetime.datetime.fromtimestamp(
+                            item.stat().st_mtime
+                        ).isoformat(),
+                        "type": "file",
+                    }
+                )
+            else:
+                folders.append(
+                    {"name": item.name, "path": str(item), "type": "folder"}
+                )
+
+        return {
+            "current_path": str(folder),
+            "items": sorted(
+                folders + files, key=lambda x: (x["type"] == "file", x["name"])
+            ),
+        }
 
     @staticmethod
     def _get_user_identifier(request: Request) -> str:
