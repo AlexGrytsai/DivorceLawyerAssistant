@@ -1,9 +1,11 @@
 import logging
+from dataclasses import dataclass
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Union, Set
 
 from fastapi import UploadFile, Request
 
+from src.core.exceptions.storage import ErrorSavingFile
 from src.core.storage.decorators import (
     handle_upload_file_exceptions,
     handle_delete_file_exceptions,
@@ -22,9 +24,27 @@ from src.core.storage.shemas import (
     FolderDeleteSchema,
 )
 from src.utils.path_handler import PathHandler
-from src.core.exceptions.storage import ErrorSavingFile
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class FolderItem:
+    name: str
+    path: str
+    type: str
+
+
+@dataclass
+class FileItem(FolderItem):
+    size: int
+    updated: Optional[str]
+
+
+@dataclass
+class FolderContents:
+    current_path: str
+    items: List[Union[FileItem, FolderItem]]
 
 
 class CloudStorage(BaseStorageInterface):
@@ -288,57 +308,75 @@ class CloudStorage(BaseStorageInterface):
             for folder_path in sorted(folders)
         ]
 
-    async def get_folder_contents(self, folder_path: str) -> dict:
-        """Get contents of a specific folder"""
+    @staticmethod
+    def _normalize_folder_path(folder_path: str) -> str:
         if folder_path and not folder_path.endswith("/"):
             folder_path += "/"
+        return folder_path
 
+    @staticmethod
+    def _get_relative_path(blob_name: str, folder_path: str) -> str:
+        return blob_name[len(folder_path) :] if folder_path else blob_name
+
+    @staticmethod
+    def _process_file_item(
+        name: str, path: str, size: int, updated: Optional[datetime]
+    ) -> FileItem:
+        return FileItem(
+            name=name,
+            path=path,
+            type="file",
+            size=size,
+            updated=updated.isoformat() if updated else None,
+        )
+
+    def _process_folder_item(self, folder_path: str) -> FolderItem:
+        return FolderItem(
+            name=self._path_handler.get_basename(folder_path),
+            path=folder_path,
+            type="folder",
+        )
+
+    @staticmethod
+    def _sort_folder_items(
+        items: List[Union[FileItem, FolderItem]],
+    ) -> List[Union[FileItem, FolderItem]]:
+        return sorted(items, key=lambda x: (x.type == "file", x.name))
+
+    async def get_folder_contents(self, folder_path: str) -> FolderContents:
+        folder_path = self._normalize_folder_path(folder_path)
         blobs = self._cloud_storage.list_blobs(prefix=folder_path)
-        files = []
-        folders = set()
+        files: List[FileItem] = []
+        folders: Set[str] = set()
 
         for blob in blobs:
-            relative_path = (
-                blob.name[len(folder_path) :] if folder_path else blob.name
-            )
+            relative_path = self._get_relative_path(blob.name, folder_path)
             if not relative_path:
                 continue
 
             parts = relative_path.split("/")
             if len(parts) == 1:
-                # This is a file in the current directory
                 files.append(
-                    {
-                        "name": parts[0],
-                        "path": blob.name,
-                        "size": blob.size,
-                        "updated": (
-                            blob.updated.isoformat() if blob.updated else None
-                        ),
-                        "type": "file",
-                    }
+                    self._process_file_item(
+                        name=parts[0],
+                        path=blob.name,
+                        size=blob.size,
+                        updated=blob.updated,
+                    )
                 )
             else:
-                # This is a folder
-                folder_path = (
+                current_folder_path = (
                     f"{folder_path}/{parts[0]}" if folder_path else parts[0]
                 )
-                if folder_path not in folders:
-                    folders.add(folder_path)
+                if current_folder_path not in folders:
+                    folders.add(current_folder_path)
 
         folder_items = [
-            {
-                "name": self._path_handler.get_basename(folder_path),
-                "path": folder_path,
-                "type": "folder",
-            }
+            self._process_folder_item(folder_path)
             for folder_path in sorted(folders)
         ]
 
-        return {
-            "current_path": folder_path.rstrip("/") if folder_path else "",
-            "items": sorted(
-                folder_items + files,
-                key=lambda x: (x["type"] == "file", x["name"]),
-            ),
-        }
+        return FolderContents(
+            current_path=folder_path.rstrip("/") if folder_path else "",
+            items=self._sort_folder_items(folder_items + files),
+        )
