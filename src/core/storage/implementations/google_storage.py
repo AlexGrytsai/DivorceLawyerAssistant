@@ -10,6 +10,7 @@ from google.cloud.storage import Blob, Bucket  # type: ignore
 from src.core.exceptions.storage import (
     ErrorSavingFile,
     ErrorWithAuthenticationInGCP,
+    ProblemWithBucket,
 )
 from src.core.storage.interfaces.cloud_storage_interface import (
     CloudStorageInterface,
@@ -48,7 +49,7 @@ class GoogleCloudStorage(CloudStorageInterface):
                 )
             except Exception as e:
                 logger.error(f"Failed to get bucket {self.bucket_name}", e)
-                raise ErrorSavingFile(
+                raise ProblemWithBucket(
                     f"Failed to get bucket {self.bucket_name}: {e}"
                 )
         return self._bucket
