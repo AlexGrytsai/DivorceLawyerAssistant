@@ -5,6 +5,10 @@ class ErrorWithAuthenticationInGCP(GoogleAuthError):
     pass
 
 
+class ProblemWithBucket(Exception):
+    pass
+
+
 class ErrorSavingFile(Exception):
     pass
 
