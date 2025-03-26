@@ -22,6 +22,7 @@ from src.core.storage.shemas import (
     FolderDeleteSchema,
 )
 from src.utils.path_handler import PathHandler
+from src.core.exceptions.storage import ErrorSavingFile
 
 logger = logging.getLogger(__name__)
 
@@ -208,3 +209,136 @@ class CloudStorage(BaseStorageInterface):
             file_path
         )
         return self._cloud_storage.upload_blob(file_path, destination)
+
+    async def get_file(self, file_path: str) -> FileDataSchema:
+        """Get file by path"""
+        blob = self._cloud_storage.get_bucket().blob(file_path)
+        if not blob.exists():
+            raise ErrorSavingFile(f"File {file_path} not found")
+
+        return FileDataSchema(
+            path=file_path,
+            url=f"{self.base_url}/{file_path}",
+            filename=self._path_handler.get_basename(file_path),
+            content_type=blob.content_type,
+            size=blob.size,
+            status_code=200,
+            message="File retrieved successfully",
+            date_created=(
+                blob.time_created.isoformat() if blob.time_created else None
+            ),
+            creator="",
+        )
+
+    async def list_files(
+        self, prefix: Optional[str] = None
+    ) -> List[FileDataSchema]:
+        """List all files in storage"""
+        blobs = self._cloud_storage.list_blobs(prefix=prefix)
+        files = []
+
+        for blob in blobs:
+            if not blob.name.endswith("/"):  # Skip folders
+                files.append(
+                    FileDataSchema(
+                        path=blob.name,
+                        url=f"{self.base_url}/{blob.name}",
+                        filename=self._path_handler.get_basename(blob.name),
+                        content_type=blob.content_type,
+                        size=blob.size,
+                        status_code=200,
+                        message="File listed successfully",
+                        date_created=(
+                            blob.time_created.isoformat()
+                            if blob.time_created
+                            else None
+                        ),
+                        creator="",
+                    )
+                )
+
+        return files
+
+    async def list_folders(
+        self, prefix: Optional[str] = None
+    ) -> List[FolderDataSchema]:
+        """List all folders in storage"""
+        blobs = self._cloud_storage.list_blobs(prefix=prefix)
+        folders = set()
+
+        for blob in blobs:
+            parts = blob.name.split("/")
+            if len(parts) > 1:  # Skip root level files
+                folder_path = "/".join(parts[:-1])
+                if folder_path not in folders:
+                    folders.add(folder_path)
+
+        return [
+            FolderDataSchema(
+                path=folder_path,
+                name=self._path_handler.get_basename(folder_path),
+                status_code=200,
+                message="Folder listed successfully",
+                date_created=None,
+                parent_folder=self._path_handler.get_parent_folder(
+                    folder_path
+                ),
+                is_empty=False,  # We don't have this information in GCS
+            )
+            for folder_path in sorted(folders)
+        ]
+
+    async def get_folder_contents(self, folder_path: str) -> dict:
+        """Get contents of a specific folder"""
+        if folder_path and not folder_path.endswith("/"):
+            folder_path += "/"
+
+        blobs = self._cloud_storage.list_blobs(prefix=folder_path)
+        files = []
+        folders = set()
+
+        for blob in blobs:
+            relative_path = (
+                blob.name[len(folder_path) :] if folder_path else blob.name
+            )
+            if not relative_path:
+                continue
+
+            parts = relative_path.split("/")
+            if len(parts) == 1:
+                # This is a file in the current directory
+                files.append(
+                    {
+                        "name": parts[0],
+                        "path": blob.name,
+                        "size": blob.size,
+                        "updated": (
+                            blob.updated.isoformat() if blob.updated else None
+                        ),
+                        "type": "file",
+                    }
+                )
+            else:
+                # This is a folder
+                folder_path = (
+                    f"{folder_path}/{parts[0]}" if folder_path else parts[0]
+                )
+                if folder_path not in folders:
+                    folders.add(folder_path)
+
+        folder_items = [
+            {
+                "name": self._path_handler.get_basename(folder_path),
+                "path": folder_path,
+                "type": "folder",
+            }
+            for folder_path in sorted(folders)
+        ]
+
+        return {
+            "current_path": folder_path.rstrip("/") if folder_path else "",
+            "items": sorted(
+                folder_items + files,
+                key=lambda x: (x["type"] == "file", x["name"]),
+            ),
+        }
