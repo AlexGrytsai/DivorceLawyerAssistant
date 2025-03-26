@@ -22,7 +22,7 @@ class FolderDataSchema(BaseModel):
     name: str
     status_code: int = 200
     message: str = "Folder operation successful"
-    date_created: str = datetime.now().isoformat()
+    date_created: Optional[str] = datetime.now().isoformat()
     creator: str = "system"
     parent_folder: Optional[Path | str] = None
     is_empty: bool = True
