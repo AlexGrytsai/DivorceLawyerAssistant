@@ -3,10 +3,14 @@ from typing import List, Optional, Union
 
 from dotenv import load_dotenv
 from google.api_core import exceptions
+from google.auth.exceptions import GoogleAuthError
 from google.cloud import storage  # type: ignore
 from google.cloud.storage import Blob, Bucket  # type: ignore
 
-from src.core.exceptions.storage import ErrorSavingFile
+from src.core.exceptions.storage import (
+    ErrorSavingFile,
+    ErrorWithAuthenticationInGCP,
+)
 from src.core.storage.interfaces.cloud_storage_interface import (
     CloudStorageInterface,
 )
@@ -28,9 +32,11 @@ class GoogleCloudStorage(CloudStorageInterface):
         if self._client is None:
             try:
                 self._client = storage.Client()
-            except Exception as e:
+            except GoogleAuthError as e:
                 logger.error("Failed to initialize GCS client", e)
-                raise ErrorSavingFile(f"Failed to initialize GCS client: {e}")
+                raise ErrorWithAuthenticationInGCP(
+                    f"Failed to initialize GCS client: {e}"
+                )
         return self._client
 
     @property
@@ -96,3 +102,8 @@ class GoogleCloudStorage(CloudStorageInterface):
             raise ErrorSavingFile(
                 f"Failed to list blobs with prefix {prefix}: {e}"
             )
+
+
+if __name__ == "__main__":
+    cloud = GoogleCloudStorage("data-for-rag")
+    print(cloud.get_bucket)
