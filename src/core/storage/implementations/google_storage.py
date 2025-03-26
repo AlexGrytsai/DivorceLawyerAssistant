@@ -11,6 +11,7 @@ from src.core.exceptions.storage import (
     ErrorSavingFile,
     ErrorWithAuthenticationInGCP,
     ProblemWithBucket,
+    ErrorDeletingFile,
 )
 from src.core.storage.interfaces.cloud_storage_interface import (
     CloudStorageInterface,
@@ -82,10 +83,10 @@ class GoogleCloudStorage(CloudStorageInterface):
             blob.delete()
         except exceptions.NotFound:
             logger.warning(f"Blob {file_path} not found")
-            raise ErrorSavingFile(f"Blob {file_path} not found")
+            raise ErrorDeletingFile(f"Blob {file_path} not found")
         except Exception as e:
             logger.error(f"Failed to delete file {file_path}", e)
-            raise ErrorSavingFile(f"Failed to delete file: {e}")
+            raise ErrorDeletingFile(f"Failed to delete file: {e}")
 
     def copy_blob(self, source_blob: Blob, new_name: str) -> Blob:
         try:
@@ -105,8 +106,3 @@ class GoogleCloudStorage(CloudStorageInterface):
             raise ErrorSavingFile(
                 f"Failed to list blobs with prefix {prefix}: {e}"
             )
-
-
-if __name__ == "__main__":
-    cloud = GoogleCloudStorage("data-for-rag")
-    print(cloud.get_bucket)
