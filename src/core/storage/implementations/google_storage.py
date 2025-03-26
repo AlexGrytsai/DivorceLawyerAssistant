@@ -43,7 +43,9 @@ class GoogleCloudStorage(CloudStorageInterface):
     def get_bucket(self) -> Bucket:
         if self._bucket is None:
             try:
-                self._bucket = self.get_client.bucket(self.bucket_name)
+                self._bucket: Bucket = self.get_client.get_bucket(
+                    bucket_or_name=self.bucket_name
+                )
             except Exception as e:
                 logger.error(f"Failed to get bucket {self.bucket_name}", e)
                 raise ErrorSavingFile(
