@@ -1,6 +1,7 @@
 import logging
 from typing import List, Optional, Union
 
+from dotenv import load_dotenv
 from google.api_core import exceptions
 from google.cloud import storage  # type: ignore
 from google.cloud.storage import Blob, Bucket  # type: ignore
@@ -9,6 +10,8 @@ from src.core.exceptions.storage import ErrorSavingFile
 from src.core.storage.interfaces.cloud_storage_interface import (
     CloudStorageInterface,
 )
+
+load_dotenv()
 
 logger = logging.getLogger(__name__)
 
@@ -48,9 +51,15 @@ class GoogleCloudStorage(CloudStorageInterface):
     ) -> str:
         try:
             blob = self.get_bucket().blob(file_path)
+
             if content_type:
                 blob.content_type = content_type
-            blob.upload_from_string(content)
+
+            if isinstance(content, str):
+                content = content.encode("utf-8")
+
+            blob.upload_from_string(content, content_type=content_type)
+
             return blob.public_url
         except Exception as e:
             logger.error(f"Failed to upload file {file_path}", e)
