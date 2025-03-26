@@ -5,9 +5,6 @@ from dotenv import load_dotenv
 from google.cloud import storage  # type: ignore
 from google.cloud.storage import Blob, Bucket  # type: ignore
 
-from src.core.exceptions.storage import (
-    ErrorSavingFile,
-)
 from src.core.storage.decorators import handle_cloud_storage_exceptions
 from src.core.storage.interfaces.cloud_storage_interface import (
     CloudStorageInterface,
