@@ -14,4 +14,6 @@ MODEL_TOKEN_LIMITS: Dict[str, int] = {
 
 # Directory constants
 STATIC_DIR: str = "static"
-UPLOAD_DIR: str = f"{STATIC_DIR}/uploads/forms" 
+UPLOAD_DIR: str = f"{STATIC_DIR}/uploads/forms"
+
+BASE_CLOUD_URL = "https://storage.googleapis.com"
