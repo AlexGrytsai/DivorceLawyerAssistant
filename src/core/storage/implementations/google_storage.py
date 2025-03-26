@@ -20,9 +20,10 @@ class GoogleCloudStorage(CloudStorageInterface):
 
     def __init__(self, bucket_name: str):
         self.bucket_name = bucket_name
-        self._client = None
-        self._bucket = None
+        self._client: Optional[storage.Client] = None
+        self._bucket: Optional[Bucket] = None
 
+    @property
     def get_client(self) -> storage.Client:
         if self._client is None:
             try:
@@ -32,10 +33,11 @@ class GoogleCloudStorage(CloudStorageInterface):
                 raise ErrorSavingFile(f"Failed to initialize GCS client: {e}")
         return self._client
 
+    @property
     def get_bucket(self) -> Bucket:
         if self._bucket is None:
             try:
-                self._bucket = self.get_client().bucket(self.bucket_name)
+                self._bucket = self.get_client.bucket(self.bucket_name)
             except Exception as e:
                 logger.error(f"Failed to get bucket {self.bucket_name}", e)
                 raise ErrorSavingFile(
@@ -50,7 +52,7 @@ class GoogleCloudStorage(CloudStorageInterface):
         content_type: Optional[str] = None,
     ) -> str:
         try:
-            blob = self.get_bucket().blob(file_path)
+            blob = self.get_bucket.blob(file_path)
 
             if content_type:
                 blob.content_type = content_type
@@ -67,7 +69,7 @@ class GoogleCloudStorage(CloudStorageInterface):
 
     def delete_blob(self, file_path: str) -> None:
         try:
-            blob = self.get_bucket().blob(file_path)
+            blob = self.get_bucket.blob(file_path)
             blob.delete()
         except exceptions.NotFound:
             logger.warning(f"Blob {file_path} not found")
@@ -78,8 +80,8 @@ class GoogleCloudStorage(CloudStorageInterface):
 
     def copy_blob(self, source_blob: Blob, new_name: str) -> Blob:
         try:
-            new_blob = self.get_bucket().copy_blob(
-                source_blob, self.get_bucket(), new_name
+            new_blob = self.get_bucket.copy_blob(
+                source_blob, self.get_bucket, new_name
             )
             return new_blob
         except Exception as e:
@@ -88,7 +90,7 @@ class GoogleCloudStorage(CloudStorageInterface):
 
     def list_blobs(self, prefix: str = "") -> List[Blob]:
         try:
-            return list(self.get_bucket().list_blobs(prefix=prefix))
+            return list(self.get_bucket.list_blobs(prefix=prefix))
         except Exception as e:
             logger.error(f"Failed to list blobs with prefix {prefix}", e)
             raise ErrorSavingFile(
