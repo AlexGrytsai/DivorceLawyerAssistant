@@ -193,3 +193,62 @@ class BaseStorageInterface(ABC):
             FileDataSchema: File rename result
         """
         pass
+
+    @abstractmethod
+    async def get_file(self, file_path: str) -> FileDataSchema:
+        """
+        Get file by path
+
+        Args:
+            file_path: Path to file
+
+        Returns:
+            FileDataSchema: File information
+
+        Raises:
+            ErrorSavingFile: If file not found
+        """
+        pass
+
+    @abstractmethod
+    async def list_files(
+        self, prefix: Optional[str] = None
+    ) -> List[FileDataSchema]:
+        """
+        List all files in storage
+
+        Args:
+            prefix: Optional prefix to filter files
+
+        Returns:
+            List[FileDataSchema]: List of files
+        """
+        pass
+
+    @abstractmethod
+    async def list_folders(
+        self, prefix: Optional[str] = None
+    ) -> List[FolderDataSchema]:
+        """
+        List all folders in storage
+
+        Args:
+            prefix: Optional prefix to filter folders
+
+        Returns:
+            List[FolderDataSchema]: List of folders
+        """
+        pass
+
+    @abstractmethod
+    async def get_folder_contents(self, folder_path: str) -> dict:
+        """
+        Get contents of a specific folder
+
+        Args:
+            folder_path: Path to folder
+
+        Returns:
+            dict: Dictionary containing current path and list of items
+        """
+        pass
