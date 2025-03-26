@@ -7,7 +7,12 @@ from types import MappingProxyType
 
 from dotenv import load_dotenv
 
-from src.core.constants import MODEL_TOKEN_LIMITS, STATIC_DIR, UPLOAD_DIR
+from src.core.constants import (
+    MODEL_TOKEN_LIMITS,
+    STATIC_DIR,
+    UPLOAD_DIR,
+    BASE_STORAGE_CLOUD_URL,
+)
 from src.core.exceptions.config import MissingEnvironmentVariable
 from src.core.storage import LocalStorage
 from src.core.storage.interfaces.base_storage_interface import (
@@ -34,6 +39,7 @@ class Settings:
     # Directory settings
     STATIC_DIR: str = STATIC_DIR
     UPLOAD_DIR: str = UPLOAD_DIR
+    BASE_STORAGE_CLOUD_URL: str = BASE_STORAGE_CLOUD_URL
     STORAGE: BaseStorageInterface = LocalStorage(path_to_upload_dir=UPLOAD_DIR)
 
     # Model settings
