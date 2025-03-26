@@ -1,4 +1,9 @@
+import os
 from typing import Dict
+
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Model token limits
 MODEL_TOKEN_LIMITS: Dict[str, int] = {
@@ -17,3 +22,6 @@ STATIC_DIR: str = "static"
 UPLOAD_DIR: str = f"{STATIC_DIR}/uploads/forms"
 
 BASE_STORAGE_CLOUD_URL = "https://storage.googleapis.com"
+
+PROJECT_ID: str = os.environ["PROJECT_ID"]
+RAG_BUCKET_NAME: str = os.environ["RAG_BUCKET_NAME"]
