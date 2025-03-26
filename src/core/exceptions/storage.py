@@ -1,3 +1,10 @@
+from google.auth.exceptions import GoogleAuthError
+
+
+class ErrorWithAuthenticationInGCP(GoogleAuthError):
+    pass
+
+
 class ErrorSavingFile(Exception):
     pass
 
@@ -7,4 +14,4 @@ class ErrorUploadingFile(Exception):
 
 
 class ErrorDeletingFile(Exception):
-    pass 
+    pass
