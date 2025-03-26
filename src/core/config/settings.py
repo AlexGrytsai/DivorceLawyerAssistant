@@ -12,9 +12,12 @@ from src.core.constants import (
     STATIC_DIR,
     UPLOAD_DIR,
     BASE_STORAGE_CLOUD_URL,
+    PROJECT_ID,
+    RAG_BUCKET_NAME,
+    MAIN_BUCKET_NAME,
 )
 from src.core.exceptions.config import MissingEnvironmentVariable
-from src.core.storage import LocalStorage
+from src.core.storage.cloud_storage import CloudStorage
 from src.core.storage.interfaces.base_storage_interface import (
     BaseStorageInterface,
 )
@@ -40,7 +43,14 @@ class Settings:
     STATIC_DIR: str = STATIC_DIR
     UPLOAD_DIR: str = UPLOAD_DIR
     BASE_STORAGE_CLOUD_URL: str = BASE_STORAGE_CLOUD_URL
-    STORAGE: BaseStorageInterface = LocalStorage(path_to_upload_dir=UPLOAD_DIR)
+
+    STORAGE: BaseStorageInterface = CloudStorage(
+        project_id=PROJECT_ID, bucket_name=MAIN_BUCKET_NAME
+    )
+
+    RAG_STORAGE: BaseStorageInterface = CloudStorage(
+        project_id=PROJECT_ID, bucket_name=RAG_BUCKET_NAME
+    )
 
     # Model settings
     MODEL_TOKEN_LIMITS: TokenLimitsMapping = MappingProxyType(
