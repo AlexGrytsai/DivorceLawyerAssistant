@@ -11,7 +11,6 @@ from src.core.constants import (
     MODEL_TOKEN_LIMITS,
     STATIC_DIR,
     UPLOAD_DIR,
-    BASE_STORAGE_CLOUD_URL,
     PROJECT_ID,
     RAG_BUCKET_NAME,
     MAIN_BUCKET_NAME,
