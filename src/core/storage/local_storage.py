@@ -384,6 +384,41 @@ class LocalStorage(BaseStorageInterface):
             ),
         }
 
+    @handle_upload_file_exceptions
+    async def search_files_by_name(
+        self, search_query: str, case_sensitive: bool = False
+    ) -> List[FileDataSchema]:
+        """Search files by name with optional case sensitivity"""
+        storage_path = Path(self._path_to_storage)
+        files = []
+
+        search_query = search_query if case_sensitive else search_query.lower()
+
+        for file_path in storage_path.rglob("*"):
+            if file_path.is_file():
+                filename = file_path.name
+                if not case_sensitive:
+                    filename = filename.lower()
+
+                if search_query in filename:
+                    created_time = datetime.datetime.fromtimestamp(
+                        file_path.stat().st_ctime
+                    ).isoformat()
+                    file_data = FileDataSchema(
+                        path=str(file_path),
+                        url=self._create_url_path(str(file_path), None),
+                        filename=file_path.name,
+                        content_type=None,
+                        size=file_path.stat().st_size,
+                        status_code=200,
+                        message="File found successfully",
+                        date_created=created_time,
+                        creator="",
+                    )
+                    files.append(file_data)
+
+        return sorted(files, key=lambda x: x.filename)
+
     @staticmethod
     def _get_user_identifier(request: Request) -> str:
         user_identifier = request.scope.get("user")
