@@ -11,6 +11,23 @@
 <body class="bg-gray-100">
     {% raw %}
     <div id="app" class="container mx-auto px-4 py-8">
+        <!-- Навигационное меню -->
+        <nav class="bg-white rounded-lg shadow p-4 mb-8">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <a href="/" class="text-gray-600 hover:text-blue-600">
+                        <i class="fas fa-home mr-2"></i>Home
+                    </a>
+                    <a href="/data-for-rag" class="text-blue-600 font-semibold">
+                        <i class="fas fa-folder-open mr-2"></i>Data for RAG
+                    </a>
+                    <a href="/simple-check-pdf-forms" class="text-gray-600 hover:text-blue-600">
+                        <i class="fas fa-file-pdf mr-2"></i>Check PDF Forms
+                    </a>
+                </div>
+            </div>
+        </nav>
+
         <h1 class="text-3xl font-bold mb-8">Raw Data for RAG</h1>
 
         <!-- Навигация -->
