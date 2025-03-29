@@ -19,48 +19,8 @@ router = APIRouter(prefix="/api/v1/data-for-rag", tags=["Data for RAG"])
     status_code=200,
 )
 async def list_folder_contents(folder_path: str = ""):
-    blobs = settings.RAG_STORAGE.list_blobs(prefix=folder_path)
-
-    files = []
-    folders = []
-
-    for blob in blobs:
-        name = blob.name
-        if name == folder_path:
-            continue
-
-        relative_path = name[len(folder_path) :].lstrip("/")
-        if not relative_path:
-            continue
-
-        parts = relative_path.split("/")
-        if len(parts) == 1:
-            files.append(
-                {
-                    "name": parts[0],
-                    "path": name,
-                    "size": blob.size,
-                    "updated": (
-                        blob.updated.isoformat() if blob.updated else None
-                    ),
-                    "type": "file",
-                }
-            )
-        else:
-            folder_path = (
-                f"{folder_path}/{parts[0]}" if folder_path else parts[0]
-            )
-            if folder_path not in [f["path"] for f in folders]:
-                folders.append(
-                    {"name": parts[0], "path": folder_path, "type": "folder"}
-                )
-
-    return {
-        "current_path": folder_path,
-        "items": sorted(
-            folders + files, key=lambda x: (x["type"] == "file", x["name"])
-        ),
-    }
+    """List contents of a specific folder"""
+    return await settings.RAG_STORAGE.get_folder_contents(folder_path)
 
 
 @router.post("/upload", response_model=FileDataSchema)
@@ -69,7 +29,7 @@ async def upload_file(
     folder_path: Optional[str] = Form(None),
     request: Request = None,
 ):
-    """Загрузка одного файла"""
+    """Upload a single file to storage"""
     if folder_path:
         file.filename = f"{folder_path.rstrip('/')}/{file.filename}"
     return await settings.RAG_STORAGE.upload(file, request)
@@ -81,7 +41,7 @@ async def upload_multiple_files(
     folder_path: Optional[str] = Form(None),
     request: Request = None,
 ):
-    """Загрузка нескольких файлов"""
+    """Upload multiple files to storage"""
     return await settings.RAG_STORAGE.multi_upload(files, request)
 
 
@@ -90,7 +50,7 @@ async def delete_file(
     file_path: str,
     request: Request = None,
 ):
-    """Удаление файла"""
+    """Delete a file from storage"""
     return await settings.RAG_STORAGE.delete(file_path, request)
 
 
@@ -99,7 +59,7 @@ async def create_folder(
     folder_path: str = Form(...),
     request: Request = None,
 ):
-    """Создание новой папки"""
+    """Create a new folder in storage"""
     return await settings.RAG_STORAGE.create_folder(folder_path, request)
 
 
@@ -109,8 +69,10 @@ async def rename_folder(
     new_path: str = Form(...),
     request: Request = None,
 ):
-    """Переименование папки"""
-    return await settings.RAG_STORAGE.rename_folder(folder_path, new_path, request)
+    """Rename a folder in storage"""
+    return await settings.RAG_STORAGE.rename_folder(
+        folder_path, new_path, request
+    )
 
 
 @router.delete(
@@ -120,7 +82,7 @@ async def delete_folder(
     folder_path: str,
     request: Request = None,
 ):
-    """Удаление папки"""
+    """Delete a folder and its contents from storage"""
     return await settings.RAG_STORAGE.delete_folder(folder_path, request)
 
 
@@ -130,7 +92,7 @@ async def rename_file(
     new_path: str = Form(...),
     request: Request = None,
 ):
-    """Переименование файла"""
+    """Rename a file in storage"""
     return await settings.RAG_STORAGE.rename_file(file_path, new_path, request)
 
 
@@ -138,7 +100,7 @@ async def rename_file(
 async def get_file(
     file_path: str,
 ):
-    """Получить файл по пути"""
+    """Get file details by path"""
     return await settings.RAG_STORAGE.get_file(file_path)
 
 
@@ -146,7 +108,7 @@ async def get_file(
 async def list_files(
     prefix: Optional[str] = None,
 ):
-    """Получить список всех файлов"""
+    """List files with optional prefix filter"""
     return await settings.RAG_STORAGE.list_files(prefix)
 
 
@@ -154,7 +116,7 @@ async def list_files(
 async def list_folders(
     prefix: Optional[str] = None,
 ):
-    """Получить список всех папок"""
+    """List folders with optional prefix filter"""
     return await settings.RAG_STORAGE.list_folders(prefix)
 
 
@@ -162,5 +124,22 @@ async def list_folders(
 async def get_folder_contents(
     folder_path: str,
 ):
-    """Получить содержимое конкретной папки"""
+    """Get contents of a specific folder"""
     return await settings.RAG_STORAGE.get_folder_contents(folder_path)
+
+
+@router.get("/all-files")
+async def list_all_files():
+    """List all files in storage"""
+    return await settings.RAG_STORAGE.list_all_files()
+
+
+@router.get("/search-files")
+async def search_files(
+    query: str,
+    case_sensitive: bool = False,
+):
+    """Search files by name with optional case sensitivity"""
+    return await settings.RAG_STORAGE.search_files_by_name(
+        query, case_sensitive
+    )
