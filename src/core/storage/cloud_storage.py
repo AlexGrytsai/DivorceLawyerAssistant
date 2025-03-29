@@ -366,3 +366,38 @@ class CloudStorage(BaseStorageInterface):
             current_path=folder_path.rstrip("/") if folder_path else "",
             items=self._sort_folder_items(folder_items + files),
         )
+
+    async def search_files_by_name(
+        self, search_query: str, case_sensitive: bool = False
+    ) -> List[FileDataSchema]:
+        blobs = self._cloud_storage.list_blobs()
+        files = []
+
+        search_query = search_query if case_sensitive else search_query.lower()
+
+        for blob in blobs:
+            if not blob.name.endswith("/"):  # Skip folders
+                filename = self._path_handler.get_basename(blob.name)
+                if not case_sensitive:
+                    filename = filename.lower()
+
+                if search_query in filename:
+                    files.append(
+                        FileDataSchema(
+                            path=blob.name,
+                            url=f"{self.base_url}/{blob.name}",
+                            filename=self._path_handler.get_basename(blob.name),
+                            content_type=blob.content_type,
+                            size=blob.size,
+                            status_code=200,
+                            message="File found successfully",
+                            date_created=(
+                                blob.time_created.isoformat()
+                                if blob.time_created
+                                else None
+                            ),
+                            creator="",
+                        )
+                    )
+
+        return sorted(files, key=lambda x: x.filename)
