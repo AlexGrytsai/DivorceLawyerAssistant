@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raw Data for RAG</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+    {% raw %}
+    <div id="app" class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-8">Raw Data for RAG</h1>
+
+        <!-- Навигация -->
+        <div class="bg-white rounded-lg shadow p-4 mb-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2 text-sm text-gray-600">
+                    <button @click="navigateToFolder('')" class="hover:text-blue-600">
+                        <i class="fas fa-home"></i>
+                    </button>
+                    <template v-for="(part, index) in breadcrumbs" :key="index">
+                        <span>/</span>
+                        <button 
+                            @click="navigateToFolder(part.path)"
+                            class="hover:text-blue-600"
+                        >{{ part.name }}</button>
+                    </template>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button 
+                        @click="showAllFiles"
+                        class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                    >
+                        <i class="fas fa-list mr-2"></i>All Files
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Поиск файлов -->
+        <div class="bg-white rounded-lg shadow p-4 mb-6">
+            <div class="flex items-center space-x-4">
+                <div class="flex-1">
+                    <input 
+                        v-model="searchQuery"
+                        type="text"
+                        placeholder="Search files by name..."
+                        class="w-full border rounded-md p-2"
+                        @keyup.enter="searchFiles"
+                    >
+                </div>
+                <div class="flex items-center space-x-2">
+                    <label class="text-sm text-gray-600">
+                        <input 
+                            type="checkbox" 
+                            v-model="caseSensitive"
+                            class="mr-2"
+                        >
+                        Case sensitive
+                    </label>
+                    <button 
+                        @click="searchFiles"
+                        class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                    >
+                        <i class="fas fa-search mr-2"></i>Search
+                    </button>
+                    <button 
+                        v-if="isSearchMode"
+                        @click="clearSearch"
+                        class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+                    >
+                        <i class="fas fa-times mr-2"></i>Clear
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Список файлов и папок -->
+        <div class="bg-white rounded-lg shadow mb-6">
+            <div class="p-4 border-b">
+                <h2 class="text-xl font-semibold">Содержимое папки</h2>
+            </div>
+            <div class="divide-y">
+                <div v-for="item in items" :key="item.path" class="p-4 hover:bg-gray-50 flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <i :class="item.type === 'folder' ? 'fas fa-folder text-yellow-500' : 'fas fa-file text-blue-500'"></i>
+                        <span
+                            v-if="item.type === 'folder'"
+                            @click="navigateToFolder(item.path)"
+                            class="cursor-pointer hover:text-blue-600"
+                        >{{ item.name }}</span>
+                        <a 
+                            v-else 
+                            :href="`/cloud-storage/files/${encodeURIComponent(item.path)}`"
+                            target="_blank"
+                            class="text-blue-600 hover:text-blue-800 hover:underline"
+                        >{{ item.name }}</a>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span v-if="item.type === 'file'" class="text-sm text-gray-500">
+                            {{ formatSize(item.size) }}
+                        </span>
+                        <button
+                            v-if="item.type === 'file'"
+                            @click="deleteFile(item.path)"
+                            class="text-red-500 hover:text-red-700"
+                        >
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        <button
+                            v-if="item.type === 'folder'"
+                            @click="deleteFolder(item.path)"
+                            class="text-red-500 hover:text-red-700"
+                        >
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                <div v-if="items.length === 0" class="p-4 text-center text-gray-500">
+                    Папка пуста
+                </div>
+            </div>
+        </div>
+
+        <!-- Загрузка файлов -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">Загрузка файлов в текущую папку</h2>
+            <div class="space-y-4">
+                <div 
+                    class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center transition-colors duration-200"
+                    :class="{ 'border-blue-500 bg-blue-50': isDragging }"
+                    @dragenter.prevent="isDragging = true"
+                    @dragleave.prevent="isDragging = false"
+                    @dragover.prevent
+                    @drop.prevent="handleDrop"
+                >
+                    <div class="space-y-2">
+                        <i class="fas fa-cloud-upload-alt text-4xl text-gray-400"></i>
+                        <p class="text-gray-600">Перетащите файлы сюда или</p>
+                        <div class="flex justify-center">
+                            <button 
+                                @click="triggerFileInput"
+                                class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                            >
+                                Выбрать файлы
+                            </button>
+                        </div>
+                        <input 
+                            type="file" 
+                            ref="fileInput"
+                            multiple 
+                            @change="handleFileUpload" 
+                            class="hidden"
+                        >
+                    </div>
+                </div>
+
+                <!-- Список файлов для загрузки -->
+                <div v-if="filesToUpload.length > 0" class="mt-4">
+                    <h3 class="text-lg font-medium mb-2">Файлы для загрузки:</h3>
+                    <div class="space-y-2">
+                        <div v-for="(file, index) in filesToUpload" :key="index" 
+                             class="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
+                            <div class="flex items-center space-x-2">
+                                <i class="fas fa-file text-blue-500"></i>
+                                <span class="text-sm">{{ file.name }}</span>
+                                <span class="text-xs text-gray-500">({{ formatSize(file.size) }})</span>
+                            </div>
+                            <button @click="removeFile(index)" 
+                                    class="text-red-500 hover:text-red-700">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex justify-end">
+                        <button @click="uploadFiles" 
+                                class="bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600">
+                            Загрузить файлы
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Создание папки -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">Создать папку</h2>
+            <div class="space-y-4">
+                <div>
+                    <input v-model="newFolderName" type="text" placeholder="Имя папки" class="mt-1 block w-full border rounded-md p-2">
+                    <button @click="createFolder" class="mt-2 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                        Создать папку
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Результаты -->
+        <div v-if="result" class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-xl font-semibold mb-4">Результат операции</h2>
+            <pre class="bg-gray-100 p-4 rounded overflow-x-auto" v-text="JSON.stringify(result, null, 2)"></pre>
+        </div>
+    </div>
+    {% endraw %}
+
+    <script>
+        const { createApp } = Vue
+
+        createApp({
+            data() {
+                return {
+                    currentPath: '',
+                    items: [],
+                    filesToUpload: [],
+                    newFolderName: '',
+                    result: null,
+                    isDragging: false,
+                    bucketName: 'your-bucket-name',
+                    searchQuery: '',
+                    caseSensitive: false,
+                    isSearchMode: false
+                }
+            },
+            computed: {
+                breadcrumbs() {
+                    if (!this.currentPath) return []
+                    const parts = this.currentPath.split('/')
+                    return parts.map((part, index) => ({
+                        name: part,
+                        path: parts.slice(0, index + 1).join('/')
+                    }))
+                }
+            },
+            methods: {
+                formatSize(bytes) {
+                    if (!bytes) return '0 B'
+                    const k = 1024
+                    const sizes = ['B', 'KB', 'MB', 'GB']
+                    const i = Math.floor(Math.log(bytes) / Math.log(k))
+                    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`
+                },
+                async loadFolderContents(path = '') {
+                    try {
+                        const response = await fetch(`/api/v1/data-for-rag/folder/${encodeURIComponent(path)}`)
+                        const data = await response.json()
+                        this.currentPath = path
+                        this.items = data.items
+                        this.isSearchMode = false
+                        this.searchQuery = ''
+                    } catch (error) {
+                        this.result = { error: error.message }
+                    }
+                },
+                async navigateToFolder(path) {
+                    await this.loadFolderContents(path)
+                },
+                handleFileUpload(event) {
+                    const files = Array.from(event.target.files)
+                    this.filesToUpload.push(...files)
+                },
+                removeFile(index) {
+                    this.filesToUpload.splice(index, 1)
+                },
+                handleDrop(event) {
+                    this.isDragging = false
+                    const files = Array.from(event.dataTransfer.files)
+                    if (files.length === 0) return
+                    this.filesTo始Upload.push(...files)
+                },
+                async uploadFiles() {
+                    if (this.filesToUpload.length === 0) return
+                    
+                    const formData = new FormData()
+                    this.filesToUpload.forEach(file => {
+                        formData.append('files', file)
+                    })
+                    formData.append('folder_path', this.currentPath)
+                    
+                    try {
+                        const response = await fetch('/cloud-storage/upload/multiple', {
+                            method: 'POST',
+                            body: formData
+                        })
+                        this.result = await response.json()
+                        this.filesToUpload = []
+                        await this.loadFolderContents(this.currentPath)
+                    } catch (error) {
+                        this.result = { error: error.message }
+                    }
+                },
+                async createFolder() {
+                    if (!this.newFolderName) return
+                    const formData = new FormData()
+                    const folderPath = this.currentPath
+                        ? `${this.currentPath}/${this.newFolderName}`
+                        : this.newFolderName
+                    formData.append('folder_path', folderPath)
+                    try {
+                        const response = await fetch('/cloud-storage/folders', {
+                            method: 'POST',
+                            body: formData
+                        })
+                        this.result = await response.json()
+                        this.newFolderName = ''
+                        await this.loadFolderContents(this.currentPath)
+                    } catch (error) {
+                        this.result = { error: error.message }
+                    }
+                },
+                async deleteFolder(path) {
+                    if (!confirm(`Вы уверены, что хотите удалить папку ${path}?`)) return
+                    try {
+                        const response = await fetch(`/cloud-storage/folders/${encodeURIComponent(path)}`, {
+                            method: 'DELETE'
+                        })
+                        this.result = await response.json()
+                        await this.loadFolderContents(this.currentPath)
+                    } catch (error) {
+                        this.result = { error: error.message }
+                    }
+                },
+                async deleteFile(path) {
+                    if (!confirm(`Вы уверены, что хотите удалить файл ${path}?`)) return
+                    try {
+                        const response = await fetch(`/cloud-storage/files/${encodeURIComponent(path)}`, {
+                            method: 'DELETE'
+                        })
+                        this.result = await response.json()
+                        await this.loadFolderContents(this.currentPath)
+                    } catch (error) {
+                        this.result = { error: error.message }
+                    }
+                },
+                triggerFileInput() {
+                    this.$refs.fileInput.click()
+                },
+                async searchFiles() {
+                    if (!this.searchQuery) return
+                    try {
+                        const response = await fetch(
+                            `/api/v1/data-for-rag/search-files?query=${encodeURIComponent(this.searchQuery)}&case_sensitive=${this.caseSensitive}`
+                        )
+                        const data = await response.json()
+                        this.items = data.map(file => ({
+                            name: file.filename,
+                            path: file.path,
+                            size: file.size,
+                            type: 'file',
+                            updated: file.date_created
+                        }))
+                        this.isSearchMode = true
+                    } catch (error) {
+                        this.result = { error: error.message }
+                    }
+                },
+                async showAllFiles() {
+                    try {
+                        const response = await fetch('/api/v1/data-for-rag/files')
+                        const data = await response.json()
+                        this.items = data.map(file => ({
+                            name: file.filename,
+                            path: file.path,
+                            size: file.size,
+                            type: 'file',
+                            updated: file.date_created
+                        }))
+                        this.isSearchMode = true
+                    } catch (error) {
+                        this.result = { error: error.message }
+                    }
+                },
+                async clearSearch() {
+                    this.searchQuery = ''
+                    this.caseSensitive = false
+                    await this.loadFolderContents(this.currentPath)
+                }
+            },
+            mounted() {
+                this.loadFolderContents()
+            }
+        }).mount('#app')
+    </script>
+</body>
+</html>
