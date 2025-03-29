@@ -1,6 +1,11 @@
 import os
 
-from .config import settings
+from .config.settings import Settings
 
-# Create necessary directories
+# Initialize settings
+settings = Settings()
+
+# Create the necessary directories
 os.makedirs(settings.STATIC_DIR, exist_ok=True)
+
+__all__ = ["settings"]
