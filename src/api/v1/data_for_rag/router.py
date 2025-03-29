@@ -108,7 +108,7 @@ async def get_file(
 async def list_files(
     prefix: Optional[str] = None,
 ):
-    """List files with optional prefix filter"""
+    """List all files in storage with optional prefix filter"""
     return await settings.RAG_STORAGE.list_files(prefix)
 
 
@@ -126,12 +126,6 @@ async def get_folder_contents(
 ):
     """Get contents of a specific folder"""
     return await settings.RAG_STORAGE.get_folder_contents(folder_path)
-
-
-@router.get("/all-files")
-async def list_all_files():
-    """List all files in storage"""
-    return await settings.RAG_STORAGE.list_all_files()
 
 
 @router.get("/search-files")
