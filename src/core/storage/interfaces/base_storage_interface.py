@@ -252,3 +252,19 @@ class BaseStorageInterface(ABC):
             dict: Dictionary containing current path and list of items
         """
         pass
+
+    @abstractmethod
+    async def search_files_by_name(
+        self, search_query: str, case_sensitive: bool = False
+    ) -> List[FileDataSchema]:
+        """
+        Search files by name with optional case sensitivity
+
+        Args:
+            search_query: Search query string
+            case_sensitive: Whether to perform case-sensitive search
+
+        Returns:
+            List[FileDataSchema]: List of matching files
+        """
+        pass
