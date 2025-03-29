@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Forms Checker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+    {% raw %}
+    <div id="app" class="container mx-auto px-4 py-8">
+        <!-- Navigation Menu -->
+        <nav class="bg-white rounded-lg shadow p-4 mb-8">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <a href="/" class="text-blue-600 font-semibold">
+                        <i class="fas fa-home mr-2"></i>Home
+                    </a>
+                    <a href="/data-for-rag" class="text-gray-600 hover:text-blue-600">
+                        <i class="fas fa-folder-open mr-2"></i>Data for RAG
+                    </a>
+                    <a href="/simple-check-pdf-forms" class="text-gray-600 hover:text-blue-600">
+                        <i class="fas fa-file-pdf mr-2"></i>Check PDF Forms
+                    </a>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Header -->
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-bold text-gray-800 mb-4">PDF Forms Checker</h1>
+            <p class="text-xl text-gray-600">Tool for PDF forms validation and data management</p>
+        </div>
+
+        <!-- Main Sections -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+            <!-- Data for RAG -->
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
+                <div class="p-6">
+                    <div class="flex items-center mb-4">
+                        <i class="fas fa-folder-open text-4xl text-yellow-500 mr-4"></i>
+                        <h2 class="text-2xl font-semibold text-gray-800">Data for RAG</h2>
+                    </div>
+                    <p class="text-gray-600 mb-4">
+                        Manage files and folders for the RAG system. Upload, organize, and manage documents efficiently.
+                    </p>
+                    <ul class="space-y-2 mb-6">
+                        <li class="flex items-center text-gray-600">
+                            <i class="fas fa-check text-green-500 mr-2"></i>
+                            Drag-and-drop file upload
+                        </li>
+                        <li class="flex items-center text-gray-600">
+                            <i class="fas fa-check text-green-500 mr-2"></i>
+                            Create and manage folders
+                        </li>
+                        <li class="flex items-center text-gray-600">
+                            <i class="fas fa-check text-green-500 mr-2"></i>
+                            Search files by name
+                        </li>
+                    </ul>
+                    <a href="/data-for-rag" 
+                       class="inline-block bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors duration-300">
+                        Go to Section
+                    </a>
+                </div>
+            </div>
+
+            <!-- Check PDF Forms -->
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
+                <div class="p-6">
+                    <div class="flex items-center mb-4">
+                        <i class="fas fa-file-pdf text-4xl text-red-500 mr-4"></i>
+                        <h2 class="text-2xl font-semibold text-gray-800">Check PDF Forms</h2>
+                    </div>
+                    <p class="text-gray-600 mb-4">
+                        Validate PDF forms for correct completion. Upload files and get detailed reports.
+                    </p>
+                    <ul class="space-y-2 mb-6">
+                        <li class="flex items-center text-gray-600">
+                            <i class="fas fa-check text-green-500 mr-2"></i>
+                            Multiple file validation
+                        </li>
+                        <li class="flex items-center text-gray-600">
+                            <i class="fas fa-check text-green-500 mr-2"></i>
+                            Detailed validation reports
+                        </li>
+                        <li class="flex items-center text-gray-600">
+                            <i class="fas fa-check text-green-500 mr-2"></i>
+                            User-friendly file upload
+                        </li>
+                    </ul>
+                    <a href="/simple-check-pdf-forms" 
+                       class="inline-block bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors duration-300">
+                        Go to Section
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Information -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">About the System</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="text-center">
+                    <i class="fas fa-shield-alt text-3xl text-blue-500 mb-4"></i>
+                    <h3 class="font-semibold mb-2">Security</h3>
+                    <p class="text-gray-600">Secure document processing and storage</p>
+                </div>
+                <div class="text-center">
+                    <i class="fas fa-bolt text-3xl text-yellow-500 mb-4"></i>
+                    <h3 class="font-semibold mb-2">Performance</h3>
+                    <p class="text-gray-600">Fast file processing and validation</p>
+                </div>
+                <div class="text-center">
+                    <i class="fas fa-user-friends text-3xl text-green-500 mb-4"></i>
+                    <h3 class="font-semibold mb-2">Usability</h3>
+                    <p class="text-gray-600">Intuitive user interface</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endraw %}
+
+    <script>
+        const { createApp } = Vue
+
+        createApp({
+            data() {
+                return {}
+            }
+        }).mount('#app')
+    </script>
+</body>
+</html> 
