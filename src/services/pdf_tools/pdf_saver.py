@@ -7,7 +7,7 @@ from typing import Optional, List, Tuple
 from fastapi import UploadFile, Request, HTTPException, status
 from starlette.datastructures import Headers
 
-from src.core import settings
+from src.core.config import settings
 from src.core.storage.shemas import FileDataSchema
 
 logger = logging.getLogger(__name__)
