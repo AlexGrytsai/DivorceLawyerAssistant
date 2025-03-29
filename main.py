@@ -28,8 +28,13 @@ templates = Jinja2Templates(directory=Path("src/templates"))
 
 
 @app.get("/", response_class=HTMLResponse)
-async def serve_ui(request: Request):
+async def serve_index(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
+
+
+@app.get("/simple-check-pdf-forms", response_class=HTMLResponse)
+async def serve_ui(request: Request):
+    return templates.TemplateResponse("simple_check_pdf_forms.html", {"request": request})
 
 
 @app.get("/data-for-rag", response_class=HTMLResponse)
