@@ -5,7 +5,6 @@ from typing import List, Optional, Union, Set
 
 from fastapi import UploadFile, Request
 
-from src.core import settings
 from src.core.exceptions.storage import ErrorSavingFile
 from src.core.storage.decorators import (
     handle_upload_file_exceptions,
@@ -49,6 +48,8 @@ class FolderContents:
 
 
 class CloudStorage(BaseStorageInterface):
+    BASE_STORAGE_CLOUD_URL = "https://storage.googleapis.com"
+
     def __init__(
         self,
         project_id: str,
@@ -56,13 +57,14 @@ class CloudStorage(BaseStorageInterface):
         path_handler: Optional[PathHandler] = None,
         cloud_storage: Optional[CloudStorageInterface] = None,
     ):
+
         self.bucket_name = bucket_name
         self._path_handler = path_handler or PathHandler()
         self._cloud_storage = cloud_storage or GoogleCloudStorage(
             project_id=project_id,
             bucket_name=bucket_name,
         )
-        self.base_url = f"{settings.BASE_STORAGE_CLOUD_URL}/{bucket_name}"
+        self.base_url = f"{self.BASE_STORAGE_CLOUD_URL}/{bucket_name}"
 
     @staticmethod
     def _get_user_identifier(request: Request) -> str:

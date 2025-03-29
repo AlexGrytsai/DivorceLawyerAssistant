@@ -42,7 +42,6 @@ class Settings:
     # Directory settings
     STATIC_DIR: str = STATIC_DIR
     UPLOAD_DIR: str = UPLOAD_DIR
-    BASE_STORAGE_CLOUD_URL: str = BASE_STORAGE_CLOUD_URL
 
     STORAGE: BaseStorageInterface = CloudStorage(
         project_id=PROJECT_ID, bucket_name=MAIN_BUCKET_NAME

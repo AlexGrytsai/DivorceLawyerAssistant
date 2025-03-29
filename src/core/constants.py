@@ -21,8 +21,6 @@ MODEL_TOKEN_LIMITS: Dict[str, int] = {
 STATIC_DIR: str = "static"
 UPLOAD_DIR: str = f"{STATIC_DIR}/uploads/forms"
 
-BASE_STORAGE_CLOUD_URL = "https://storage.googleapis.com"
-
 PROJECT_ID: str = os.environ["PROJECT_ID"]
 MAIN_BUCKET_NAME: str = os.environ["MAIN_BUCKET_NAME"]
 RAG_BUCKET_NAME: str = os.environ["RAG_BUCKET_NAME"]
