@@ -10,12 +10,8 @@ from src.api.v1.check_pdf_forms.router import router_pdf_check
 from src.api.v1.data_for_rag import router as router_cloud_storage
 from src.core.config import settings
 
-# from src.utils.performance_monitoring import initialize_redis
 
 logger = logging.getLogger(__name__)
-
-# Initialize Redis if debug mode is enabled
-# initialize_redis(settings.DEBUG)
 
 app = FastAPI(title="Divorce Lawyer Assistant API", version="1.0.0")
 
