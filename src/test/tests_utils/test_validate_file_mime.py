@@ -7,7 +7,7 @@ from fastapi import UploadFile, HTTPException
 from src.utils.validators.validate_file_mime import (
     get_real_mime_type,
     check_mime_type,
-    validate_files,
+    validate_file_mime,
     ALLOWED_MIME_TYPES_FOR_FORMS,
 )
 
@@ -85,7 +85,7 @@ class TestValidateFileMime(unittest.TestCase):
 
             mock_check.side_effect = async_return
 
-            result = asyncio.run(validate_files([mock_file1, mock_file2]))
+            result = asyncio.run(validate_file_mime([mock_file1, mock_file2]))
 
             self.assertEqual(result, [mock_file1, mock_file2])
             # Check that both files were processed
@@ -113,7 +113,7 @@ class TestValidateFileMime(unittest.TestCase):
             mock_check.side_effect = async_side_effect
 
             with self.assertRaises(HTTPException) as context:
-                asyncio.run(validate_files([mock_file1, mock_file2]))
+                asyncio.run(validate_file_mime([mock_file1, mock_file2]))
 
             self.assertEqual(context.exception.status_code, 400)
             self.assertIn(
@@ -139,7 +139,7 @@ class TestValidateFileMime(unittest.TestCase):
 
     def test_validate_empty_file_list(self):
         # Test with empty file list
-        result = asyncio.run(validate_files([]))
+        result = asyncio.run(validate_file_mime([]))
         self.assertEqual(result, [])
 
     def test_all_allowed_mime_types(self):
