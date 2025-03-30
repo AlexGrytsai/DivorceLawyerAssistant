@@ -66,8 +66,6 @@ class CloudStorage(BaseStorageInterface):
         )
         self.base_url = f"{self.BASE_STORAGE_CLOUD_URL}/{bucket_name}"
 
-
-
     @handle_upload_file_exceptions
     async def upload(
         self, file: UploadFile, request: Request, *args, **kwargs
@@ -379,7 +377,9 @@ class CloudStorage(BaseStorageInterface):
                         FileDataSchema(
                             path=blob.name,
                             url=f"{self.base_url}/{blob.name}",
-                            filename=self._path_handler.get_basename(blob.name),
+                            filename=self._path_handler.get_basename(
+                                blob.name
+                            ),
                             content_type=blob.content_type,
                             size=blob.size,
                             status_code=200,
