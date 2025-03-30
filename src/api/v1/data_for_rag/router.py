@@ -3,13 +3,14 @@ from typing import List, Optional
 from fastapi import APIRouter, UploadFile, Request, File, Form
 
 from src.core.config import settings
+from src.core.constants import ALLOWED_MIME_TYPES_FOR_RAG
 from src.core.storage.shemas import (
     FileDataSchema,
     FileDeleteSchema,
     FolderDataSchema,
     FolderDeleteSchema,
 )
-
+from src.utils.validators.validate_file_mime import validate_file_mime
 
 router = APIRouter(prefix="/api/v1/data-for-rag", tags=["Data for RAG"])
 
@@ -42,7 +43,10 @@ async def upload_multiple_files(
     request: Request = None,
 ):
     """Upload multiple files to storage"""
-    return await settings.RAG_STORAGE.multi_upload(files, request)
+    checked_files: List[UploadFile] = await validate_file_mime(
+        files, ALLOWED_MIME_TYPES_FOR_RAG
+    )
+    return await settings.RAG_STORAGE.multi_upload(checked_files, request)
 
 
 @router.delete("/files/{file_path:path}", response_model=FileDeleteSchema)
