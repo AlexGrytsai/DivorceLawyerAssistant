@@ -66,14 +66,7 @@ class CloudStorage(BaseStorageInterface):
         )
         self.base_url = f"{self.BASE_STORAGE_CLOUD_URL}/{bucket_name}"
 
-    @staticmethod
-    def _get_user_identifier(request: Request) -> str:
-        user_identifier = request.scope.get("user")
-        if not user_identifier and request.client:
-            user_identifier = request.client.host
-        return (
-            str(user_identifier) if user_identifier is not None else "Unknown"
-        )
+
 
     @handle_upload_file_exceptions
     async def upload(
@@ -401,3 +394,12 @@ class CloudStorage(BaseStorageInterface):
                     )
 
         return sorted(files, key=lambda x: x.filename)
+
+    @staticmethod
+    def _get_user_identifier(request: Request) -> str:
+        user_identifier = request.scope.get("user")
+        if not user_identifier and request.client:
+            user_identifier = request.client.host
+        return (
+            str(user_identifier) if user_identifier is not None else "Unknown"
+        )
