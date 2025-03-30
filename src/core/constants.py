@@ -22,5 +22,16 @@ STATIC_DIR: str = "static"
 UPLOAD_DIR: str = f"{STATIC_DIR}/uploads/forms"
 
 PROJECT_ID: str = os.environ["PROJECT_ID"]
+
+# Bucket names
 MAIN_BUCKET_NAME: str = os.environ["MAIN_BUCKET_NAME"]
 RAG_BUCKET_NAME: str = os.environ["RAG_BUCKET_NAME"]
+
+# Allowed mime types
+ALLOWED_MIME_TYPES_FOR_FORMS = (
+    "application/pdf",
+    "application/msword",  # .doc
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+)
+
+ALLOWED_MIME_TYPES_FOR_RAG = ("application/pdf",)
