@@ -34,7 +34,9 @@ async def serve_index(request: Request):
 
 @app.get("/simple-check-pdf-forms", response_class=HTMLResponse)
 async def serve_ui(request: Request):
-    return templates.TemplateResponse("simple_check_pdf_forms.html", {"request": request})
+    return templates.TemplateResponse(
+        "simple_check_pdf_forms.html", {"request": request}
+    )
 
 
 @app.get("/data-for-rag", response_class=HTMLResponse)
