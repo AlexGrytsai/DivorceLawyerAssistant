@@ -69,6 +69,4 @@ async def multi_save_pdf_to_new_file(
         for pdf in list_pdf_buffer
     ]
 
-    saved_new_pdf = await asyncio.gather(*tasks)
-
-    return saved_new_pdf
+    return await asyncio.gather(*tasks)
