@@ -8,8 +8,11 @@ class PathHandler:
 
     @staticmethod
     def normalize_path(path: str) -> str:
-        """Normalize path by ensuring it ends with a slash"""
-        return path.rstrip("/") + "/"
+        """
+        Normalize path by ensuring it ends with a slash using
+        os.path.join to avoid duplicate separators
+        """
+        return os.path.normpath(path).replace(os.sep, "/")
 
     @staticmethod
     def get_parent_folder(path: str) -> Optional[str]:
