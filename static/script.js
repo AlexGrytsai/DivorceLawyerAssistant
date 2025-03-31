@@ -1,6 +1,6 @@
 async function uploadFiles() {
     const input = document.getElementById("fileInput");
-    const files = input.files;
+    const {files} = input;
     if (files.length === 0) {
         alert("Select the PDF form");
         return;
