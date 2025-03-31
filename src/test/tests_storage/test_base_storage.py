@@ -1,5 +1,6 @@
 import unittest
 from unittest.mock import AsyncMock, MagicMock, patch
+from typing import Optional, List
 
 from fastapi import UploadFile, Request, HTTPException
 
@@ -12,6 +13,7 @@ from src.core.storage.shemas import (
     FileDeleteSchema,
     FolderDataSchema,
     FolderDeleteSchema,
+    FolderContents,
 )
 
 
@@ -104,7 +106,7 @@ class TestBaseStorage(unittest.TestCase):
                 creator="test",
             )
 
-        async def get_file(self, file_path, request, *args, **kwargs):
+        async def get_file(self, file_path: str) -> FileDataSchema:
             return FileDataSchema(
                 path=file_path,
                 url=f"http://example.com/mock/{file_path}",
@@ -116,11 +118,39 @@ class TestBaseStorage(unittest.TestCase):
                 creator="test",
             )
 
-        async def get_folder_contents(self, folder_path, request, *args, **kwargs):
+        async def get_folder_contents(self, folder_path: str) -> FolderContents:
+            return FolderContents(
+                files=[
+                    FileDataSchema(
+                        path=f"{folder_path}/file1.txt",
+                        url=f"http://example.com/mock/{folder_path}/file1.txt",
+                        filename="file1.txt",
+                        content_type="text/plain",
+                        status_code=200,
+                        message="Success",
+                        date_created="2023-01-01",
+                        creator="test",
+                    )
+                ],
+                folders=[
+                    FolderDataSchema(
+                        path=f"{folder_path}/subfolder",
+                        name="subfolder",
+                        status_code=200,
+                        message="Success",
+                        date_created="2023-01-01",
+                        creator="test",
+                        parent_folder=folder_path,
+                        is_empty=True,
+                    )
+                ]
+            )
+
+        async def list_files(self, prefix: Optional[str] = None) -> List[FileDataSchema]:
             return [
                 FileDataSchema(
-                    path=f"{folder_path}/file1.txt",
-                    url=f"http://example.com/mock/{folder_path}/file1.txt",
+                    path=f"{prefix or ''}/file1.txt",
+                    url=f"http://example.com/mock/{prefix or ''}/file1.txt",
                     filename="file1.txt",
                     content_type="text/plain",
                     status_code=200,
@@ -130,35 +160,23 @@ class TestBaseStorage(unittest.TestCase):
                 )
             ]
 
-        async def list_files(self, folder_path, request, *args, **kwargs):
-            return [
-                FileDataSchema(
-                    path=f"{folder_path}/file1.txt",
-                    url=f"http://example.com/mock/{folder_path}/file1.txt",
-                    filename="file1.txt",
-                    content_type="text/plain",
-                    status_code=200,
-                    message="Success",
-                    date_created="2023-01-01",
-                    creator="test",
-                )
-            ]
-
-        async def list_folders(self, folder_path, request, *args, **kwargs):
+        async def list_folders(self, prefix: Optional[str] = None) -> List[FolderDataSchema]:
             return [
                 FolderDataSchema(
-                    path=f"{folder_path}/subfolder",
+                    path=f"{prefix or ''}/subfolder",
                     name="subfolder",
                     status_code=200,
                     message="Success",
                     date_created="2023-01-01",
                     creator="test",
-                    parent_folder=folder_path,
+                    parent_folder=prefix or "",
                     is_empty=True,
                 )
             ]
 
-        async def search_files_by_name(self, query, request, *args, **kwargs):
+        async def search_files_by_name(
+            self, search_query: str, case_sensitive: bool = False
+        ) -> List[FileDataSchema]:
             return [
                 FileDataSchema(
                     path="/mock/path/file.txt",
