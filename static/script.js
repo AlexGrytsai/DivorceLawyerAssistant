@@ -34,7 +34,7 @@ function displayResults(files) {
 
     files.forEach(file => {
         const fileInfo = document.createElement("p");
-        fileInfo.innerHTML = `<strong>${file.filename}</strong> - <a href="${file.url}" target="_blank">Download</a>`;
+        fileInfo.innerText = `<strong>${file.filename}</strong> - <a href="${file.url}" target="_blank">Download</a>`;
         resultsDiv.appendChild(fileInfo);
     });
 }
