@@ -64,7 +64,7 @@ class BaseStorageInterface(ABC):
                     "error": str(exc),
                     "message": "File upload was unsuccessful",
                 },
-            )
+            ) from exc
 
     @abstractmethod
     async def upload(
