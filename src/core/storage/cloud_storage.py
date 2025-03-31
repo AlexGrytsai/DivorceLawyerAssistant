@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import List, Optional, Union, Set
 
-from fastapi import UploadFile, Request
+from fastapi import UploadFile, Request, status, HTTPException
 
 from src.core.exceptions.storage import ErrorSavingFile
 from src.core.storage.decorators import (
@@ -13,6 +13,8 @@ from src.core.storage.decorators import (
 from src.core.storage.implementations.google_storage import GoogleCloudStorage
 from src.core.storage.interfaces.base_storage_interface import (
     BaseStorageInterface,
+    current_timestamp,
+    log_operation,
 )
 from src.core.storage.interfaces.cloud_storage_interface import (
     CloudStorageInterface,
@@ -26,6 +28,40 @@ from src.core.storage.shemas import (
 from src.utils.path_handler import PathHandler
 
 logger = logging.getLogger(__name__)
+
+
+def _validate_blob_exists(
+    cloud_storage: GoogleCloudStorage,
+    blob_name: str,
+    error_code: int = status.HTTP_404_NOT_FOUND,
+) -> None:
+    """Validate that blob exists in cloud storage"""
+    if not cloud_storage.get_bucket.blob(blob_name).exists():
+        log_operation(f"Blob {blob_name} not found", "warning")
+        raise HTTPException(
+            status_code=error_code,
+            detail={
+                "error": "Blob not found",
+                "message": f"{blob_name} not found",
+            },
+        )
+
+
+def _validate_blob_not_exists(
+    cloud_storage: GoogleCloudStorage,
+    blob_name: str,
+    error_code: int = status.HTTP_409_CONFLICT,
+) -> None:
+    """Validate that blob does not exist in cloud storage"""
+    if cloud_storage.get_bucket.blob(blob_name).exists():
+        log_operation(f"Blob {blob_name} already exists", "warning")
+        raise HTTPException(
+            status_code=error_code,
+            detail={
+                "error": "Blob already exists",
+                "message": f"{blob_name} already exists",
+            },
+        )
 
 
 @dataclass
@@ -117,16 +153,20 @@ class CloudStorage(BaseStorageInterface):
     async def create_folder(
         self, folder_path: str, request: Request, *args, **kwargs
     ) -> FolderDataSchema:
+        """Create a new folder in storage"""
         folder_path = self._path_handler.normalize_path(folder_path)
+        _validate_blob_not_exists(self._cloud_storage, folder_path)
+
         self._cloud_storage.upload_blob(folder_path, b"")
         parent_folder = self._path_handler.get_parent_folder(folder_path)
+        log_operation(f"Folder {folder_path} created successfully")
 
         return FolderDataSchema(
             path=folder_path,
             name=self._path_handler.get_basename(folder_path),
-            status_code=200,
-            message="Folder created successfully",
-            date_created=datetime.now().isoformat(),
+            status_code=status.HTTP_201_CREATED,
+            message=f"Folder {folder_path} created successfully",
+            date_created=current_timestamp(),
             creator=self._get_user_identifier(request),
             parent_folder=parent_folder,
             is_empty=True,
@@ -136,8 +176,12 @@ class CloudStorage(BaseStorageInterface):
     async def rename_folder(
         self, old_path: str, new_path: str, request: Request, *args, **kwargs
     ) -> FolderDataSchema:
+        """Rename existing folder"""
         old_path = self._path_handler.normalize_path(old_path)
         new_path = self._path_handler.normalize_path(new_path)
+
+        _validate_blob_exists(self._cloud_storage, old_path)
+        _validate_blob_not_exists(self._cloud_storage, new_path)
 
         blobs = self._cloud_storage.list_blobs(prefix=old_path)
         for blob in blobs:
@@ -146,13 +190,14 @@ class CloudStorage(BaseStorageInterface):
             self._cloud_storage.delete_blob(blob.name)
 
         parent_folder = self._path_handler.get_parent_folder(new_path)
+        log_operation(f"Folder renamed from {old_path} to {new_path}")
 
         return FolderDataSchema(
             path=new_path,
             name=self._path_handler.get_basename(new_path),
-            status_code=200,
-            message="Folder renamed successfully",
-            date_created=datetime.now().isoformat(),
+            status_code=status.HTTP_200_OK,
+            message=f"Folder renamed from {old_path} to {new_path}",
+            date_created=current_timestamp(),
             creator=self._get_user_identifier(request),
             parent_folder=parent_folder,
             is_empty=not any(blobs),
@@ -162,18 +207,22 @@ class CloudStorage(BaseStorageInterface):
     async def delete_folder(
         self, folder_path: str, request: Request, *args, **kwargs
     ) -> FolderDeleteSchema:
+        """Delete folder and all its contents"""
         folder_path = self._path_handler.normalize_path(folder_path)
+        _validate_blob_exists(self._cloud_storage, folder_path)
+
         blobs = self._cloud_storage.list_blobs(prefix=folder_path)
         deleted_files = len(blobs)
 
         for blob in blobs:
             self._cloud_storage.delete_blob(blob.name)
 
+        log_operation(f"Folder {folder_path} deleted successfully")
         return FolderDeleteSchema(
             folder=folder_path,
-            message="Folder and its contents deleted successfully",
-            status_code=200,
-            date_deleted=datetime.now().isoformat(),
+            message=f"Folder {folder_path} deleted successfully",
+            status_code=status.HTTP_204_NO_CONTENT,
+            date_deleted=current_timestamp(),
             deleted_by=self._get_user_identifier(request),
             deleted_files_count=deleted_files,
         )
@@ -185,7 +234,7 @@ class CloudStorage(BaseStorageInterface):
         old_blob = self._cloud_storage.get_bucket.blob(old_path)
         if not old_blob.exists():
             raise ErrorSavingFile(f"Source file {old_path} does not exist")
-            
+
         new_blob = self._cloud_storage.copy_blob(old_blob, new_path)
         self._cloud_storage.delete_blob(old_path)
 
@@ -248,7 +297,9 @@ class CloudStorage(BaseStorageInterface):
                 status_code=200,
                 message="File listed successfully",
                 date_created=(
-                    blob.time_created.isoformat() if blob.time_created else None
+                    blob.time_created.isoformat()
+                    if blob.time_created
+                    else None
                 ),
                 creator="",
             )
