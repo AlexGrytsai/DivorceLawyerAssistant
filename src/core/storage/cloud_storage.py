@@ -24,6 +24,9 @@ from src.core.storage.shemas import (
     FileDeleteSchema,
     FolderDataSchema,
     FolderDeleteSchema,
+    FileItem,
+    FolderItem,
+    FolderContents,
 )
 from src.utils.path_handler import PathHandler
 
@@ -62,25 +65,6 @@ def _validate_blob_not_exists(
                 "message": f"{blob_name} already exists",
             },
         )
-
-
-@dataclass
-class FolderItem:
-    name: str
-    path: str
-    type: str
-
-
-@dataclass
-class FileItem(FolderItem):
-    size: int
-    updated: Optional[str]
-
-
-@dataclass
-class FolderContents:
-    current_path: str
-    items: List[Union[FileItem, FolderItem]]
 
 
 class CloudStorage(BaseStorageInterface):
@@ -282,10 +266,10 @@ class CloudStorage(BaseStorageInterface):
         )
 
     async def list_files(
-        self, prefix: Optional[str] = None
+        self, prefix: Optional[str] = ""
     ) -> List[FileDataSchema]:
         blobs = self._cloud_storage.list_blobs(prefix=prefix)
-        files = []
+        files: List[FileDataSchema] = []
 
         files.extend(
             FileDataSchema(
@@ -297,9 +281,7 @@ class CloudStorage(BaseStorageInterface):
                 status_code=200,
                 message="File listed successfully",
                 date_created=(
-                    blob.time_created.isoformat()
-                    if blob.time_created
-                    else None
+                    blob.time_created.isoformat() if blob.time_created else ""
                 ),
                 creator="",
             )
@@ -451,7 +433,7 @@ class CloudStorage(BaseStorageInterface):
                         )
                     )
 
-        return sorted(files, key=lambda x: x.filename)
+        return sorted(files, key=lambda x: x.filename or "")
 
     @staticmethod
     def _get_user_identifier(request: Request) -> str:
