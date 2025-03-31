@@ -29,7 +29,9 @@ logger = logging.getLogger(__name__)
 
 
 def _validate_path_exists(
-    path: Path, entity: str, error_code: int = status.HTTP_404_NOT_FOUND
+    path: Path,
+    entity: str,
+    error_code: int = status.HTTP_404_NOT_FOUND,
 ) -> None:
     """Validate that path exists"""
     if not path.exists():
@@ -44,7 +46,9 @@ def _validate_path_exists(
 
 
 def _validate_path_not_exists(
-    path: Path, entity: str, error_code: int = status.HTTP_409_CONFLICT
+    path: Path,
+    entity: str,
+    error_code: int = status.HTTP_409_CONFLICT,
 ) -> None:
     """Validate that path does not exist"""
     if path.exists():
