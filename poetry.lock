@@ -1951,6 +1951,18 @@ files = [
 ]
 
 [[package]]
+name = "sourcery"
+version = "1.35.0"
+description = "Magically refactor Python"
+optional = false
+python-versions = "*"
+files = [
+    {file = "sourcery-1.35.0-py2.py3-none-macosx_10_9_universal2.whl", hash = "sha256:196e20bcc1b295b326005f728638f0a4bbb9c1fe7399dce4d4409ecfc9a5e487"},
+    {file = "sourcery-1.35.0-py2.py3-none-manylinux1_x86_64.whl", hash = "sha256:0d1c63eb0465ed9405bea422ac6229aa1128e784160a481389ed6dbe90080682"},
+    {file = "sourcery-1.35.0-py2.py3-none-win_amd64.whl", hash = "sha256:61db72f1183abd231bc448a4d03a74738f3b1013ad4396dc2935c080c3863c36"},
+]
+
+[[package]]
 name = "starlette"
 version = "0.46.1"
 description = "The little ASGI library that shines."
@@ -2120,4 +2132,4 @@ standard = ["colorama (>=0.4)", "httptools (>=0.6.3)", "python-dotenv (>=0.13)",
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.12,<3.13"
-content-hash = "a75d28b26c18bc8aeb68709823fb9f33e87ec15e8f53e58da1e4a01bef8fe562"
+content-hash = "91558a6fad0ec2863756f6cefc1d2f9c7f0c26eafacce23720858d777bf2c7b0"
