@@ -38,19 +38,20 @@ class ScraperPDF(BaseScraperPDF):
         for block in page.get_text("dict").get("blocks"):
             if block.get("lines"):
                 for line in block["lines"]:
-                    for span in line.get("spans"):
-                        if span["text"].strip() != "":
-                            list_spans_with_parameters.append(span)
-
+                    list_spans_with_parameters.extend(
+                        span
+                        for span in line.get("spans")
+                        if span["text"].strip() != ""
+                    )
         return list_spans_with_parameters
 
     @staticmethod
     def __extract_tables_from_page(page: fitz.Page) -> List[Table]:
-        return [table for table in page.find_tables(strategy="lines_strict")]
+        return list(page.find_tables(strategy="lines_strict"))
 
     @staticmethod
     def __extract_widgets_from_page(page: fitz.Page) -> List[fitz.Widget]:
-        return [widget for widget in page.widgets()]
+        return list(page.widgets())
 
     def _scrap_page(self, page: fitz.Page) -> ScrapedPage:
         return ScrapedPage(
@@ -65,8 +66,7 @@ class ScraperPDF(BaseScraperPDF):
     ) -> List[ScrapedPage]:
         doc: fitz.Document = fitz.open(self.file_path)
         scraped_pages: List[ScrapedPage] = []
-        for page in doc:
-            scraped_pages.append(self._scrap_page(page))
+        scraped_pages.extend(self._scrap_page(page) for page in doc)
         doc.close()
 
         return scraped_pages
@@ -79,10 +79,9 @@ class ScraperWidgetFromPDF(BaseScraperPDF):
     def scrap_data(self) -> List[ScrapedPage]:
         doc: fitz.Document = fitz.open(self.file_path)
         scraped_pages: List[ScrapedPage] = []
-        for page in doc:
-            scraped_pages.append(
-                ScrapedPage([], [widget for widget in page.widgets()], [])
-            )
+        scraped_pages.extend(
+            ScrapedPage([], list(page.widgets()), []) for page in doc
+        )
         doc.close()
 
         return scraped_pages
