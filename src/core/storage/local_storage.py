@@ -312,7 +312,7 @@ class LocalStorage(BaseStorageInterface):
                 )
                 files.append(file_data)
 
-        return files
+        return sorted(files, key=lambda x: x.filename or "")
 
     @handle_upload_file_exceptions
     async def list_folders(
@@ -380,7 +380,10 @@ class LocalStorage(BaseStorageInterface):
 
     @handle_upload_file_exceptions
     async def search_files_by_name(
-        self, search_query: str, case_sensitive: bool = False
+        self,
+        search_query: str,
+        request: Request,
+        case_sensitive: bool = False,
     ) -> List[FileDataSchema]:
         """Search files by name with optional case sensitivity"""
         storage_path = Path(self._path_to_storage)
@@ -400,7 +403,7 @@ class LocalStorage(BaseStorageInterface):
                     ).isoformat()
                     file_data = FileDataSchema(
                         path=str(file_path),
-                        url=self._create_url_path(str(file_path), None),
+                        url=self._create_url_path(str(file_path), request),
                         filename=file_path.name,
                         content_type=None,
                         size=file_path.stat().st_size,
@@ -411,7 +414,7 @@ class LocalStorage(BaseStorageInterface):
                     )
                     files.append(file_data)
 
-        return sorted(files, key=lambda x: x.filename)
+        return sorted(files, key=lambda x: x.filename or "")
 
     @staticmethod
     def _get_user_identifier(request: Request) -> str:
