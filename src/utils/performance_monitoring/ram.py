@@ -7,7 +7,7 @@ from typing import Callable, List, Tuple, Optional, Dict
 import psutil
 from redis import Redis
 
-from src.core import settings
+from src.core.config import settings
 from src.utils.performance_monitoring import (
     redis_client_for_performance_monitoring,
 )
