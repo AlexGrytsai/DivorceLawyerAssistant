@@ -1,11 +1,15 @@
+from typing import Optional
+
 from redis import Redis
 
-from src.core import settings
+from src.core.config import settings
 
-if settings.DEBUG:
-    redis_client_for_performance_monitoring = Redis(
-        host="localhost",
-        port=6379,
-        db=10,
-        decode_responses=True,
-    )
+
+def redis_client_for_performance_monitoring() -> Optional[Redis]:
+    if settings.DEBUG:
+        return Redis(
+            host=settings.REDIS_HOST,
+            port=settings.REDIS_PORT,
+            db=settings.REDIS_DB,
+            decode_responses=True,
+        )
