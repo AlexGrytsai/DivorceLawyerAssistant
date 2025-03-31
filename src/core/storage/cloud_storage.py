@@ -404,9 +404,14 @@ class CloudStorage(BaseStorageInterface):
             for folder_path in sorted(folders)
         ]
 
+        all_items: List[Union[FileItem, FolderItem]] = [
+            *folder_items,
+            *files
+        ]
+
         return FolderContents(
             current_path=folder_path.rstrip("/") if folder_path else "",
-            items=self._sort_folder_items(folder_items + files),
+            items=self._sort_folder_items(all_items),
         )
 
     async def search_files_by_name(
@@ -438,7 +443,7 @@ class CloudStorage(BaseStorageInterface):
                             date_created=(
                                 blob.time_created.isoformat()
                                 if blob.time_created
-                                else None
+                                else ""
                             ),
                             creator="",
                         )
