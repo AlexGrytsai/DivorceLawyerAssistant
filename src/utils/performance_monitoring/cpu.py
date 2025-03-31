@@ -37,7 +37,10 @@ def save_data_to_usage_results(
         try:
             r_client.rpush(f"cpu_usage_{func_name}", json.dumps(cpu_data))
         except Exception as exc:
-            raise Exception(f"Failed to save CPU usage data to Redis: {exc}")
+            # sourcery skip: raise-specific-error
+            raise Exception(
+                f"Failed to save CPU usage data to Redis: {exc}"
+            ) from exc
     else:
         if func_name not in cpu_usage_results:
             cpu_usage_results[func_name] = []
