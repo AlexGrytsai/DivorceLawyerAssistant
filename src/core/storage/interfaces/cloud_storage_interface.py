@@ -13,6 +13,7 @@ class CloudStorageInterface(ABC):
         """Get cloud storage client"""
         pass
 
+    @property
     @abstractmethod
     def get_bucket(self) -> Bucket:
         """
