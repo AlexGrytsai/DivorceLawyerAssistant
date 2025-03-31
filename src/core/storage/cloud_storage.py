@@ -183,6 +183,9 @@ class CloudStorage(BaseStorageInterface):
         self, old_path: str, new_path: str, request: Request, *args, **kwargs
     ) -> FileDataSchema:
         old_blob = self._cloud_storage.get_bucket.blob(old_path)
+        if not old_blob.exists():
+            raise ErrorSavingFile(f"Source file {old_path} does not exist")
+            
         new_blob = self._cloud_storage.copy_blob(old_blob, new_path)
         self._cloud_storage.delete_blob(old_path)
 
