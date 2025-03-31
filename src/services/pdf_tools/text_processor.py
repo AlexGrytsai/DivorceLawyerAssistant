@@ -77,7 +77,7 @@ class TextProcessor(TextBaseProcessor):
             for span in text_line
             if isinstance(span, Widget) and span.field_value
         }
-        filtered_spans = []
+        filtered_spans: LineType = []
         filtered_spans.extend(
             span
             for span in text_line
