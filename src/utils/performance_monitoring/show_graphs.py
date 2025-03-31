@@ -28,7 +28,7 @@ def load_usage_data_from_redis(key_prefix: str):
             for key in redis_keys  # type: ignore
         }
     except Exception as exc:
-# sourcery skip: raise-specific-error
+        # sourcery skip: raise-specific-error
         raise Exception(f"Failed to load RAM usage data from Redis: {exc}")
 
 
