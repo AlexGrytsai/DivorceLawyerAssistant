@@ -33,6 +33,7 @@ rule_settings:
   - default
   disable: # A list of rule IDs Sourcery will never suggest.
   - use-named-expression
+  - no-loop-in-tests
   rule_types:
   - refactoring
   - suggestion
