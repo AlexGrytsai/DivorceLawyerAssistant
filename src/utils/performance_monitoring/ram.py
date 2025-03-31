@@ -48,7 +48,7 @@ def monitor_ram_usage(interval: float = 0.1) -> None:
 
 
 def ram_monitor_decorator(
-    r_client: Optional[Redis] = redis_client_for_performance_monitoring,
+    r_client: Optional[Redis] = redis_client_for_performance_monitoring(),
     save_data: Optional[bool] = True,
     is_enabled: Optional[bool] = settings.DEBUG,
 ) -> Callable:
