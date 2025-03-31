@@ -8,9 +8,7 @@ import psutil
 from redis import Redis
 
 from src.core.config import settings
-from src.utils.performance_monitoring import (
-    redis_client_monitoring
-)
+from src.utils.performance_monitoring import redis_client_monitoring
 
 running = False
 cpu_usage_data = []
