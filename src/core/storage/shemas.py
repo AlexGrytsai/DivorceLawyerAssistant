@@ -1,8 +1,24 @@
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List, Union
 
 from pydantic import HttpUrl, BaseModel
+
+
+class FolderItem(BaseModel):
+    name: str
+    path: str
+    type: str
+
+
+class FileItem(FolderItem):
+    size: int
+    updated: Optional[str]
+
+
+class FolderContents(BaseModel):
+    current_path: str
+    items: List[Union[FileItem, FolderItem]]
 
 
 class FileDataSchema(BaseModel):
