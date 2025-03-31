@@ -34,7 +34,7 @@ class GoogleCloudStorage(CloudStorageInterface):
     @handle_cloud_storage_exceptions
     def get_bucket(self) -> Bucket:
         if self._bucket is None:
-            self._bucket: Bucket = self.get_client.get_bucket(
+            self._bucket = self.get_client.get_bucket(
                 bucket_or_name=self.bucket_name
             )
         return self._bucket
