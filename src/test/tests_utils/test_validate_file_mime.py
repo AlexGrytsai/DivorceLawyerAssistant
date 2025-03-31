@@ -145,6 +145,7 @@ class TestValidateFileMime(unittest.TestCase):
 
     def test_all_allowed_mime_types(self):
         # Test all allowed MIME types
+# sourcery skip: no-loop-in-tests
         for mime_type in ALLOWED_MIME_TYPES_FOR_FORMS:
             mock_file = AsyncMock(spec=UploadFile)
             mock_file.filename = f"test.{mime_type.split('/')[-1]}"
