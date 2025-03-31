@@ -35,13 +35,11 @@ async def simple_check_pdf_forms(
     if isinstance(uploaded, FileDataSchema):
         uploaded = [uploaded]
 
-    checked_forms = await main_check_pdf_fields(
+    return await main_check_pdf_fields(
         [str(file.path) for file in uploaded],
         ai_assistant=OpenAITextAnalyzer(),
         request=request,
     )
-
-    return checked_forms
 
 
 @router_pdf_check.delete(
@@ -54,7 +52,6 @@ async def simple_check_pdf_forms(
 async def delete_file(
     request: Request, file_path=Body(..., embed=True)
 ) -> FileDeleteSchema:
-    deleted_file = await settings.STORAGE.delete(
+    return await settings.STORAGE.delete(
         file_path=str(file_path), request=request
     )
-    return deleted_file
