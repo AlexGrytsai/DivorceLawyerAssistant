@@ -18,7 +18,7 @@ def load_usage_data_from_redis(key_prefix: str):
         redis_keys = redis_client_for_performance_monitoring.keys(
             f"{key_prefix}*"
         )
-        data = {
+        return {
             key: [
                 json.loads(value)
                 for value in redis_client_for_performance_monitoring.lrange(  # type: ignore # noqa
@@ -27,8 +27,8 @@ def load_usage_data_from_redis(key_prefix: str):
             ]
             for key in redis_keys  # type: ignore
         }
-        return data
     except Exception as exc:
+# sourcery skip: raise-specific-error
         raise Exception(f"Failed to load RAM usage data from Redis: {exc}")
 
 
@@ -80,13 +80,10 @@ def preparation_of_graphs(
         return None
 
     avg_resource_usage = []
-    for i in range(max_length):
-        avg_resource_usage.append(
-            np.average(
-                [data[i] for data in all_resource_usages if i < len(data)]
-            )
-        )
-
+    avg_resource_usage.extend(
+        np.average([data[i] for data in all_resource_usages if i < len(data)])
+        for i in range(max_length)
+    )
     avg_exec_time = np.mean(exec_times)
     x_values = np.linspace(0, np.mean(exec_times), len(avg_resource_usage))
 
