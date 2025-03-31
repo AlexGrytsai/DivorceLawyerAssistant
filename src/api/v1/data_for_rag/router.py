@@ -34,9 +34,9 @@ async def list_folder_contents(folder_path: str = ""):
 
 @router.post("/upload", response_model=FileDataSchema)
 async def upload_file(
+    request: Request,
     file: UploadFile = File(...),
     folder_path: Optional[str] = Form(None),
-    request: Request = None,
 ):
     """Upload a single file to storage"""
     _process_file_path(file, folder_path)
@@ -45,9 +45,9 @@ async def upload_file(
 
 @router.post("/upload/multiple", response_model=List[FileDataSchema])
 async def upload_multiple_files(
+    request: Request,
     files: List[UploadFile] = File(...),
     folder_path: Optional[str] = Form(None),
-    request: Request = None,
 ):
     """Upload multiple files to storage"""
     for file in files:
@@ -62,7 +62,7 @@ async def upload_multiple_files(
 @router.delete("/files/{file_path:path}", response_model=FileDeleteSchema)
 async def delete_file(
     file_path: str,
-    request: Request = None,
+    request: Request,
 ):
     """Delete a file from storage"""
     return await settings.RAG_STORAGE.delete(file_path, request)
@@ -70,8 +70,8 @@ async def delete_file(
 
 @router.post("/folders", response_model=FolderDataSchema)
 async def create_folder(
+    request: Request,
     folder_path: str = Form(...),
-    request: Request = None,
 ):
     """Create a new folder in storage"""
     return await settings.RAG_STORAGE.create_folder(folder_path, request)
@@ -80,8 +80,8 @@ async def create_folder(
 @router.put("/folders/{folder_path:path}", response_model=FolderDataSchema)
 async def rename_folder(
     folder_path: str,
+    request: Request,
     new_path: str = Form(...),
-    request: Request = None,
 ):
     """Rename a folder in storage"""
     return await settings.RAG_STORAGE.rename_folder(
@@ -94,7 +94,7 @@ async def rename_folder(
 )
 async def delete_folder(
     folder_path: str,
-    request: Request = None,
+    request: Request,
 ):
     """Delete a folder and its contents from storage"""
     return await settings.RAG_STORAGE.delete_folder(folder_path, request)
@@ -103,8 +103,8 @@ async def delete_folder(
 @router.put("/files/{file_path:path}", response_model=FileDataSchema)
 async def rename_file(
     file_path: str,
+    request: Request,
     new_path: str = Form(...),
-    request: Request = None,
 ):
     """Rename a file in storage"""
     return await settings.RAG_STORAGE.rename_file(file_path, new_path, request)

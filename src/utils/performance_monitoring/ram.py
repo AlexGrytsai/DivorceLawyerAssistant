@@ -7,10 +7,8 @@ from typing import Callable, List, Tuple, Optional, Dict
 import psutil
 from redis import Redis
 
-from src.core import settings
-from src.utils.performance_monitoring import (
-    redis_client_for_performance_monitoring,
-)
+from src.core.config import settings
+from src.utils.performance_monitoring import redis_client_monitoring
 
 monitoring = False
 ram_usage = []
@@ -48,7 +46,7 @@ def monitor_ram_usage(interval: float = 0.1) -> None:
 
 
 def ram_monitor_decorator(
-    r_client: Optional[Redis] = redis_client_for_performance_monitoring,
+    r_client: Optional[Redis] = redis_client_monitoring,
     save_data: Optional[bool] = True,
     is_enabled: Optional[bool] = settings.DEBUG,
 ) -> Callable:

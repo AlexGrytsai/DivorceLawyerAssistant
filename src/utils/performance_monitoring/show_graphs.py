@@ -6,27 +6,24 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.lines import Line2D
 
-from src.utils.performance_monitoring import (
-    redis_client_for_performance_monitoring,
-)
+from src.utils.performance_monitoring import redis_client_monitoring
 
 logger = logging.getLogger(__name__)
 
 
 def load_usage_data_from_redis(key_prefix: str):
     try:
-        redis_keys = redis_client_for_performance_monitoring.keys(
-            f"{key_prefix}*"
-        )
-        return {
-            key: [
-                json.loads(value)
-                for value in redis_client_for_performance_monitoring.lrange(  # type: ignore # noqa
-                    key, 0, -1
-                )
-            ]
-            for key in redis_keys  # type: ignore
-        }
+        if redis_client_monitoring:
+            redis_keys = redis_client_monitoring.keys(f"{key_prefix}*")
+            return {
+                key: [
+                    json.loads(value)
+                    for value in redis_client_monitoring.lrange(  # type: ignore # noqa
+                        key, 0, -1
+                    )
+                ]
+                for key in redis_keys  # type: ignore
+            }
     except Exception as exc:
         # sourcery skip: raise-specific-error
         raise Exception(
@@ -81,11 +78,10 @@ def preparation_of_graphs(
     if max_length == 0:
         return None
 
-    avg_resource_usage = []
-    avg_resource_usage.extend(
+    avg_resource_usage: List[np.floating] = [
         np.average([data[i] for data in all_resource_usages if i < len(data)])
         for i in range(max_length)
-    )
+    ]
     avg_exec_time = np.mean(exec_times)
     x_values = np.linspace(0, np.mean(exec_times), len(avg_resource_usage))
 

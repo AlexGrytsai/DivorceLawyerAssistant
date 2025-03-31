@@ -133,7 +133,7 @@ class TableProcessor(TableBaseProcessor):
         else:
             table_rects = []
 
-        result = []
+        result: List[LinePDF] = []
         result.extend(
             line
             for line in page.lines

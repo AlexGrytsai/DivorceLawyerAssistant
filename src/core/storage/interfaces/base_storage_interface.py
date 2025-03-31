@@ -11,6 +11,7 @@ from src.core.storage.shemas import (
     FileDeleteSchema,
     FolderDataSchema,
     FolderDeleteSchema,
+    FolderContents,
 )
 
 logger = logging.getLogger(__name__)
@@ -253,15 +254,15 @@ class BaseStorageInterface(ABC):
         pass
 
     @abstractmethod
-    async def get_folder_contents(self, folder_path: str) -> dict:
+    async def get_folder_contents(self, folder_path: str) -> FolderContents:
         """
-        Get contents of a specific folder
+        Get contents of a folder
 
         Args:
             folder_path: Path to folder
 
         Returns:
-            dict: Dictionary containing current path and list of items
+            FolderContents: Contents of the folder
         """
         pass
 

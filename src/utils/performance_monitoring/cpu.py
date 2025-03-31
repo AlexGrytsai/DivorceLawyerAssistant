@@ -7,10 +7,8 @@ from typing import Callable, List, Tuple, Optional, Dict
 import psutil
 from redis import Redis
 
-from src.core import settings
-from src.utils.performance_monitoring import (
-    redis_client_for_performance_monitoring,
-)
+from src.core.config import settings
+from src.utils.performance_monitoring import redis_client_monitoring
 
 running = False
 cpu_usage_data = []
@@ -50,7 +48,7 @@ def save_data_to_usage_results(
 def cpu_monitor_decorator(
     save_data: bool = True,
     is_enabled: bool = settings.DEBUG,
-    r_client: Optional[Redis] = redis_client_for_performance_monitoring,
+    r_client: Optional[Redis] = redis_client_monitoring,
 ) -> Callable:
     def decorator(func: Callable) -> Callable:
         @functools.wraps(func)

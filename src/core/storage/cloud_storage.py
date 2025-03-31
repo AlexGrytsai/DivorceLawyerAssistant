@@ -1,7 +1,7 @@
 import logging
 from dataclasses import dataclass
 from datetime import datetime
-from typing import List, Optional, Union, Set
+from typing import List, Optional, Union, Set, Tuple
 
 from fastapi import UploadFile, Request, status, HTTPException
 
@@ -24,6 +24,9 @@ from src.core.storage.shemas import (
     FileDeleteSchema,
     FolderDataSchema,
     FolderDeleteSchema,
+    FileItem,
+    FolderItem,
+    FolderContents,
 )
 from src.utils.path_handler import PathHandler
 
@@ -31,7 +34,7 @@ logger = logging.getLogger(__name__)
 
 
 def _validate_blob_exists(
-    cloud_storage: GoogleCloudStorage,
+    cloud_storage: CloudStorageInterface,
     blob_name: str,
     error_code: int = status.HTTP_404_NOT_FOUND,
 ) -> None:
@@ -48,7 +51,7 @@ def _validate_blob_exists(
 
 
 def _validate_blob_not_exists(
-    cloud_storage: GoogleCloudStorage,
+    cloud_storage: CloudStorageInterface,
     blob_name: str,
     error_code: int = status.HTTP_409_CONFLICT,
 ) -> None:
@@ -62,25 +65,6 @@ def _validate_blob_not_exists(
                 "message": f"{blob_name} already exists",
             },
         )
-
-
-@dataclass
-class FolderItem:
-    name: str
-    path: str
-    type: str
-
-
-@dataclass
-class FileItem(FolderItem):
-    size: int
-    updated: Optional[str]
-
-
-@dataclass
-class FolderContents:
-    current_path: str
-    items: List[Union[FileItem, FolderItem]]
 
 
 class CloudStorage(BaseStorageInterface):
@@ -276,16 +260,16 @@ class CloudStorage(BaseStorageInterface):
             status_code=200,
             message="File retrieved successfully",
             date_created=(
-                blob.time_created.isoformat() if blob.time_created else None
+                blob.time_created.isoformat() if blob.time_created else ""
             ),
             creator="",
         )
 
     async def list_files(
-        self, prefix: Optional[str] = None
+        self, prefix: Optional[str] = ""
     ) -> List[FileDataSchema]:
         blobs = self._cloud_storage.list_blobs(prefix=prefix)
-        files = []
+        files: List[FileDataSchema] = []
 
         files.extend(
             FileDataSchema(
@@ -297,9 +281,7 @@ class CloudStorage(BaseStorageInterface):
                 status_code=200,
                 message="File listed successfully",
                 date_created=(
-                    blob.time_created.isoformat()
-                    if blob.time_created
-                    else None
+                    blob.time_created.isoformat() if blob.time_created else ""
                 ),
                 creator="",
             )
@@ -369,7 +351,12 @@ class CloudStorage(BaseStorageInterface):
     def _sort_folder_items(
         items: List[Union[FileItem, FolderItem]],
     ) -> List[Union[FileItem, FolderItem]]:
-        return sorted(items, key=lambda x: (x.type == "file", x.name))
+        def sort_key(item: Union[FileItem, FolderItem]) -> Tuple[bool, str]:
+            is_file = isinstance(item, FileItem)
+            name = item.name or ""
+            return is_file, name
+
+        return sorted(items, key=sort_key)
 
     async def get_folder_contents(self, folder_path: str) -> FolderContents:
         folder_path = self._normalize_folder_path(folder_path)
@@ -404,9 +391,11 @@ class CloudStorage(BaseStorageInterface):
             for folder_path in sorted(folders)
         ]
 
+        all_items: List[Union[FileItem, FolderItem]] = [*folder_items, *files]
+
         return FolderContents(
             current_path=folder_path.rstrip("/") if folder_path else "",
-            items=self._sort_folder_items(folder_items + files),
+            items=self._sort_folder_items(all_items),
         )
 
     async def search_files_by_name(
@@ -438,13 +427,13 @@ class CloudStorage(BaseStorageInterface):
                             date_created=(
                                 blob.time_created.isoformat()
                                 if blob.time_created
-                                else None
+                                else ""
                             ),
                             creator="",
                         )
                     )
 
-        return sorted(files, key=lambda x: x.filename)
+        return sorted(files, key=lambda x: x.filename or "")
 
     @staticmethod
     def _get_user_identifier(request: Request) -> str:

@@ -13,6 +13,7 @@ class CloudStorageInterface(ABC):
         """Get cloud storage client"""
         pass
 
+    @property
     @abstractmethod
     def get_bucket(self) -> Bucket:
         """
@@ -74,7 +75,7 @@ class CloudStorageInterface(ABC):
         pass
 
     @abstractmethod
-    def list_blobs(self, prefix: str = "") -> List[Blob]:
+    def list_blobs(self, prefix: Optional[str] = "") -> List[Blob]:
         """
         List blobs in storage
 
