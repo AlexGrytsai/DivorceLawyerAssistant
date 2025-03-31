@@ -14,6 +14,8 @@ from src.core.storage.decorators import (
 )
 from src.core.storage.interfaces.base_storage_interface import (
     BaseStorageInterface,
+    current_timestamp,
+    log_operation,
 )
 from src.core.storage.shemas import (
     FileDataSchema,
@@ -24,6 +26,36 @@ from src.core.storage.shemas import (
 from src.core.exceptions.storage import ErrorSavingFile
 
 logger = logging.getLogger(__name__)
+
+
+def _validate_path_exists(
+    path: Path, entity: str, error_code: int = status.HTTP_404_NOT_FOUND
+) -> None:
+    """Validate that path exists"""
+    if not path.exists():
+        log_operation(f"{entity} {path} not found", "warning")
+        raise HTTPException(
+            status_code=error_code,
+            detail={
+                "error": f"{entity} not found",
+                "message": f"{path} not found",
+            },
+        )
+
+
+def _validate_path_not_exists(
+    path: Path, entity: str, error_code: int = status.HTTP_409_CONFLICT
+) -> None:
+    """Validate that path does not exist"""
+    if path.exists():
+        log_operation(f"{entity} {path} already exists", "warning")
+        raise HTTPException(
+            status_code=error_code,
+            detail={
+                "error": f"{entity} already exists",
+                "message": f"{path} already exists",
+            },
+        )
 
 
 class LocalStorage(BaseStorageInterface):
@@ -110,39 +142,26 @@ class LocalStorage(BaseStorageInterface):
     ) -> FolderDeleteSchema:
         """Delete a folder and all its contents"""
         folder = Path(folder_path)
-        if folder.exists():
-            deleted_files = 0
-            for root, dirs, files in os.walk(folder, topdown=False):
-                for name in files:
-                    os.remove(os.path.join(root, name))
-                    deleted_files += 1
-                for name in dirs:
-                    os.rmdir(os.path.join(root, name))
-            os.rmdir(folder)
+        _validate_path_exists(folder, "Folder")
 
-            logger.info(f"{folder_path} deleted successfully")
-            return FolderDeleteSchema(
-                folder=folder_path,
-                message=f"{folder_path} deleted successfully",
-                status_code=status.HTTP_204_NO_CONTENT,
-                date_deleted=datetime.datetime.now().strftime(
-                    "%H:%M:%S %m-%d-%Y"
-                ),
-                deleted_by=self._get_user_identifier(request),
-                deleted_files_count=deleted_files,
-            )
-        else:
-            logger.warning(
-                f"{folder_path} not found in {self._path_to_storage} "
-                f"for deletion"
-            )
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail={
-                    "error": "Folder not found",
-                    "message": f"{folder_path} not found",
-                },
-            )
+        deleted_files = 0
+        for root, dirs, files in os.walk(folder, topdown=False):
+            for name in files:
+                os.remove(os.path.join(root, name))
+                deleted_files += 1
+            for name in dirs:
+                os.rmdir(os.path.join(root, name))
+        os.rmdir(folder)
+
+        log_operation(f"{folder_path} deleted successfully")
+        return FolderDeleteSchema(
+            folder=folder_path,
+            message=f"{folder_path} deleted successfully",
+            status_code=status.HTTP_204_NO_CONTENT,
+            date_deleted=current_timestamp(),
+            deleted_by=self._get_user_identifier(request),
+            deleted_files_count=deleted_files,
+        )
 
     @handle_upload_file_exceptions
     async def create_folder(
@@ -150,31 +169,21 @@ class LocalStorage(BaseStorageInterface):
     ) -> FolderDataSchema:
         """Create a new folder in storage"""
         folder = Path(folder_path)
-        if not folder.exists():
-            folder.mkdir(parents=True, exist_ok=True)
-            logger.info(f"Folder {folder_path} created successfully")
+        _validate_path_not_exists(folder, "Folder")
 
-            return FolderDataSchema(
-                path=str(folder),
-                name=folder.name,
-                status_code=status.HTTP_201_CREATED,
-                message=f"Folder {folder_path} created successfully",
-                date_created=datetime.datetime.now().strftime(
-                    "%H:%M:%S %m-%d-%Y"
-                ),
-                creator=self._get_user_identifier(request),
-                parent_folder=str(folder.parent),
-                is_empty=True,
-            )
-        else:
-            logger.warning(f"Folder {folder_path} already exists")
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail={
-                    "error": "Folder already exists",
-                    "message": f"Folder {folder_path} already exists",
-                },
-            )
+        folder.mkdir(parents=True, exist_ok=True)
+        log_operation(f"Folder {folder_path} created successfully")
+
+        return FolderDataSchema(
+            path=str(folder),
+            name=folder.name,
+            status_code=status.HTTP_201_CREATED,
+            message=f"Folder {folder_path} created successfully",
+            date_created=current_timestamp(),
+            creator=self._get_user_identifier(request),
+            parent_folder=str(folder.parent),
+            is_empty=True,
+        )
 
     @handle_upload_file_exceptions
     async def rename_folder(
@@ -184,41 +193,22 @@ class LocalStorage(BaseStorageInterface):
         old_folder = Path(old_path)
         new_folder = Path(new_path)
 
-        if old_folder.exists():
-            if not new_folder.exists():
-                old_folder.rename(new_folder)
-                logger.info(f"Folder renamed from {old_path} to {new_path}")
+        _validate_path_exists(old_folder, "Source folder")
+        _validate_path_not_exists(new_folder, "Target folder")
 
-                return FolderDataSchema(
-                    path=str(new_folder),
-                    name=new_folder.name,
-                    status_code=status.HTTP_200_OK,
-                    message=f"Folder renamed from {old_path} to {new_path}",
-                    date_created=datetime.datetime.now().strftime(
-                        "%H:%M:%S %m-%d-%Y"
-                    ),
-                    creator=self._get_user_identifier(request),
-                    parent_folder=str(new_folder.parent),
-                    is_empty=not any(new_folder.iterdir()),
-                )
-            else:
-                logger.warning(f"Target folder {new_path} already exists")
-                raise HTTPException(
-                    status_code=status.HTTP_409_CONFLICT,
-                    detail={
-                        "error": "Target folder exists",
-                        "message": f"Target folder {new_path} already exists",
-                    },
-                )
-        else:
-            logger.warning(f"Source folder {old_path} not found")
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail={
-                    "error": "Source folder not found",
-                    "message": f"Source folder {old_path} not found",
-                },
-            )
+        old_folder.rename(new_folder)
+        log_operation(f"Folder renamed from {old_path} to {new_path}")
+
+        return FolderDataSchema(
+            path=str(new_folder),
+            name=new_folder.name,
+            status_code=status.HTTP_200_OK,
+            message=f"Folder renamed from {old_path} to {new_path}",
+            date_created=current_timestamp(),
+            creator=self._get_user_identifier(request),
+            parent_folder=str(new_folder.parent),
+            is_empty=not any(new_folder.iterdir()),
+        )
 
     @handle_upload_file_exceptions
     async def rename_file(
