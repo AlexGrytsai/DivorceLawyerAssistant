@@ -75,7 +75,7 @@ def handle_cloud_storage_exceptions(func: Callable) -> Callable:
                 f"Failed to perform GCS operation: {exc}"
             )
         except Exception as exc:
-            logger.error("Unexpected error", exc)
+            logger.exception("Unexpected error")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail={
