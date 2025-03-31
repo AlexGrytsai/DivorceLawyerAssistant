@@ -15,7 +15,9 @@ from src.utils.validators.validate_file_mime import validate_file_mime
 router = APIRouter(prefix="/api/v1/data-for-rag", tags=["Data for RAG"])
 
 
-def _process_file_path(file: UploadFile, folder_path: Optional[str] = None) -> None:
+def _process_file_path(
+    file: UploadFile, folder_path: Optional[str] = None
+) -> None:
     if folder_path:
         original_filename = file.filename
         file.filename = f"{folder_path.rstrip('/')}/{original_filename}"
@@ -50,7 +52,7 @@ async def upload_multiple_files(
     """Upload multiple files to storage"""
     for file in files:
         _process_file_path(file, folder_path)
-        
+
     checked_files: List[UploadFile] = await validate_file_mime(
         files, ALLOWED_MIME_TYPES_FOR_RAG
     )

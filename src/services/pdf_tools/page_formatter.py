@@ -41,9 +41,7 @@ class PageFormatter(PageFormatterBase):
         result = [f"Page # {page.page_number}\n"]
 
         liens: List[LinePDF] = page.lines or []
-        tables: List[TableParsed] = (
-            page.parsed_tables or []
-        )
+        tables: List[TableParsed] = page.parsed_tables or []
 
         elements = self._text_processor.sort_by_vertical_position(
             liens + tables

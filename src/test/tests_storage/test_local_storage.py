@@ -8,7 +8,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from fastapi import UploadFile, Request, HTTPException, status
 
 from src.core.storage.local_storage import LocalStorage
-from src.core.storage.shemas import FileDataSchema, FileDeleteSchema, FolderDataSchema, FolderDeleteSchema
+from src.core.storage.shemas import (
+    FileDataSchema,
+    FileDeleteSchema,
+    FolderDataSchema,
+    FolderDeleteSchema,
+)
 
 
 class TestLocalStorage(unittest.TestCase):
@@ -224,7 +229,9 @@ class TestLocalStorage(unittest.TestCase):
         self, mock_logger, mock_exists
     ):
         # Arrange
-        folder_path = os.path.join(self.test_dir, "test_user", "existing_folder")
+        folder_path = os.path.join(
+            self.test_dir, "test_user", "existing_folder"
+        )
         mock_exists.return_value = True
 
         # Act & Assert
