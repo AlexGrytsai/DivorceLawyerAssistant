@@ -8,7 +8,12 @@ from src.utils.validators.validate_file_mime import (
     get_real_mime_type,
     check_mime_type,
     validate_file_mime,
-    ALLOWED_MIME_TYPES_FOR_FORMS,
+)
+
+ALLOWED_MIME_TYPES_FOR_TEST = (
+    "application/pdf",
+    "application/msword",  # .doc
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 )
 
 
@@ -146,7 +151,7 @@ class TestValidateFileMime(unittest.TestCase):
     def test_all_allowed_mime_types(self):
         # Test all allowed MIME types
         # sourcery skip: no-loop-in-tests
-        for mime_type in ALLOWED_MIME_TYPES_FOR_FORMS:
+        for mime_type in ALLOWED_MIME_TYPES_FOR_TEST:
             mock_file = AsyncMock(spec=UploadFile)
             mock_file.filename = f"test.{mime_type.split('/')[-1]}"
 
