@@ -104,6 +104,74 @@ class TestBaseStorage(unittest.TestCase):
                 creator="test",
             )
 
+        async def get_file(self, file_path, request, *args, **kwargs):
+            return FileDataSchema(
+                path=file_path,
+                url=f"http://example.com/mock/{file_path}",
+                filename="test.txt",
+                content_type="text/plain",
+                status_code=200,
+                message="Success",
+                date_created="2023-01-01",
+                creator="test",
+            )
+
+        async def get_folder_contents(self, folder_path, request, *args, **kwargs):
+            return [
+                FileDataSchema(
+                    path=f"{folder_path}/file1.txt",
+                    url=f"http://example.com/mock/{folder_path}/file1.txt",
+                    filename="file1.txt",
+                    content_type="text/plain",
+                    status_code=200,
+                    message="Success",
+                    date_created="2023-01-01",
+                    creator="test",
+                )
+            ]
+
+        async def list_files(self, folder_path, request, *args, **kwargs):
+            return [
+                FileDataSchema(
+                    path=f"{folder_path}/file1.txt",
+                    url=f"http://example.com/mock/{folder_path}/file1.txt",
+                    filename="file1.txt",
+                    content_type="text/plain",
+                    status_code=200,
+                    message="Success",
+                    date_created="2023-01-01",
+                    creator="test",
+                )
+            ]
+
+        async def list_folders(self, folder_path, request, *args, **kwargs):
+            return [
+                FolderDataSchema(
+                    path=f"{folder_path}/subfolder",
+                    name="subfolder",
+                    status_code=200,
+                    message="Success",
+                    date_created="2023-01-01",
+                    creator="test",
+                    parent_folder=folder_path,
+                    is_empty=True,
+                )
+            ]
+
+        async def search_files_by_name(self, query, request, *args, **kwargs):
+            return [
+                FileDataSchema(
+                    path="/mock/path/file.txt",
+                    url="http://example.com/mock/file.txt",
+                    filename="file.txt",
+                    content_type="text/plain",
+                    status_code=200,
+                    message="Success",
+                    date_created="2023-01-01",
+                    creator="test",
+                )
+            ]
+
     def setUp(self):
         self.storage = self.MockStorage()
         self.mock_request = MagicMock(spec=Request)
