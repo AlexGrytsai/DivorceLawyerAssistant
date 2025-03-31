@@ -148,7 +148,7 @@ class TestCheckPDFFormsRouter(unittest.TestCase):
         # Verify results
         self.assertEqual(response, self.deleted_file_data)
         mock_delete.assert_called_once_with(
-            file_path=str(file_path), request=self.mock_request
+            file_path=file_path, request=self.mock_request
         )
 
     @patch("src.utils.validators.validate_file_mime.validate_files")
