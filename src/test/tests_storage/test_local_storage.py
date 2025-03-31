@@ -557,7 +557,7 @@ class TestLocalStorage(unittest.TestCase):
 
         # Assert
         self.assertTrue(result.startswith("http://testserver/"))
-        self.assertTrue("test_file.txt" in result)
+        self.assertTrue("test_file.txt" in result, "File not uploaded")
 
     @patch("src.core.storage.local_storage.Path")
     @patch("src.core.storage.local_storage.logger")
