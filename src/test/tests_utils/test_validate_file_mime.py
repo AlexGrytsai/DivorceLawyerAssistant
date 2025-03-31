@@ -105,10 +105,11 @@ class TestValidateFileMime(unittest.TestCase):
         ) as mock_check:
             # Return different results based on which file is passed
             async def async_side_effect(file):
-                if file.filename == "test1.pdf":
-                    return (True, file)
-                else:
-                    return (False, file)
+                return (
+                    (True, file)
+                    if file.filename == "test1.pdf"
+                    else (False, file)
+                )
 
             mock_check.side_effect = async_side_effect
 
