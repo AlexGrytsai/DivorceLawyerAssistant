@@ -2,7 +2,7 @@
 line-length = 79
 
 [tool.poetry]
-name = "Check PDF Form with AI"
+name = "Divorce Lawyer AI Assistant"
 version = "0.1.0"
 description = ""
 authors = ["Alex Grytsai <grytsai.alex@gmail.com>"]
