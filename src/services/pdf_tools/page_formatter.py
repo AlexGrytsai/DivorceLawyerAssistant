@@ -40,10 +40,8 @@ class PageFormatter(PageFormatterBase):
     ) -> str:
         result = [f"Page # {page.page_number}\n"]
 
-        liens: List[LinePDF] = page.lines if page.lines else []
-        tables: List[TableParsed] = (
-            page.parsed_tables if page.parsed_tables else []
-        )
+        liens: List[LinePDF] = page.lines or []
+        tables: List[TableParsed] = page.parsed_tables or []
 
         elements = self._text_processor.sort_by_vertical_position(
             liens + tables

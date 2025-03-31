@@ -72,15 +72,17 @@ class TextProcessor(TextBaseProcessor):
     def _remove_widget_text_duplicates(
         text_line: LineType,
     ) -> LineType:
-        widget_value_set: Set[str] = set(
+        widget_value_set: Set[str] = {
             span.field_value
             for span in text_line
             if isinstance(span, Widget) and span.field_value
-        )
+        }
         filtered_spans = []
-        for span in text_line:
-            if isinstance(span, SpanPDF) and span.text not in widget_value_set:
-                filtered_spans.append(span)
+        filtered_spans.extend(
+            span
+            for span in text_line
+            if isinstance(span, SpanPDF) and span.text not in widget_value_set
+        )
         filtered_spans += [
             span for span in text_line if isinstance(span, Widget)
         ]

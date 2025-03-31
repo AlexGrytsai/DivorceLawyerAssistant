@@ -3,8 +3,15 @@ import logging
 from typing import Callable
 
 from fastapi import HTTPException, status
+from google.api_core.exceptions import ClientError
+from google.auth.exceptions import GoogleAuthError
 
-from src.core.storage.exceptions import ErrorUploadingFile, ErrorDeletingFile
+from src.core.exceptions.storage import (
+    ErrorUploadingFile,
+    ErrorDeletingFile,
+    ErrorWithAuthenticationInGCP,
+    ProblemWithRequestToGCP,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +53,34 @@ def handle_delete_file_exceptions(func: Callable) -> Callable:
                 detail={
                     "error": str(exc),
                     "message": f"Error deleting {file_path}",
+                },
+            )
+
+    return wrapper
+
+
+def handle_cloud_storage_exceptions(func: Callable) -> Callable:
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except GoogleAuthError as exc:
+            logger.error("Failed to initialize GCS client", exc)
+            raise ErrorWithAuthenticationInGCP(
+                f"Failed to initialize GCS client: {exc}"
+            )
+        except ClientError as exc:
+            logger.error("Failed to perform GCS operation", exc)
+            raise ProblemWithRequestToGCP(
+                f"Failed to perform GCS operation: {exc}"
+            )
+        except Exception as exc:
+            logger.exception("Unexpected error")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail={
+                    "error": str(exc),
+                    "message": "Unexpected error",
                 },
             )
 

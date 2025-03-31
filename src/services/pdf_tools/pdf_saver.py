@@ -7,7 +7,7 @@ from typing import Optional, List, Tuple
 from fastapi import UploadFile, Request, HTTPException, status
 from starlette.datastructures import Headers
 
-from src.core import settings
+from src.core.config import settings
 from src.core.storage.shemas import FileDataSchema
 
 logger = logging.getLogger(__name__)
@@ -69,6 +69,4 @@ async def multi_save_pdf_to_new_file(
         for pdf in list_pdf_buffer
     ]
 
-    saved_new_pdf = await asyncio.gather(*tasks)
-
-    return saved_new_pdf
+    return await asyncio.gather(*tasks)

@@ -6,7 +6,7 @@ from openai import (
     AsyncOpenAI,
 )
 
-from src.core import settings
+from src.core.config import settings
 from src.services.ai_service.decorators import reconnection_async
 
 BASE_AI_CLIENT = AsyncOpenAI(api_key=settings.OPENAI_API_KEY, max_retries=5)

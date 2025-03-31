@@ -107,10 +107,7 @@ class TableProcessor(TableBaseProcessor):
             for i, cell in enumerate(row):
                 cell_str = self._extract_text(cell, use_widget_label)
                 if table.header:
-                    if cell_str:
-                        row_data[table.header[i]] = cell_str
-                    else:
-                        row_data[table.header[i]] = "N/A"
+                    row_data[table.header[i]] = cell_str or "N/A"
             rows.append(row_data)
 
         return rows
@@ -137,12 +134,14 @@ class TableProcessor(TableBaseProcessor):
             table_rects = []
 
         result = []
-        for line in page.lines:
+        result.extend(
+            line
+            for line in page.lines
             if any(
                 self._geometry_utils.is_rect_inside(table_rect, line.rect)
                 for table_rect in table_rects
-            ):
-                result.append(line)
+            )
+        )
         return result
 
     @staticmethod
@@ -239,18 +238,13 @@ class TableProcessor(TableBaseProcessor):
         for text in cell_data:
             if isinstance(text, fitz.Widget):
                 if use_widget_label:
-                    if text.field_value:
-                        value = text.field_value
-                    else:
-                        value = "N/A"
+                    value = text.field_value or "N/A"
                     cell_words.append(f"{text.field_name}: {value}")
                 elif text.field_value:
                     cell_words.append(text.field_value)
             else:
                 cell_words.append(text.text)
-        if cell_words:
-            return " ".join(cell_words)
-        return None
+        return " ".join(cell_words) if cell_words else None
 
     def _table_to_text_rows(
         self,

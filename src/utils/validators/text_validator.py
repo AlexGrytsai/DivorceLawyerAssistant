@@ -76,9 +76,7 @@ class TextWidgetValidatorUseAI(TextBaseValidator):
 
     @staticmethod
     async def is_caps_lock_on(line: str) -> Tuple[bool, str]:
-        if line.isupper():
-            return True, "Caps lock is on"
-        return False, ""
+        return (True, "Caps lock is on") if line.isupper() else (False, "")
 
     @staticmethod
     async def email_validator(email: str) -> Tuple[bool, str]:
@@ -249,12 +247,10 @@ class TextWidgetValidatorUseAI(TextBaseValidator):
                 f"Analyze the following JSON dictionary:\n"
                 f"{json.dumps(widgets)}"
             )
-            address_dates_phones = await ai_assistant.analyze_text(
+            return await ai_assistant.analyze_text(
                 prompt=prompt,
                 assistant_prompt=assistant_prompt,
             )
-            return address_dates_phones
-
         return {}
 
     async def _add_error_to_dict(

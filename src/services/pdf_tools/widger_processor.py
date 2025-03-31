@@ -60,23 +60,22 @@ class WidgetSpanProcessor(WidgetSpanBaseProcessor):
         widget: fitz.Widget,
         use_widget_label: bool = True,
     ) -> Optional[str]:
-        if use_widget_label:
-            if widget.field_type_string in ("Text", "ComboBox"):
+        if widget.field_type_string in ("Text", "ComboBox"):
+            if use_widget_label:
                 return (
                     f"{widget.field_name}: {widget.field_value}"
                     if widget.field_value
                     else f"{widget.field_name}: N/A"
                 )
-            elif widget.field_type_string == "CheckBox":
+            return f"{widget.field_value}" if widget.field_value else "N/A"
+        elif widget.field_type_string == "CheckBox":
+            if use_widget_label:
                 return (
                     f"{widget.field_name}: ON"
                     if widget.field_value
                     else f"{widget.field_name}: OFF"
                 )
 
-        if widget.field_type_string in ("Text", "ComboBox"):
-            return f"{widget.field_value}" if widget.field_value else "N/A"
-        elif widget.field_type_string == "CheckBox":
             return "ON" if widget.field_value else "OFF"
         return None
 

@@ -8,7 +8,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from fastapi import UploadFile, Request, HTTPException, status
 
 from src.core.storage.local_storage import LocalStorage
-from src.core.storage.shemas import FileDataSchema, FileDeleteSchema
+from src.core.storage.shemas import (
+    FileDataSchema,
+    FileDeleteSchema,
+    FolderDataSchema,
+    FolderDeleteSchema,
+)
 
 
 class TestLocalStorage(unittest.TestCase):
@@ -173,6 +178,232 @@ class TestLocalStorage(unittest.TestCase):
         error_detail = context.exception.detail
         self.assertEqual(error_detail["error"], "File not found")
         self.assertEqual(error_detail["message"], f"{file_path} not found")
+
+    @patch("src.core.storage.local_storage.Path.exists")
+    @patch("src.core.storage.local_storage.Path.mkdir")
+    @patch("src.core.storage.local_storage.logger")
+    @patch(
+        "src.core.storage.decorators.handle_upload_file_exceptions",
+        lambda func: func,
+    )
+    async def test_create_folder_success(
+        self, mock_logger, mock_mkdir, mock_exists
+    ):
+        # Arrange
+        folder_path = os.path.join(self.test_dir, "test_user", "new_folder")
+        mock_exists.return_value = False
+        mock_folder = MagicMock()
+        mock_folder.name = "new_folder"
+        mock_folder.parent = MagicMock()
+        mock_folder.parent.__str__.return_value = str(self.test_dir)
+        mock_folder.__str__.return_value = folder_path
+        mock_folder.iterdir.return_value = []
+
+        # Act
+        result = await self.storage.create_folder(
+            folder_path=folder_path, request=self.mock_request
+        )
+
+        # Assert
+        mock_exists.assert_called_once()
+        mock_mkdir.assert_called_once_with(parents=True, exist_ok=True)
+        mock_logger.info.assert_called_once_with(
+            f"Folder {folder_path} created successfully"
+        )
+
+        self.assertIsInstance(result, FolderDataSchema)
+        self.assertEqual(result.path, folder_path)
+        self.assertEqual(result.name, "new_folder")
+        self.assertEqual(result.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(result.creator, "test_user")
+        self.assertEqual(result.parent_folder, str(self.test_dir))
+        self.assertTrue(result.is_empty)
+
+    @patch("src.core.storage.local_storage.Path.exists")
+    @patch("src.core.storage.local_storage.logger")
+    @patch(
+        "src.core.storage.decorators.handle_upload_file_exceptions",
+        lambda func: func,
+    )
+    async def test_create_folder_already_exists(
+        self, mock_logger, mock_exists
+    ):
+        # Arrange
+        folder_path = os.path.join(
+            self.test_dir, "test_user", "existing_folder"
+        )
+        mock_exists.return_value = True
+
+        # Act & Assert
+        with self.assertRaises(HTTPException) as context:
+            await self.storage.create_folder(
+                folder_path=folder_path, request=self.mock_request
+            )
+
+        # Assert
+        mock_exists.assert_called_once()
+        mock_logger.warning.assert_called_once_with(
+            f"Folder {folder_path} already exists"
+        )
+
+        self.assertEqual(
+            context.exception.status_code, status.HTTP_409_CONFLICT
+        )
+        error_detail = context.exception.detail
+        self.assertEqual(error_detail["error"], "Folder already exists")
+        self.assertEqual(
+            error_detail["message"], f"Folder {folder_path} already exists"
+        )
+
+    @patch("src.core.storage.local_storage.Path.exists")
+    @patch("src.core.storage.local_storage.Path.rename")
+    @patch("src.core.storage.local_storage.Path.iterdir")
+    @patch("src.core.storage.local_storage.logger")
+    @patch(
+        "src.core.storage.decorators.handle_upload_file_exceptions",
+        lambda func: func,
+    )
+    async def test_rename_folder_success(
+        self, mock_logger, mock_iterdir, mock_rename, mock_exists
+    ):
+        # Arrange
+        old_path = os.path.join(self.test_dir, "test_user", "old_folder")
+        new_path = os.path.join(self.test_dir, "test_user", "new_folder")
+        mock_exists.side_effect = [True, False]  # old exists, new doesn't
+        mock_new_folder = MagicMock()
+        mock_new_folder.name = "new_folder"
+        mock_new_folder.parent = MagicMock()
+        mock_new_folder.parent.__str__.return_value = str(self.test_dir)
+        mock_new_folder.__str__.return_value = new_path
+        mock_new_folder.iterdir.return_value = []
+        mock_rename.return_value = mock_new_folder
+
+        # Act
+        result = await self.storage.rename_folder(
+            old_path=old_path, new_path=new_path, request=self.mock_request
+        )
+
+        # Assert
+        self.assertEqual(mock_exists.call_count, 2)
+        mock_rename.assert_called_once_with(mock_new_folder)
+        mock_logger.info.assert_called_once_with(
+            f"Folder renamed from {old_path} to {new_path}"
+        )
+
+        self.assertIsInstance(result, FolderDataSchema)
+        self.assertEqual(result.path, new_path)
+        self.assertEqual(result.name, "new_folder")
+        self.assertEqual(result.status_code, status.HTTP_200_OK)
+        self.assertEqual(result.creator, "test_user")
+        self.assertEqual(result.parent_folder, str(self.test_dir))
+        self.assertTrue(result.is_empty)
+
+    @patch("src.core.storage.local_storage.Path.exists")
+    @patch("src.core.storage.local_storage.logger")
+    @patch(
+        "src.core.storage.decorators.handle_upload_file_exceptions",
+        lambda func: func,
+    )
+    async def test_rename_folder_source_not_exists(
+        self, mock_logger, mock_exists
+    ):
+        # Arrange
+        old_path = os.path.join(self.test_dir, "test_user", "nonexistent")
+        new_path = os.path.join(self.test_dir, "test_user", "new_folder")
+        mock_exists.return_value = False
+
+        # Act & Assert
+        with self.assertRaises(HTTPException) as context:
+            await self.storage.rename_folder(
+                old_path=old_path, new_path=new_path, request=self.mock_request
+            )
+
+        # Assert
+        mock_exists.assert_called_once()
+        mock_logger.warning.assert_called_once_with(
+            f"Source folder {old_path} not found"
+        )
+
+        self.assertEqual(
+            context.exception.status_code, status.HTTP_404_NOT_FOUND
+        )
+        error_detail = context.exception.detail
+        self.assertEqual(error_detail["error"], "Source folder not found")
+        self.assertEqual(
+            error_detail["message"], f"Source folder {old_path} not found"
+        )
+
+    @patch("src.core.storage.local_storage.Path.exists")
+    @patch("src.core.storage.local_storage.Path.rename")
+    @patch("src.core.storage.local_storage.logger")
+    @patch(
+        "src.core.storage.decorators.handle_upload_file_exceptions",
+        lambda func: func,
+    )
+    async def test_rename_file_success(
+        self, mock_logger, mock_rename, mock_exists
+    ):
+        # Arrange
+        old_path = os.path.join(self.test_dir, "test_user", "old_file.txt")
+        new_path = os.path.join(self.test_dir, "test_user", "new_file.txt")
+        mock_exists.side_effect = [True, False]  # old exists, new doesn't
+        mock_new_file = MagicMock()
+        mock_new_file.name = "new_file.txt"
+        mock_new_file.__str__.return_value = new_path
+        mock_rename.return_value = mock_new_file
+
+        # Act
+        result = await self.storage.rename_file(
+            old_path=old_path, new_path=new_path, request=self.mock_request
+        )
+
+        # Assert
+        self.assertEqual(mock_exists.call_count, 2)
+        mock_rename.assert_called_once_with(mock_new_file)
+        mock_logger.info.assert_called_once_with(
+            f"File renamed from {old_path} to {new_path}"
+        )
+
+        self.assertIsInstance(result, FileDataSchema)
+        self.assertEqual(result.path, new_path)
+        self.assertEqual(result.filename, "new_file.txt")
+        self.assertEqual(result.status_code, status.HTTP_200_OK)
+        self.assertEqual(result.creator, "test_user")
+
+    @patch("src.core.storage.local_storage.Path.exists")
+    @patch("src.core.storage.local_storage.logger")
+    @patch(
+        "src.core.storage.decorators.handle_upload_file_exceptions",
+        lambda func: func,
+    )
+    async def test_rename_file_source_not_exists(
+        self, mock_logger, mock_exists
+    ):
+        # Arrange
+        old_path = os.path.join(self.test_dir, "test_user", "nonexistent.txt")
+        new_path = os.path.join(self.test_dir, "test_user", "new_file.txt")
+        mock_exists.return_value = False
+
+        # Act & Assert
+        with self.assertRaises(HTTPException) as context:
+            await self.storage.rename_file(
+                old_path=old_path, new_path=new_path, request=self.mock_request
+            )
+
+        # Assert
+        mock_exists.assert_called_once()
+        mock_logger.warning.assert_called_once_with(
+            f"Source file {old_path} not found"
+        )
+
+        self.assertEqual(
+            context.exception.status_code, status.HTTP_404_NOT_FOUND
+        )
+        error_detail = context.exception.detail
+        self.assertEqual(error_detail["error"], "Source file not found")
+        self.assertEqual(
+            error_detail["message"], f"Source file {old_path} not found"
+        )
 
     def test_get_user_identifier_from_user(self):
         # Arrange

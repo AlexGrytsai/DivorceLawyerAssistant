@@ -357,9 +357,11 @@ class TestTextWidgetValidatorUseAI(unittest.TestCase):
                     "Charge/credit card accounts to be paid by Respondent 3",
                 ]
 
-                if any(field in text for field in problematic_fields):
-                    return 1000  # Make it exceed widget width
-                return 50  # Normal width
+                return (
+                    1000
+                    if any(field in text for field in problematic_fields)
+                    else 50
+                )
 
             mock_font_instance.text_length.side_effect = mock_text_length
             mock_font.return_value = mock_font_instance

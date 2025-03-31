@@ -9,7 +9,7 @@ from src.core.storage.decorators import (
     handle_upload_file_exceptions,
     handle_delete_file_exceptions,
 )
-from src.core.storage.exceptions import ErrorUploadingFile, ErrorDeletingFile
+from src.core.exceptions.storage import ErrorUploadingFile, ErrorDeletingFile
 from src.core.storage.shemas import FileDataSchema, FileDeleteSchema
 
 
