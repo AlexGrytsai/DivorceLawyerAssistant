@@ -17,7 +17,19 @@ ALLOWED_MIME_TYPES_FOR_TEST = (
 )
 
 
-class TestValidateFileMime(unittest.TestCase):
+class AsyncTestCase(unittest.TestCase):
+    def setUp(self):
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.loop)
+
+    def tearDown(self):
+        self.loop.close()
+
+    def async_test(self, coro):
+        return self.loop.run_until_complete(coro)
+
+
+class TestValidateFileMime(AsyncTestCase):
 
     def test_get_real_mime_type(self):
         # Test with PDF content
@@ -33,9 +45,6 @@ class TestValidateFileMime(unittest.TestCase):
             )
             self.assertEqual(result, "application/pdf")
 
-    async def async_test(self, coroutine):
-        return await coroutine
-
     def test_check_mime_type_valid(self):
         # Test with valid MIME type
         mock_file = AsyncMock(spec=UploadFile)
@@ -45,7 +54,11 @@ class TestValidateFileMime(unittest.TestCase):
             "src.utils.validators.validate_file_mime.get_real_mime_type",
             return_value="application/pdf",
         ):
-            result = asyncio.run(check_mime_type(mock_file, ALLOWED_MIME_TYPES_FOR_TEST))
+            result = self.async_test(
+                check_mime_type(
+                    mock_file, ALLOWED_MIME_TYPES_FOR_TEST
+                )
+            )
 
             is_valid, file = result
             self.assertTrue(is_valid)
@@ -60,7 +73,11 @@ class TestValidateFileMime(unittest.TestCase):
             "src.utils.validators.validate_file_mime.get_real_mime_type",
             return_value="application/x-msdownload",
         ):
-            result = asyncio.run(check_mime_type(mock_file, ALLOWED_MIME_TYPES_FOR_TEST))
+            result = self.async_test(
+                check_mime_type(
+                    mock_file, ALLOWED_MIME_TYPES_FOR_TEST
+                )
+            )
 
             is_valid, file = result
             self.assertFalse(is_valid)
@@ -77,8 +94,11 @@ class TestValidateFileMime(unittest.TestCase):
             "src.utils.validators.validate_file_mime.get_real_mime_type",
             side_effect=["application/pdf", "application/msword"],
         ):
-            result = asyncio.run(
-                validate_file_mime([mock_file1, mock_file2], ALLOWED_MIME_TYPES_FOR_TEST)
+            result = self.async_test(
+                validate_file_mime(
+                    [mock_file1, mock_file2],
+                    ALLOWED_MIME_TYPES_FOR_TEST
+                )
             )
 
             self.assertTrue(result)
@@ -87,6 +107,8 @@ class TestValidateFileMime(unittest.TestCase):
         # Test when one file is invalid
         mock_file1 = AsyncMock(spec=UploadFile)
         mock_file2 = AsyncMock(spec=UploadFile)
+        mock_file1.filename = "test1.pdf"
+        mock_file2.filename = "test2.exe"
         mock_file1.read.return_value = b"fake pdf content"
         mock_file2.read.return_value = b"fake exe content"
 
@@ -95,8 +117,11 @@ class TestValidateFileMime(unittest.TestCase):
             side_effect=["application/pdf", "application/x-msdownload"],
         ):
             with self.assertRaises(HTTPException):
-                asyncio.run(
-                    validate_file_mime([mock_file1, mock_file2], ALLOWED_MIME_TYPES_FOR_TEST)
+                self.async_test(
+                    validate_file_mime(
+                        [mock_file1, mock_file2],
+                        ALLOWED_MIME_TYPES_FOR_TEST
+                    )
                 )
 
     def test_spoofed_extension(self):
@@ -109,7 +134,11 @@ class TestValidateFileMime(unittest.TestCase):
             "src.utils.validators.validate_file_mime.get_real_mime_type",
             return_value="application/x-msdownload",
         ):
-            result = asyncio.run(check_mime_type(mock_file, ALLOWED_MIME_TYPES_FOR_TEST))
+            result = self.async_test(
+                check_mime_type(
+                    mock_file, ALLOWED_MIME_TYPES_FOR_TEST
+                )
+            )
 
             is_valid, file = result
             self.assertFalse(is_valid)
@@ -117,8 +146,10 @@ class TestValidateFileMime(unittest.TestCase):
 
     def test_validate_empty_file_list(self):
         # Test with empty file list
-        result = asyncio.run(validate_file_mime([], ALLOWED_MIME_TYPES_FOR_TEST))
-        self.assertTrue(result)
+        result = self.async_test(
+            validate_file_mime([], ALLOWED_MIME_TYPES_FOR_TEST)
+        )
+        self.assertEqual(result, [])
 
     def test_all_allowed_mime_types(self):
         # Test all allowed MIME types
@@ -131,7 +162,11 @@ class TestValidateFileMime(unittest.TestCase):
                 "src.utils.validators.validate_file_mime.get_real_mime_type",
                 return_value=mime_type,
             ):
-                result = asyncio.run(check_mime_type(mock_file, ALLOWED_MIME_TYPES_FOR_TEST))
+                result = self.async_test(
+                    check_mime_type(
+                        mock_file, ALLOWED_MIME_TYPES_FOR_TEST
+                    )
+                )
 
                 is_valid, file = result
                 self.assertTrue(is_valid)
