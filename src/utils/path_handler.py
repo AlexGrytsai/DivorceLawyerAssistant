@@ -15,7 +15,7 @@ class PathHandler:
     def get_parent_folder(path: str) -> Optional[str]:
         """Get parent folder path"""
         parent = os.path.dirname(path.rstrip("/"))
-        return parent if parent else None
+        return parent or None
 
     @staticmethod
     def get_basename(path: str) -> str:
