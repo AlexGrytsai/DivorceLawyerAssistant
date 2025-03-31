@@ -235,26 +235,23 @@ class CloudStorage(BaseStorageInterface):
         blobs = self._cloud_storage.list_blobs(prefix=prefix)
         files = []
 
-        for blob in blobs:
-            if not blob.name.endswith("/"):  # Skip folders
-                files.append(
-                    FileDataSchema(
-                        path=blob.name,
-                        url=f"{self.base_url}/{blob.name}",
-                        filename=self._path_handler.get_basename(blob.name),
-                        content_type=blob.content_type,
-                        size=blob.size,
-                        status_code=200,
-                        message="File listed successfully",
-                        date_created=(
-                            blob.time_created.isoformat()
-                            if blob.time_created
-                            else None
-                        ),
-                        creator="",
-                    )
-                )
-
+        files.extend(
+            FileDataSchema(
+                path=blob.name,
+                url=f"{self.base_url}/{blob.name}",
+                filename=self._path_handler.get_basename(blob.name),
+                content_type=blob.content_type,
+                size=blob.size,
+                status_code=200,
+                message="File listed successfully",
+                date_created=(
+                    blob.time_created.isoformat() if blob.time_created else None
+                ),
+                creator="",
+            )
+            for blob in blobs
+            if not blob.name.endswith("/")
+        )
         return files
 
     async def list_folders(
