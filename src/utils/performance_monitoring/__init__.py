@@ -13,3 +13,5 @@ def redis_client_for_performance_monitoring() -> Optional[Redis]:
             db=settings.REDIS_DB,
             decode_responses=True,
         )
+
+redis_client_monitoring = redis_client_for_performance_monitoring()
