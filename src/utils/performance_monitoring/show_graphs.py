@@ -13,18 +13,17 @@ logger = logging.getLogger(__name__)
 
 def load_usage_data_from_redis(key_prefix: str):
     try:
-        redis_keys = redis_client_monitoring.keys(
-            f"{key_prefix}*"
-        )
-        return {
-            key: [
-                json.loads(value)
-                for value in redis_client_monitoring.lrange(  # type: ignore # noqa
-                    key, 0, -1
-                )
-            ]
-            for key in redis_keys  # type: ignore
-        }
+        if redis_client_monitoring:
+            redis_keys = redis_client_monitoring.keys(f"{key_prefix}*")
+            return {
+                key: [
+                    json.loads(value)
+                    for value in redis_client_monitoring.lrange(  # type: ignore # noqa
+                        key, 0, -1
+                    )
+                ]
+                for key in redis_keys  # type: ignore
+            }
     except Exception as exc:
         # sourcery skip: raise-specific-error
         raise Exception(
