@@ -84,4 +84,4 @@ class CloudStorageInterface(ABC):
         Returns:
             List[Blob]: List of blobs
         """
-        pass 
+        pass
