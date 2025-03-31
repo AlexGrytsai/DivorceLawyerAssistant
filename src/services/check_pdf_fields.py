@@ -35,9 +35,7 @@ async def validate_pdf_fields(
     fields: Dict[str, Dict[str, str]],
     validator: TextBaseValidator,
 ) -> Dict[str, str]:
-    result = await validator.validate_widgets(fields)
-
-    return result
+    return await validator.validate_widgets(fields)
 
 
 async def check_fields_in_pdf_file(
@@ -83,8 +81,6 @@ async def main_check_pdf_fields(
 
     files_with_comments_in_buffer = await asyncio.gather(*tasks)
 
-    saved_new_forms = await multi_save_pdf_to_new_file(
+    return await multi_save_pdf_to_new_file(
         list_pdf_buffer=files_with_comments_in_buffer, **kwargs
     )
-
-    return saved_new_forms
