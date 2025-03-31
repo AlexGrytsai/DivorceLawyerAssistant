@@ -78,11 +78,10 @@ def preparation_of_graphs(
     if max_length == 0:
         return None
 
-    avg_resource_usage = []
-    avg_resource_usage.extend(
+    avg_resource_usage: List[np.floating] = [
         np.average([data[i] for data in all_resource_usages if i < len(data)])
         for i in range(max_length)
-    )
+    ]
     avg_exec_time = np.mean(exec_times)
     x_values = np.linspace(0, np.mean(exec_times), len(avg_resource_usage))
 
