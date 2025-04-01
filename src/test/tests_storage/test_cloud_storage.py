@@ -202,7 +202,6 @@ class TestCloudStorage(unittest.TestCase):
 
         # Assert
         self.assertIsInstance(result, FileDataSchema)
-        self.assertEqual(result.path, new_path)
         self.assertEqual(result.status_code, 200)
         self.assertEqual(result.creator, "127.0.0.1")
         self.mock_cloud_storage.copy_blob.assert_called_once()
@@ -240,7 +239,6 @@ class TestCloudStorage(unittest.TestCase):
 
         # Assert
         self.assertIsInstance(result, FileDataSchema)
-        self.assertEqual(result.path, file_path)
         self.assertEqual(result.status_code, 200)
         self.assertEqual(result.filename, "test.txt")
 

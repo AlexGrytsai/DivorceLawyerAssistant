@@ -36,7 +36,7 @@ async def simple_check_pdf_forms(
         uploaded = [uploaded]
 
     return await main_check_pdf_fields(
-        [str(file.path) for file in uploaded],
+        [str(file.url) for file in uploaded],
         ai_assistant=OpenAITextAnalyzer(),
         request=request,
     )

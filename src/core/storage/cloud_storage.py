@@ -102,7 +102,6 @@ class CloudStorage(BaseStorageInterface):
         )
 
         return FileDataSchema(
-            path=file.filename,
             url=blob_url,
             filename=file.filename,
             content_type=file.content_type,
@@ -252,7 +251,6 @@ class CloudStorage(BaseStorageInterface):
         self._cloud_storage.delete_blob(old_path)
 
         return FileDataSchema(
-            path=new_path,
             url=f"{self.base_url}/{new_path}",
             filename=self._path_handler.get_basename(new_path),
             content_type=new_blob.content_type,
@@ -283,7 +281,6 @@ class CloudStorage(BaseStorageInterface):
             raise ErrorSavingFile(f"File {file_path} not found")
 
         return FileDataSchema(
-            path=file_path,
             url=f"{self.base_url}/{file_path}",
             filename=self._path_handler.get_basename(file_path),
             content_type=blob.content_type,
@@ -305,9 +302,8 @@ class CloudStorage(BaseStorageInterface):
 
         files.extend(
             FileDataSchema(
-                path=blob.name,
-                url=f"{self.base_url}/{blob.name}",
                 filename=self._path_handler.get_basename(blob.name),
+                url=f"{self.base_url}/{blob.name}",
                 content_type=blob.content_type,
                 size=blob.size,
                 status_code=200,
@@ -450,11 +446,10 @@ class CloudStorage(BaseStorageInterface):
                 if search_query in filename:
                     files.append(
                         FileDataSchema(
-                            path=blob.name,
-                            url=f"{self.base_url}/{blob.name}",
                             filename=self._path_handler.get_basename(
                                 blob.name
                             ),
+                            url=f"{self.base_url}/{blob.name}",
                             content_type=blob.content_type,
                             size=blob.size,
                             status_code=200,

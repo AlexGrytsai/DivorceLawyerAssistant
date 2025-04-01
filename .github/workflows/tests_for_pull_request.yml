@@ -1,0 +1,31 @@
+name: Test Coverage Check
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12.7
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.7'
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "export PATH=$HOME/.local/bin:$PATH" >> $GITHUB_ENV
+      - name: Install dependencies
+        run: |
+          poetry install --without dev
+      - name: Run unit tests
+        run: |
+          poetry run bash -c "DEVELOP_MODE=True poetry run python -m unittest discover"

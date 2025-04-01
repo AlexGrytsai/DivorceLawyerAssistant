@@ -15,7 +15,6 @@ from src.core.constants import (
     RAG_BUCKET_NAME,
     MAIN_BUCKET_NAME,
 )
-from src.core.exceptions.config import MissingEnvironmentVariable
 from src.core.storage.cloud_storage import CloudStorage
 from src.core.storage.interfaces.base_storage_interface import (
     BaseStorageInterface,
@@ -30,13 +29,8 @@ class Settings:
     DEBUG: bool = os.getenv("DEBUG", "True") == "True"
 
     # Required environment variables
-    try:
-        BASE_AI_MODEL: str = os.environ["BASE_AI_MODEL"]
-        OPENAI_API_KEY: str = os.environ["OPENAI_API_KEY"]
-    except KeyError as e:
-        raise MissingEnvironmentVariable(
-            f"Missing required environment variable: {e}"
-        )
+    BASE_AI_MODEL: str = os.getenv("BASE_AI_MODEL", "Not Found")
+    OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "Not Found")
 
     # Directory settings
     STATIC_DIR: str = STATIC_DIR

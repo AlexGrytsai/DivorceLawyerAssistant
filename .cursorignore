@@ -1,0 +1,11 @@
+documents/
+.gitignore
+.cursorignore
+.cursorrules
+.cursorconfig
+.cursorrules
+.pytest_cache/
+.venv/
+.vscode/
+.idea/
+.env
