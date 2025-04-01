@@ -2,8 +2,6 @@
 Logging configuration for the application.
 """
 
-import logging.config
-
 LOGGING_CONFIG = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -33,5 +31,3 @@ LOGGING_CONFIG = {
         }
     },
 }
-
-logging.config.dictConfig(LOGGING_CONFIG)
