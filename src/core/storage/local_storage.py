@@ -8,6 +8,7 @@ from typing import List, Optional
 
 from fastapi import UploadFile, Request, status, HTTPException
 
+from src.core.exceptions.storage import ErrorSavingFile
 from src.core.storage.decorators import (
     handle_upload_file_exceptions,
     handle_delete_file_exceptions,
@@ -23,7 +24,6 @@ from src.core.storage.shemas import (
     FolderDataSchema,
     FolderDeleteSchema,
 )
-from src.core.exceptions.storage import ErrorSavingFile
 
 logger = logging.getLogger(__name__)
 
@@ -87,12 +87,11 @@ class LocalStorage(BaseStorageInterface):
         await file.close()
 
         return FileDataSchema(
-            path=file_path,
+            filename=file.filename,
             url=self._create_url_path(file_path, request),
             message=f"{file.filename} saved successfully",
             content_type=file.content_type,
             size=file.size,
-            filename=file.filename,
             status_code=status.HTTP_201_CREATED,
             date_created=datetime.datetime.now().strftime("%H:%M:%S %m-%d-%Y"),
             creator=self._get_user_identifier(request),
@@ -228,9 +227,8 @@ class LocalStorage(BaseStorageInterface):
                 logger.info(f"File renamed from {old_path} to {new_path}")
 
                 return FileDataSchema(
-                    path=str(new_file),
-                    url=self._create_url_path(str(new_file), request),
                     filename=new_file.name,
+                    url=self._create_url_path(str(new_file), request),
                     status_code=status.HTTP_200_OK,
                     message=f"File renamed from {old_path} to {new_path}",
                     date_created=datetime.datetime.now().strftime(
@@ -269,9 +267,8 @@ class LocalStorage(BaseStorageInterface):
             raise ErrorSavingFile(f"File {file_path} not found")
 
         return FileDataSchema(
-            path=str(file),
-            url=self._create_url_path(str(file), request),
             filename=file.name,
+            url=self._create_url_path(str(file), request),
             content_type=None,
             size=file.stat().st_size,
             status_code=200,
@@ -300,9 +297,8 @@ class LocalStorage(BaseStorageInterface):
                     file_path.stat().st_ctime
                 ).isoformat()
                 file_data = FileDataSchema(
-                    path=str(file_path),
-                    url=self._create_url_path(str(file_path), request),
                     filename=file_path.name,
+                    url=self._create_url_path(str(file_path), request),
                     content_type=None,
                     size=file_path.stat().st_size,
                     status_code=200,
@@ -402,9 +398,8 @@ class LocalStorage(BaseStorageInterface):
                         file_path.stat().st_ctime
                     ).isoformat()
                     file_data = FileDataSchema(
-                        path=str(file_path),
-                        url=self._create_url_path(str(file_path), request),
                         filename=file_path.name,
+                        url=self._create_url_path(str(file_path), request),
                         content_type=None,
                         size=file_path.stat().st_size,
                         status_code=200,
