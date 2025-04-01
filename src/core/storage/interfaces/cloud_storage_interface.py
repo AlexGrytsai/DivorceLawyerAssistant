@@ -7,7 +7,7 @@ from google.cloud.storage_control_v2 import (
     StorageControlClient,
 )  # type: ignore
 
-from src.core.storage.shemas import FolderDataSchema
+from src.core.storage.shemas import FolderDataSchema, CreatedFolderSchema
 
 
 class CloudStorageInterface(ABC):
@@ -107,7 +107,7 @@ class CloudStorageInterface(ABC):
         pass
 
     @abstractmethod
-    def create_managed_folder(self, folder_name: str) -> None:
+    def create_managed_folder(self, folder_name: str) -> CreatedFolderSchema:
         """Create a new managed folder"""
         pass
 
