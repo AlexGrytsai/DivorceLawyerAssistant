@@ -1,8 +1,13 @@
 from abc import ABC, abstractmethod
-from typing import Any, List, Optional, Union
+from typing import List, Optional, Union
 
 from google.cloud import storage  # type: ignore
 from google.cloud.storage import Blob, Bucket  # type: ignore
+from google.cloud.storage_control_v2 import (
+    StorageControlClient,
+)  # type: ignore
+
+from src.core.storage.shemas import FolderDataSchema
 
 
 class CloudStorageInterface(ABC):
@@ -21,6 +26,20 @@ class CloudStorageInterface(ABC):
 
         Returns:
             Bucket: Cloud storage bucket
+        """
+        pass
+
+    @property
+    @abstractmethod
+    def get_storage_control(self) -> StorageControlClient:
+        """
+        Get storage control client instance.
+
+        This property returns a StorageControlClient instance, which is used to
+        manage storage resources.
+
+        Returns:
+            StorageControlClient: Storage control client instance.
         """
         pass
 
@@ -85,4 +104,31 @@ class CloudStorageInterface(ABC):
         Returns:
             List[Blob]: List of blobs
         """
+        pass
+
+    @abstractmethod
+    def create_managed_folder(self, folder_name: str) -> None:
+        """Create a new managed folder"""
+        pass
+
+    @abstractmethod
+    def delete_managed_folder(self, folder_name: str) -> None:
+        """Delete a managed folder"""
+        pass
+
+    @abstractmethod
+    def rename_folder(self, old_name: str, new_name: str) -> None:
+        """Rename a managed folder"""
+        pass
+
+    @abstractmethod
+    def list_managed_folders(
+        self, prefix: Optional[str] = None
+    ) -> List[FolderDataSchema]:
+        """List managed folders"""
+        pass
+
+    @abstractmethod
+    def get_managed_folder(self, folder_name: str) -> FolderDataSchema:
+        """Get managed folder metadata"""
         pass
