@@ -6,12 +6,14 @@ from google.cloud import storage  # type: ignore
 from google.cloud.storage import Blob, Bucket  # type: ignore
 from google.cloud.storage_control_v2 import (
     StorageControlClient,
+    CreateManagedFolderRequest,
 )  # type: ignore
 
 from src.core.storage.decorators import handle_cloud_storage_exceptions
 from src.core.storage.interfaces.cloud_storage_interface import (
     CloudStorageInterface,
 )
+from src.core.storage.shemas import FolderDataSchema, CreatedFolderSchema
 
 load_dotenv()
 
@@ -83,3 +85,49 @@ class GoogleCloudStorage(CloudStorageInterface):
     @handle_cloud_storage_exceptions
     def list_blobs(self, prefix: str = "") -> List[Blob]:
         return list(self.get_bucket.list_blobs(prefix=prefix))
+
+    @handle_cloud_storage_exceptions
+    def create_managed_folder(self, folder_name: str) -> CreatedFolderSchema:
+        """Create a new managed folder"""
+        project_path = self.get_storage_control.common_project_path("_")
+        bucket_path = f"{project_path}/buckets/{self.bucket_name}"
+
+        request = CreateManagedFolderRequest(
+            parent=bucket_path,
+            managed_folder_id=folder_name,
+        )
+        response = self.get_storage_control.create_managed_folder(
+            request=request
+        )
+
+        return CreatedFolderSchema(
+            name="/".join(response.name.split("/")[3:]),
+            create_time=response.create_time.replace(microsecond=0),
+            update_time=response.update_time.replace(microsecond=0),
+        )
+
+    def delete_managed_folder(self, folder_name: str) -> None:
+        """Delete a managed folder"""
+        pass
+
+    def rename_folder(self, old_name: str, new_name: str) -> None:
+        """Rename a managed folder"""
+        pass
+
+    def list_managed_folders(
+        self, prefix: Optional[str] = None
+    ) -> List[FolderDataSchema]:
+        """List managed folders"""
+        pass
+
+    def get_managed_folder(self, folder_name: str) -> FolderDataSchema:
+        """Get managed folder metadata"""
+        pass
+
+
+if __name__ == "__main__":
+    google_cloud_storage = GoogleCloudStorage(
+        bucket_name="data-for-rag", project_id="divorce-lawyer-assistant"
+    )
+
+    print(google_cloud_storage.create_managed_folder("test33/test_inner"))
