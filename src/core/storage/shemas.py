@@ -22,10 +22,9 @@ class FolderContents(BaseModel):
 
 
 class FileDataSchema(BaseModel):
-    path: Path | str
+    filename: Optional[str] = None
     url: HttpUrl | str
     size: Optional[int] = None
-    filename: Optional[str] = None
     content_type: Optional[str] = None
     status_code: int = 200
     message: str = "File operation successful"
