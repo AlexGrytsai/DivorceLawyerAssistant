@@ -23,7 +23,6 @@ class BaseDeleteSchema(BaseModel):
     date_deleted: str = Field(
         default_factory=lambda: datetime.now().isoformat()
     )
-    deleted_by: str = "system"
 
 
 class FileItem(BaseModel):
@@ -50,8 +49,10 @@ class FileDataSchema(BaseFileSchema):
     pass
 
 
-class FolderDataSchema(BaseFolderSchema):
-    pass
+class FolderDataSchema(BaseModel):
+    name: str
+    create_time: datetime
+    update_time: datetime
 
 
 class FileDeleteSchema(BaseDeleteSchema):
@@ -59,5 +60,4 @@ class FileDeleteSchema(BaseDeleteSchema):
 
 
 class FolderDeleteSchema(BaseDeleteSchema):
-    folder: Path | str
-    deleted_files_count: int = 0
+    name: Path | str
