@@ -828,3 +828,69 @@ class TestLocalStorage(unittest.TestCase):
         self.assertIsInstance(result, list)
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].filename, "Test1.txt")
+
+    @patch("src.core.storage.local_storage.os.path.join")
+    @patch("src.core.storage.local_storage.open")
+    @patch(
+        "src.core.storage.decorators.handle_upload_file_exceptions",
+        lambda func: func,
+    )
+    async def test_upload_file_raises_error_saving_file(
+        self, mock_open, mock_join
+    ):
+        # Arrange
+        expected_path = os.path.join(
+            self.test_dir, "test_user", "test_file.txt"
+        )
+        mock_join.return_value = expected_path
+        mock_open.side_effect = OSError("Failed to write file")
+
+        # Act & Assert
+        with self.assertRaises(ErrorSavingFile) as context:
+            await self.storage(request=self.mock_request, file=self.mock_file)
+
+        self.assertEqual(
+            str(context.exception),
+            f"Failed to save file {self.mock_file.filename}"
+        )
+        self.mock_file.read.assert_called_once()
+        self.mock_file.close.assert_called_once()
+
+    @patch("src.core.storage.local_storage.os.path.join")
+    @patch("src.core.storage.local_storage.open")
+    @patch(
+        "src.core.storage.decorators.handle_upload_file_exceptions",
+        lambda func: func,
+    )
+    async def test_multi_upload_raises_error_saving_file(
+        self, mock_open, mock_join
+    ):
+        # Arrange
+        mock_file2 = MagicMock(spec=UploadFile)
+        mock_file2.filename = "test_file2.txt"
+        mock_file2.content_type = "text/plain"
+        mock_file2.size = 123
+        mock_file2.read = AsyncMock(return_value=b"test content 2")
+        mock_file2.close = AsyncMock()
+
+        expected_path = os.path.join(
+            self.test_dir, "test_user", "test_file.txt"
+        )
+        mock_join.return_value = expected_path
+        mock_open.side_effect = OSError("Failed to write file")
+
+        # Act & Assert
+        with self.assertRaises(ErrorSavingFile) as context:
+            await self.storage(
+                request=self.mock_request,
+                files=[self.mock_file, mock_file2]
+            )
+
+        self.assertEqual(
+            str(context.exception),
+            f"Failed to save file {self.mock_file.filename}"
+        )
+        self.mock_file.read.assert_called_once()
+        self.mock_file.close.assert_called_once()
+        mock_file2.read.assert_not_called()
+        mock_file2.close.assert_not_called()
