@@ -6,10 +6,7 @@ from pydantic import HttpUrl, BaseModel, Field
 
 
 class BaseOperationSchema(BaseModel):
-    status_code: int = 200
     message: str = "Operation successful"
-    date_created: str = Field(default_factory=lambda: datetime.now().isoformat())
-    creator: str = "system"
 
 
 class BaseFileSchema(BaseOperationSchema):
@@ -27,7 +24,9 @@ class BaseFolderSchema(BaseOperationSchema):
 
 
 class BaseDeleteSchema(BaseOperationSchema):
-    date_deleted: str = Field(default_factory=lambda: datetime.now().isoformat())
+    date_deleted: str = Field(
+        default_factory=lambda: datetime.now().isoformat()
+    )
     deleted_by: str = "system"
 
 
