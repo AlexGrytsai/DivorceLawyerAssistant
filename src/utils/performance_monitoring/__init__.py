@@ -1,8 +1,4 @@
-from typing import Optional
-
-from redis import Redis
-
-from src.core.config import settings
+from redis import Redis, RedisError
 
 
 def redis_client_for_performance_monitoring() -> Redis:
@@ -13,6 +9,6 @@ def redis_client_for_performance_monitoring() -> Redis:
             db=0,
             decode_responses=True,
         )
-    except Exception as exc:
+    except RedisError as exc:
         # sourcery skip: raise-specific-error
         raise Exception(f"Failed to connect to Redis: {exc}") from exc
