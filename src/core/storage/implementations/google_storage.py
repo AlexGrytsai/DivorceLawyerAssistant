@@ -7,13 +7,14 @@ from google.cloud.storage import Blob, Bucket  # type: ignore
 from google.cloud.storage_control_v2 import (
     StorageControlClient,
     CreateManagedFolderRequest,
+    ListManagedFoldersRequest,
 )  # type: ignore
 
 from src.core.storage.decorators import handle_cloud_storage_exceptions
 from src.core.storage.interfaces.cloud_storage_interface import (
     CloudStorageInterface,
 )
-from src.core.storage.shemas import FolderDataSchema, CreatedFolderSchema
+from src.core.storage.shemas import FolderDataSchema
 
 load_dotenv()
 
@@ -87,20 +88,19 @@ class GoogleCloudStorage(CloudStorageInterface):
         return list(self.get_bucket.list_blobs(prefix=prefix))
 
     @handle_cloud_storage_exceptions
-    def create_managed_folder(self, folder_name: str) -> CreatedFolderSchema:
+    def create_managed_folder(self, folder_name: str) -> FolderDataSchema:
         """Create a new managed folder"""
         project_path = self.get_storage_control.common_project_path("_")
-        bucket_path = f"{project_path}/buckets/{self.bucket_name}"
 
         request = CreateManagedFolderRequest(
-            parent=bucket_path,
+            parent=f"{project_path}/buckets/{self.bucket_name}",
             managed_folder_id=folder_name,
         )
         response = self.get_storage_control.create_managed_folder(
             request=request
         )
 
-        return CreatedFolderSchema(
+        return FolderDataSchema(
             name="/".join(response.name.split("/")[3:]),
             create_time=response.create_time.replace(microsecond=0),
             update_time=response.update_time.replace(microsecond=0),
@@ -115,10 +115,29 @@ class GoogleCloudStorage(CloudStorageInterface):
         pass
 
     def list_managed_folders(
-        self, prefix: Optional[str] = None
+        self,
+        prefix: Optional[str] = None,
     ) -> List[FolderDataSchema]:
         """List managed folders"""
-        pass
+        project_path = self.get_storage_control.common_project_path("_")
+
+        request = ListManagedFoldersRequest(
+            parent=f"{project_path}/buckets/{self.bucket_name}",
+            prefix=prefix,
+        )
+
+        page_result = self.get_storage_control.list_managed_folders(
+            request=request
+        )
+
+        return [
+            FolderDataSchema(
+                name="/".join(managed_folder.name.split("/")[3:]),
+                create_time=managed_folder.create_time.replace(microsecond=0),
+                update_time=managed_folder.update_time.replace(microsecond=0),
+            )
+            for managed_folder in page_result
+        ]
 
     def get_managed_folder(self, folder_name: str) -> FolderDataSchema:
         """Get managed folder metadata"""
@@ -130,4 +149,6 @@ if __name__ == "__main__":
         bucket_name="data-for-rag", project_id="divorce-lawyer-assistant"
     )
 
-    print(google_cloud_storage.create_managed_folder("test33/test_inner"))
+    # print(google_cloud_storage.create_managed_folder("test33"))
+
+    print(google_cloud_storage.list_managed_folders(prefix="test_"))
