@@ -68,8 +68,6 @@ class TestLocalStorage(unittest.TestCase):
         self.assertEqual(result.filename, "test_file.txt")
         self.assertEqual(result.content_type, "text/plain")
         self.assertEqual(result.size, 123)
-        self.assertEqual(result.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(result.creator, "test_user")
 
     @patch("src.core.storage.local_storage.asyncio.gather")
     @patch(
@@ -88,9 +86,6 @@ class TestLocalStorage(unittest.TestCase):
                 content_type="text/plain",
                 size=123,
                 filename="test_file.txt",
-                status_code=status.HTTP_201_CREATED,
-                date_created=datetime.now().strftime("%H:%M:%S %m-%d-%Y"),
-                creator="test_user",
             ),
             FileDataSchema(
                 url="http://testserver/path/to/test_file2.txt",
@@ -98,9 +93,6 @@ class TestLocalStorage(unittest.TestCase):
                 content_type="text/plain",
                 size=123,
                 filename="test_file2.txt",
-                status_code=status.HTTP_201_CREATED,
-                date_created=datetime.now().strftime("%H:%M:%S %m-%d-%Y"),
-                creator="test_user",
             ),
         ]
         mock_gather.return_value = expected_result
@@ -155,8 +147,6 @@ class TestLocalStorage(unittest.TestCase):
         self.assertEqual(result.filename, "test_file.txt")
         self.assertEqual(result.content_type, "text/plain")
         self.assertEqual(result.size, 123)
-        self.assertEqual(result.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(result.creator, "test_user")
 
     @patch("src.core.storage.local_storage.asyncio.gather")
     @patch(
@@ -175,9 +165,6 @@ class TestLocalStorage(unittest.TestCase):
                 content_type="text/plain",
                 size=123,
                 filename="test_file.txt",
-                status_code=status.HTTP_201_CREATED,
-                date_created=datetime.now().strftime("%H:%M:%S %m-%d-%Y"),
-                creator="test_user",
             ),
             FileDataSchema(
                 url="http://testserver/path/to/test_file2.txt",
@@ -185,9 +172,6 @@ class TestLocalStorage(unittest.TestCase):
                 content_type="text/plain",
                 size=123,
                 filename="test_file2.txt",
-                status_code=status.HTTP_201_CREATED,
-                date_created=datetime.now().strftime("%H:%M:%S %m-%d-%Y"),
-                creator="test_user",
             ),
         ]
         mock_gather.return_value = expected_result
@@ -230,7 +214,6 @@ class TestLocalStorage(unittest.TestCase):
 
         self.assertIsInstance(result, FileDeleteSchema)
         self.assertEqual(result.file, file_path)
-        self.assertEqual(result.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(result.deleted_by, "test_user")
 
     @patch("src.core.storage.local_storage.Path.exists")
@@ -296,8 +279,6 @@ class TestLocalStorage(unittest.TestCase):
         self.assertIsInstance(result, FolderDataSchema)
         self.assertEqual(result.path, folder_path)
         self.assertEqual(result.name, "new_folder")
-        self.assertEqual(result.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(result.creator, "test_user")
         self.assertEqual(result.parent_folder, str(self.test_dir))
         self.assertTrue(result.is_empty)
 
@@ -375,8 +356,6 @@ class TestLocalStorage(unittest.TestCase):
         self.assertIsInstance(result, FolderDataSchema)
         self.assertEqual(result.path, new_path)
         self.assertEqual(result.name, "new_folder")
-        self.assertEqual(result.status_code, status.HTTP_200_OK)
-        self.assertEqual(result.creator, "test_user")
         self.assertEqual(result.parent_folder, str(self.test_dir))
         self.assertTrue(result.is_empty)
 
@@ -448,8 +427,6 @@ class TestLocalStorage(unittest.TestCase):
 
         self.assertIsInstance(result, FileDataSchema)
         self.assertEqual(result.filename, "new_file.txt")
-        self.assertEqual(result.status_code, status.HTTP_200_OK)
-        self.assertEqual(result.creator, "test_user")
 
     @patch("src.core.storage.local_storage.Path.exists")
     @patch("src.core.storage.local_storage.logger")
@@ -574,7 +551,6 @@ class TestLocalStorage(unittest.TestCase):
         self.assertIsInstance(result, FileDataSchema)
         self.assertEqual(result.filename, "test_file.txt")
         self.assertEqual(result.size, 123)
-        self.assertEqual(result.status_code, 200)
         self.assertEqual(result.message, "File retrieved successfully")
 
     @patch("src.core.storage.local_storage.Path")
@@ -851,7 +827,7 @@ class TestLocalStorage(unittest.TestCase):
 
         self.assertEqual(
             str(context.exception),
-            f"Failed to save file {self.mock_file.filename}"
+            f"Failed to save file {self.mock_file.filename}",
         )
         self.mock_file.read.assert_called_once()
         self.mock_file.close.assert_called_once()
@@ -882,13 +858,12 @@ class TestLocalStorage(unittest.TestCase):
         # Act & Assert
         with self.assertRaises(ErrorSavingFile) as context:
             await self.storage(
-                request=self.mock_request,
-                files=[self.mock_file, mock_file2]
+                request=self.mock_request, files=[self.mock_file, mock_file2]
             )
 
         self.assertEqual(
             str(context.exception),
-            f"Failed to save file {self.mock_file.filename}"
+            f"Failed to save file {self.mock_file.filename}",
         )
         self.mock_file.read.assert_called_once()
         self.mock_file.close.assert_called_once()

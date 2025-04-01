@@ -141,26 +141,18 @@ class TestCheckPdfFields(unittest.TestCase):
 
         expected_file_data = [
             FileDataSchema(
-                path="path/to/file1.pdf",
                 url="http://example.com/file1.pdf",
                 size=100,
                 filename="file1.pdf",
                 content_type="application/pdf",
-                status_code=200,
-                message="File saved",
-                date_created="2023-01-01",
-                creator="test",
+                message="Operation successful",
             ),
             FileDataSchema(
-                path="path/to/file2.pdf",
                 url="http://example.com/file2.pdf",
                 size=200,
                 filename="file2.pdf",
                 content_type="application/pdf",
-                status_code=200,
-                message="File saved",
-                date_created="2023-01-01",
-                creator="test",
+                message="Operation successful",
             ),
         ]
         mock_save.return_value = expected_file_data

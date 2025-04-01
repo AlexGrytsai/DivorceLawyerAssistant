@@ -33,35 +33,26 @@ class TestCheckPDFFormsRouter(unittest.TestCase):
 
         # Create mock for file upload result
         self.uploaded_file_data = FileDataSchema(
-            path="/mock/path/test_form.pdf",
             url="http://testserver/mock/path/test_form.pdf",
             filename="test_form.pdf",
             content_type="application/pdf",
             size=1024,
-            status_code=201,
             message="Success",
-            date_created="2023-01-01",
-            creator="test_user",
         )
 
         # Create mock for PDF checking result
         self.checked_file_data = FileDataSchema(
-            path="/mock/path/test_form_with_simple_check.pdf",
             url="http://testserver/mock/path/test_form_with_simple_check.pdf",
             filename="test_form_with_simple_check.pdf",
             content_type="application/pdf",
             size=1536,
-            status_code=201,
             message="Success",
-            date_created="2023-01-01",
-            creator="test_user",
         )
 
         # Create mock for file deletion result
         self.deleted_file_data = FileDeleteSchema(
             file="/mock/path/test_form.pdf",
             message="File deleted successfully",
-            status_code=204,
             date_deleted="2023-01-01",
             deleted_by="test_user",
         )

@@ -2,7 +2,7 @@ import unittest
 from datetime import datetime
 from unittest.mock import Mock, AsyncMock
 
-from fastapi import UploadFile, Request, status
+from fastapi import UploadFile, Request
 
 from src.core.exceptions.storage import ErrorSavingFile
 from src.core.storage.cloud_storage import CloudStorage
@@ -52,8 +52,6 @@ class TestCloudStorage(unittest.TestCase):
         self.assertEqual(result.filename, "test.txt")
         self.assertEqual(result.content_type, "text/plain")
         self.assertEqual(result.size, 12)
-        self.assertEqual(result.status_code, 200)
-        self.assertEqual(result.creator, "127.0.0.1")
 
     async def test_upload_empty_filename(self):
         # Arrange
@@ -90,7 +88,6 @@ class TestCloudStorage(unittest.TestCase):
         self.assertEqual(len(results), 3)
         for result in results:
             self.assertIsInstance(result, FileDataSchema)
-            self.assertEqual(result.status_code, 200)
 
     async def test_delete_success(self):
         # Arrange
@@ -102,7 +99,6 @@ class TestCloudStorage(unittest.TestCase):
         # Assert
         self.assertIsInstance(result, FileDeleteSchema)
         self.assertEqual(result.file, file_path)
-        self.assertEqual(result.status_code, 200)
         self.assertEqual(result.deleted_by, "127.0.0.1")
         self.mock_cloud_storage.delete_blob.assert_called_once_with(file_path)
 
@@ -121,8 +117,6 @@ class TestCloudStorage(unittest.TestCase):
         # Assert
         self.assertIsInstance(result, FolderDataSchema)
         self.assertEqual(result.path, folder_path)
-        self.assertEqual(result.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(result.creator, "127.0.0.1")
         self.assertTrue(result.is_empty)
         self.mock_cloud_storage.upload_blob.assert_called_once_with(
             folder_path, b""
@@ -153,8 +147,6 @@ class TestCloudStorage(unittest.TestCase):
         # Assert
         self.assertIsInstance(result, FolderDataSchema)
         self.assertEqual(result.path, new_path)
-        self.assertEqual(result.status_code, status.HTTP_200_OK)
-        self.assertEqual(result.creator, "127.0.0.1")
         self.assertFalse(result.is_empty)
         self.assertEqual(self.mock_cloud_storage.copy_blob.call_count, 2)
         self.assertEqual(self.mock_cloud_storage.delete_blob.call_count, 2)
@@ -178,7 +170,6 @@ class TestCloudStorage(unittest.TestCase):
         # Assert
         self.assertIsInstance(result, FolderDeleteSchema)
         self.assertEqual(result.folder, folder_path)
-        self.assertEqual(result.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(result.deleted_by, "127.0.0.1")
         self.assertEqual(result.deleted_files_count, 2)
         self.assertEqual(self.mock_cloud_storage.delete_blob.call_count, 2)
@@ -202,8 +193,6 @@ class TestCloudStorage(unittest.TestCase):
 
         # Assert
         self.assertIsInstance(result, FileDataSchema)
-        self.assertEqual(result.status_code, 200)
-        self.assertEqual(result.creator, "127.0.0.1")
         self.mock_cloud_storage.copy_blob.assert_called_once()
         self.mock_cloud_storage.delete_blob.assert_called_once_with(old_path)
 
@@ -239,7 +228,6 @@ class TestCloudStorage(unittest.TestCase):
 
         # Assert
         self.assertIsInstance(result, FileDataSchema)
-        self.assertEqual(result.status_code, 200)
         self.assertEqual(result.filename, "test.txt")
 
     async def test_get_file_not_exists(self):
@@ -283,7 +271,6 @@ class TestCloudStorage(unittest.TestCase):
         self.assertEqual(len(results), 2)
         for result in results:
             self.assertIsInstance(result, FileDataSchema)
-            self.assertEqual(result.status_code, 200)
 
     async def test_list_folders_success(self):
         # Arrange
@@ -306,7 +293,6 @@ class TestCloudStorage(unittest.TestCase):
         self.assertEqual(len(results), 2)
         for result in results:
             self.assertIsInstance(result, FolderDataSchema)
-            self.assertEqual(result.status_code, 200)
 
     async def test_search_files_by_name_success(self):
         # Arrange
@@ -337,7 +323,6 @@ class TestCloudStorage(unittest.TestCase):
         self.assertEqual(len(results), 2)
         for result in results:
             self.assertIsInstance(result, FileDataSchema)
-            self.assertEqual(result.status_code, 200)
             self.assertIn("test", result.filename)
 
     async def test_search_files_by_name_case_sensitive(self):
