@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-from google.cloud.storage import Blob, Bucket
+from google.cloud.storage import Blob, Bucket  # type: ignore
 
 from src.core.storage.implementations.google_storage import GoogleCloudStorage
 

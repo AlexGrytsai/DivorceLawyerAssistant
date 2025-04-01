@@ -1,6 +1,6 @@
 import unittest
-from unittest.mock import AsyncMock, MagicMock, patch
 from typing import Optional, List
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from fastapi import UploadFile, Request, HTTPException
 
@@ -14,6 +14,8 @@ from src.core.storage.shemas import (
     FolderDataSchema,
     FolderDeleteSchema,
     FolderContents,
+    FileItem,
+    FolderItem,
 )
 
 
@@ -122,29 +124,20 @@ class TestBaseStorage(unittest.TestCase):
             self, folder_path: str
         ) -> FolderContents:
             return FolderContents(
-                files=[
-                    FileDataSchema(
+                current_path=folder_path,
+                items=[
+                    FileItem(
+                        name="file1.txt",
                         path=f"{folder_path}/file1.txt",
-                        url=f"http://example.com/mock/{folder_path}/file1.txt",
-                        filename="file1.txt",
-                        content_type="text/plain",
-                        status_code=200,
-                        message="Success",
-                        date_created="2023-01-01",
-                        creator="test",
-                    )
-                ],
-                folders=[
-                    FolderDataSchema(
-                        path=f"{folder_path}/subfolder",
+                        type="file",
+                        size=100,
+                        updated="2023-01-01",
+                    ),
+                    FolderItem(
                         name="subfolder",
-                        status_code=200,
-                        message="Success",
-                        date_created="2023-01-01",
-                        creator="test",
-                        parent_folder=folder_path,
-                        is_empty=True,
-                    )
+                        path=f"{folder_path}/subfolder",
+                        type="folder",
+                    ),
                 ],
             )
 
