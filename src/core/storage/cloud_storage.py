@@ -106,7 +106,6 @@ class CloudStorage(BaseStorageInterface):
             filename=file.filename,
             content_type=file.content_type,
             size=len(content),
-            message=f"File {file.filename} uploaded successfully",
         )
 
     @handle_upload_file_exceptions
@@ -134,7 +133,6 @@ class CloudStorage(BaseStorageInterface):
         self._cloud_storage.delete_blob(file_path)
         return FileDeleteSchema(
             file=file_path,
-            message=f"File {file_path} deleted successfully",
             date_deleted=datetime.now().isoformat(),
             deleted_by=self._get_user_identifier(request),
         )
@@ -158,7 +156,6 @@ class CloudStorage(BaseStorageInterface):
         return FolderDataSchema(
             path=folder_path,
             name=self._path_handler.get_basename(folder_path),
-            message=f"Folder {folder_path} created successfully",
             parent_folder=parent_folder,
             is_empty=True,
         )
@@ -191,9 +188,6 @@ class CloudStorage(BaseStorageInterface):
         return FolderDataSchema(
             path=new_path,
             name=self._path_handler.get_basename(new_path),
-            status_code=status.HTTP_200_OK,
-            message=f"Folder renamed from {old_path} to {new_path}",
-            creator=self._get_user_identifier(request),
             parent_folder=parent_folder,
             is_empty=not any(blobs),
         )
@@ -219,8 +213,6 @@ class CloudStorage(BaseStorageInterface):
         log_operation(f"Folder {folder_path} deleted successfully")
         return FolderDeleteSchema(
             folder=folder_path,
-            message=f"Folder {folder_path} deleted successfully",
-            status_code=status.HTTP_204_NO_CONTENT,
             date_deleted=current_timestamp(),
             deleted_by=self._get_user_identifier(request),
             deleted_files_count=deleted_files,
@@ -247,9 +239,6 @@ class CloudStorage(BaseStorageInterface):
             filename=self._path_handler.get_basename(new_path),
             content_type=new_blob.content_type,
             size=new_blob.size,
-            status_code=200,
-            message="File renamed successfully",
-            creator=self._get_user_identifier(request),
         )
 
     @handle_upload_file_exceptions
@@ -276,9 +265,6 @@ class CloudStorage(BaseStorageInterface):
             filename=self._path_handler.get_basename(file_path),
             content_type=blob.content_type,
             size=blob.size,
-            status_code=200,
-            message="File retrieved successfully",
-            creator="",
         )
 
     async def list_files(
@@ -294,9 +280,6 @@ class CloudStorage(BaseStorageInterface):
                 url=f"{self.base_url}/{blob.name}",
                 content_type=blob.content_type,
                 size=blob.size,
-                status_code=200,
-                message="File listed successfully",
-                creator="",
             )
             for blob in blobs
             if not blob.name.endswith("/")
@@ -321,8 +304,6 @@ class CloudStorage(BaseStorageInterface):
             FolderDataSchema(
                 path=folder_path,
                 name=self._path_handler.get_basename(folder_path),
-                status_code=200,
-                message="Folder listed successfully",
                 parent_folder=self._path_handler.get_parent_folder(
                     folder_path
                 ),
@@ -436,9 +417,6 @@ class CloudStorage(BaseStorageInterface):
                             url=f"{self.base_url}/{blob.name}",
                             content_type=blob.content_type,
                             size=blob.size,
-                            status_code=200,
-                            message="File found successfully",
-                            creator="",
                         )
                     )
 
