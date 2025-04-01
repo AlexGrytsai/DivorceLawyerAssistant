@@ -10,7 +10,6 @@ from src.api.v1.check_pdf_forms.router import router_pdf_check
 from src.api.v1.data_for_rag import router as router_cloud_storage
 from src.core.config import settings
 
-
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Divorce Lawyer Assistant API", version="1.0.0")
@@ -24,7 +23,7 @@ app.mount(
     name="static",
 )
 
-templates = Jinja2Templates(directory=Path("src/templates"))
+templates = Jinja2Templates(directory=Path("templates"))
 
 
 @app.get("/", response_class=HTMLResponse)
