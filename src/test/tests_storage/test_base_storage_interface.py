@@ -118,7 +118,9 @@ class TestBaseStorage(unittest.TestCase):
                 creator="test",
             )
 
-        async def get_folder_contents(self, folder_path: str) -> FolderContents:
+        async def get_folder_contents(
+            self, folder_path: str
+        ) -> FolderContents:
             return FolderContents(
                 files=[
                     FileDataSchema(
@@ -143,10 +145,12 @@ class TestBaseStorage(unittest.TestCase):
                         parent_folder=folder_path,
                         is_empty=True,
                     )
-                ]
+                ],
             )
 
-        async def list_files(self, prefix: Optional[str] = None) -> List[FileDataSchema]:
+        async def list_files(
+            self, prefix: Optional[str] = None
+        ) -> List[FileDataSchema]:
             return [
                 FileDataSchema(
                     path=f"{prefix or ''}/file1.txt",
@@ -160,7 +164,9 @@ class TestBaseStorage(unittest.TestCase):
                 )
             ]
 
-        async def list_folders(self, prefix: Optional[str] = None) -> List[FolderDataSchema]:
+        async def list_folders(
+            self, prefix: Optional[str] = None
+        ) -> List[FolderDataSchema]:
             return [
                 FolderDataSchema(
                     path=f"{prefix or ''}/subfolder",

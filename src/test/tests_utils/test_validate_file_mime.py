@@ -55,9 +55,7 @@ class TestValidateFileMime(AsyncTestCase):
             return_value="application/pdf",
         ):
             result = self.async_test(
-                check_mime_type(
-                    mock_file, ALLOWED_MIME_TYPES_FOR_TEST
-                )
+                check_mime_type(mock_file, ALLOWED_MIME_TYPES_FOR_TEST)
             )
 
             is_valid, file = result
@@ -74,9 +72,7 @@ class TestValidateFileMime(AsyncTestCase):
             return_value="application/x-msdownload",
         ):
             result = self.async_test(
-                check_mime_type(
-                    mock_file, ALLOWED_MIME_TYPES_FOR_TEST
-                )
+                check_mime_type(mock_file, ALLOWED_MIME_TYPES_FOR_TEST)
             )
 
             is_valid, file = result
@@ -96,8 +92,7 @@ class TestValidateFileMime(AsyncTestCase):
         ):
             result = self.async_test(
                 validate_file_mime(
-                    [mock_file1, mock_file2],
-                    ALLOWED_MIME_TYPES_FOR_TEST
+                    [mock_file1, mock_file2], ALLOWED_MIME_TYPES_FOR_TEST
                 )
             )
 
@@ -119,8 +114,7 @@ class TestValidateFileMime(AsyncTestCase):
             with self.assertRaises(HTTPException):
                 self.async_test(
                     validate_file_mime(
-                        [mock_file1, mock_file2],
-                        ALLOWED_MIME_TYPES_FOR_TEST
+                        [mock_file1, mock_file2], ALLOWED_MIME_TYPES_FOR_TEST
                     )
                 )
 
@@ -135,9 +129,7 @@ class TestValidateFileMime(AsyncTestCase):
             return_value="application/x-msdownload",
         ):
             result = self.async_test(
-                check_mime_type(
-                    mock_file, ALLOWED_MIME_TYPES_FOR_TEST
-                )
+                check_mime_type(mock_file, ALLOWED_MIME_TYPES_FOR_TEST)
             )
 
             is_valid, file = result
@@ -163,9 +155,7 @@ class TestValidateFileMime(AsyncTestCase):
                 return_value=mime_type,
             ):
                 result = self.async_test(
-                    check_mime_type(
-                        mock_file, ALLOWED_MIME_TYPES_FOR_TEST
-                    )
+                    check_mime_type(mock_file, ALLOWED_MIME_TYPES_FOR_TEST)
                 )
 
                 is_valid, file = result
