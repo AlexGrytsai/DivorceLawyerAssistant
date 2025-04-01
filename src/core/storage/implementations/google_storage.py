@@ -8,13 +8,14 @@ from google.cloud.storage_control_v2 import (
     StorageControlClient,
     CreateManagedFolderRequest,
     ListManagedFoldersRequest,
+    DeleteManagedFolderRequest,
 )  # type: ignore
 
 from src.core.storage.decorators import handle_cloud_storage_exceptions
 from src.core.storage.interfaces.cloud_storage_interface import (
     CloudStorageInterface,
 )
-from src.core.storage.shemas import FolderDataSchema
+from src.core.storage.shemas import FolderDataSchema, FolderDeleteSchema
 
 load_dotenv()
 
@@ -106,9 +107,19 @@ class GoogleCloudStorage(CloudStorageInterface):
             update_time=response.update_time.replace(microsecond=0),
         )
 
-    def delete_managed_folder(self, folder_name: str) -> None:
+    @handle_cloud_storage_exceptions
+    def delete_managed_folder(self, folder_name: str) -> FolderDeleteSchema:
         """Delete a managed folder"""
-        pass
+        folder_path = self.get_storage_control.managed_folder_path(
+            "_", self.bucket_name, folder_name
+        )
+
+        request = DeleteManagedFolderRequest(
+            name=folder_path,
+        )
+        self.get_storage_control.delete_managed_folder(request=request)
+
+        return FolderDeleteSchema(name=folder_name)
 
     def rename_folder(self, old_name: str, new_name: str) -> None:
         """Rename a managed folder"""
@@ -151,4 +162,6 @@ if __name__ == "__main__":
 
     # print(google_cloud_storage.create_managed_folder("test33"))
 
-    print(google_cloud_storage.list_managed_folders(prefix="test_"))
+    print(google_cloud_storage.list_managed_folders(prefix="test"))
+    print(google_cloud_storage.delete_managed_folder("test33"))
+    print(google_cloud_storage.list_managed_folders())
