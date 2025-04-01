@@ -4,6 +4,9 @@ from typing import List, Optional, Union
 from dotenv import load_dotenv
 from google.cloud import storage  # type: ignore
 from google.cloud.storage import Blob, Bucket  # type: ignore
+from google.cloud.storage_control_v2 import (
+    StorageControlClient,
+)  # type: ignore
 
 from src.core.storage.decorators import handle_cloud_storage_exceptions
 from src.core.storage.interfaces.cloud_storage_interface import (
@@ -21,6 +24,7 @@ class GoogleCloudStorage(CloudStorageInterface):
         self.bucket_name = bucket_name
         self.project_id = project_id
         self._client: Optional[storage.Client] = None
+        self._storage_control: Optional[StorageControlClient] = None
         self._bucket: Optional[Bucket] = None
 
     @property
@@ -29,6 +33,13 @@ class GoogleCloudStorage(CloudStorageInterface):
         if self._client is None:
             self._client = storage.Client(project=self.project_id)
         return self._client
+
+    @property
+    @handle_cloud_storage_exceptions
+    def get_storage_control(self) -> StorageControlClient:
+        if self._storage_control is None:
+            self._storage_control = StorageControlClient()
+        return self._storage_control
 
     @property
     @handle_cloud_storage_exceptions
