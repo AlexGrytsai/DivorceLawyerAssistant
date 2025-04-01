@@ -415,6 +415,84 @@ class TestCloudStorage(unittest.TestCase):
         self.assertEqual(result.current_path, folder_path)
         self.assertEqual(len(result.items), 0)
 
+    async def test_upload_network_error(self):
+        # Arrange
+        mock_file = Mock(spec=UploadFile)
+        mock_file.filename = "test.txt"
+        mock_file.content_type = "text/plain"
+        mock_file.read = AsyncMock(return_value=b"test content")
+
+        self.mock_cloud_storage.upload_blob.side_effect = Exception("Network error")
+
+        # Act & Assert
+        with self.assertRaises(ErrorSavingFile) as context:
+            await self.storage.upload(mock_file, self.mock_request)
+        self.assertIn("Network error", str(context.exception))
+
+    async def test_upload_storage_full(self):
+        # Arrange
+        mock_file = Mock(spec=UploadFile)
+        mock_file.filename = "test.txt"
+        mock_file.content_type = "text/plain"
+        mock_file.read = AsyncMock(return_value=b"test content")
+
+        self.mock_cloud_storage.upload_blob.side_effect = Exception("Storage quota exceeded")
+
+        # Act & Assert
+        with self.assertRaises(ErrorSavingFile) as context:
+            await self.storage.upload(mock_file, self.mock_request)
+        self.assertIn("Storage quota exceeded", str(context.exception))
+
+    async def test_upload_invalid_file_type(self):
+        # Arrange
+        mock_file = Mock(spec=UploadFile)
+        mock_file.filename = "test.exe"
+        mock_file.content_type = "application/x-msdownload"
+        mock_file.read = AsyncMock(return_value=b"test content")
+
+        self.mock_cloud_storage.upload_blob.side_effect = Exception("Invalid file type")
+
+        # Act & Assert
+        with self.assertRaises(ErrorSavingFile) as context:
+            await self.storage.upload(mock_file, self.mock_request)
+        self.assertIn("Invalid file type", str(context.exception))
+
+    async def test_upload_file_read_error(self):
+        # Arrange
+        mock_file = Mock(spec=UploadFile)
+        mock_file.filename = "test.txt"
+        mock_file.content_type = "text/plain"
+        mock_file.read = AsyncMock(side_effect=Exception("File read error"))
+
+        # Act & Assert
+        with self.assertRaises(ErrorSavingFile) as context:
+            await self.storage.upload(mock_file, self.mock_request)
+        self.assertIn("File read error", str(context.exception))
+
+    async def test_multi_upload_partial_failure(self):
+        # Arrange
+        mock_files = [
+            Mock(
+                spec=UploadFile,
+                filename=f"test{i}.txt",
+                content_type="text/plain",
+            )
+            for i in range(3)
+        ]
+        for file in mock_files:
+            file.read = AsyncMock(return_value=b"test content")
+
+        self.mock_cloud_storage.upload_blob.side_effect = [
+            "https://storage.googleapis.com/test-bucket/test0.txt",
+            Exception("Upload failed for test1.txt"),
+            "https://storage.googleapis.com/test-bucket/test2.txt"
+        ]
+
+        # Act & Assert
+        with self.assertRaises(ErrorSavingFile) as context:
+            await self.storage.multi_upload(mock_files, self.mock_request)
+        self.assertIn("Upload failed for test1.txt", str(context.exception))
+
 
 if __name__ == "__main__":
     unittest.main()
