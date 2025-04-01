@@ -39,14 +39,14 @@ async def validate_pdf_fields(
 
 
 async def check_fields_in_pdf_file(
-    path_to_pdf: str,
+    url_to_pdf: str,
     parser_instance: ParserPDFBase,
     validator_instance: TextBaseValidator,
     **kwargs,
 ) -> Tuple[io.BytesIO, str]:
-    logger.info(f"Check PDF fields for '{path_to_pdf}'...")
+    logger.info(f"Check PDF fields for '{url_to_pdf}'...")
 
-    fields = await scrap_pdf_fields(path_to_pdf)
+    fields = await scrap_pdf_fields(url_to_pdf)
 
     await prepare_scraped_data(parser_instance, fields)
 
@@ -55,15 +55,15 @@ async def check_fields_in_pdf_file(
     )
 
     files_with_comments_in_buffer = await add_comments_to_widgets(
-        pdf_path=path_to_pdf, comments=errors_in_fields, **kwargs
+        pdf_path=url_to_pdf, comments=errors_in_fields, **kwargs
     )
 
-    logger.info(f"PDF '{path_to_pdf}' checked successfully")
+    logger.info(f"PDF '{url_to_pdf}' checked successfully")
     return files_with_comments_in_buffer
 
 
 async def main_check_pdf_fields(
-    paths_to_pdf: List[str],
+    urls_to_pdf: List[str],
     ai_assistant: OpenAITextAnalyzer,
     widget_parser_type: Type[ParserPDFBase] = ParserPDFWidget,
     validator_type: Type[TextWidgetValidatorUseAI] = TextWidgetValidatorUseAI,
@@ -71,12 +71,12 @@ async def main_check_pdf_fields(
 ) -> List[FileDataSchema]:
     tasks = [
         check_fields_in_pdf_file(
-            path_to_pdf=pdf,
+            url_to_pdf=pdf,
             parser_instance=widget_parser_type(),
             validator_instance=validator_type(ai_assistant=ai_assistant),
             **kwargs,
         )
-        for pdf in paths_to_pdf
+        for pdf in urls_to_pdf
     ]
 
     files_with_comments_in_buffer = await asyncio.gather(*tasks)
