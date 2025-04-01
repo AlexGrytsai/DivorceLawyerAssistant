@@ -422,7 +422,9 @@ class TestCloudStorage(unittest.TestCase):
         mock_file.content_type = "text/plain"
         mock_file.read = AsyncMock(return_value=b"test content")
 
-        self.mock_cloud_storage.upload_blob.side_effect = Exception("Network error")
+        self.mock_cloud_storage.upload_blob.side_effect = Exception(
+            "Network error"
+        )
 
         # Act & Assert
         with self.assertRaises(ErrorSavingFile) as context:
@@ -436,7 +438,9 @@ class TestCloudStorage(unittest.TestCase):
         mock_file.content_type = "text/plain"
         mock_file.read = AsyncMock(return_value=b"test content")
 
-        self.mock_cloud_storage.upload_blob.side_effect = Exception("Storage quota exceeded")
+        self.mock_cloud_storage.upload_blob.side_effect = Exception(
+            "Storage quota exceeded"
+        )
 
         # Act & Assert
         with self.assertRaises(ErrorSavingFile) as context:
@@ -450,7 +454,9 @@ class TestCloudStorage(unittest.TestCase):
         mock_file.content_type = "application/x-msdownload"
         mock_file.read = AsyncMock(return_value=b"test content")
 
-        self.mock_cloud_storage.upload_blob.side_effect = Exception("Invalid file type")
+        self.mock_cloud_storage.upload_blob.side_effect = Exception(
+            "Invalid file type"
+        )
 
         # Act & Assert
         with self.assertRaises(ErrorSavingFile) as context:
@@ -485,7 +491,7 @@ class TestCloudStorage(unittest.TestCase):
         self.mock_cloud_storage.upload_blob.side_effect = [
             "https://storage.googleapis.com/test-bucket/test0.txt",
             Exception("Upload failed for test1.txt"),
-            "https://storage.googleapis.com/test-bucket/test2.txt"
+            "https://storage.googleapis.com/test-bucket/test2.txt",
         ]
 
         # Act & Assert
@@ -493,6 +499,38 @@ class TestCloudStorage(unittest.TestCase):
             await self.storage.multi_upload(mock_files, self.mock_request)
         self.assertIn("Upload failed for test1.txt", str(context.exception))
 
+    async def test_delete_file_not_exists(self):
+        # Arrange
+        file_path = "nonexistent.txt"
+        self.mock_cloud_storage.delete_blob.side_effect = Exception(
+            "File not found"
+        )
 
-if __name__ == "__main__":
-    unittest.main()
+        # Act & Assert
+        with self.assertRaises(ErrorSavingFile) as context:
+            await self.storage.delete(file_path, self.mock_request)
+        self.assertIn("File not found", str(context.exception))
+
+    async def test_delete_permission_error(self):
+        # Arrange
+        file_path = "protected.txt"
+        self.mock_cloud_storage.delete_blob.side_effect = Exception(
+            "Permission denied"
+        )
+
+        # Act & Assert
+        with self.assertRaises(ErrorSavingFile) as context:
+            await self.storage.delete(file_path, self.mock_request)
+        self.assertIn("Permission denied", str(context.exception))
+
+    async def test_delete_network_error(self):
+        # Arrange
+        file_path = "test.txt"
+        self.mock_cloud_storage.delete_blob.side_effect = Exception(
+            "Network error"
+        )
+
+        # Act & Assert
+        with self.assertRaises(ErrorSavingFile) as context:
+            await self.storage.delete(file_path, self.mock_request)
+        self.assertIn("Network error", str(context.exception))
