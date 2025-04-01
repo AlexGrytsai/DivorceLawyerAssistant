@@ -37,7 +37,6 @@ class TestCheckPDFFormsRouter(unittest.TestCase):
             filename="test_form.pdf",
             content_type="application/pdf",
             size=1024,
-            message="Success",
         )
 
         # Create mock for PDF checking result
@@ -46,13 +45,11 @@ class TestCheckPDFFormsRouter(unittest.TestCase):
             filename="test_form_with_simple_check.pdf",
             content_type="application/pdf",
             size=1536,
-            message="Success",
         )
 
         # Create mock for file deletion result
         self.deleted_file_data = FileDeleteSchema(
             file="/mock/path/test_form.pdf",
-            message="File deleted successfully",
             date_deleted="2023-01-01",
             deleted_by="test_user",
         )

@@ -28,7 +28,6 @@ class TestBaseStorage(unittest.TestCase):
                 url="http://example.com/mock/test.txt",
                 filename="test.txt",
                 content_type="text/plain",
-                message="File uploaded",
             )
 
         async def multi_upload(self, files, request, *args, **kwargs):
@@ -37,14 +36,12 @@ class TestBaseStorage(unittest.TestCase):
                     url="http://example.com/mock/test.txt",
                     filename="test.txt",
                     content_type="text/plain",
-                    message="File uploaded",
                 )
             ]
 
         async def delete(self, file_path, request, *args, **kwargs):
             return FileDeleteSchema(
                 file=file_path,
-                message="File deleted",
                 date_deleted="2023-01-01",
                 deleted_by="test",
             )
@@ -53,7 +50,6 @@ class TestBaseStorage(unittest.TestCase):
             return FolderDataSchema(
                 path=folder_path,
                 name="mock_folder",
-                message="Folder created",
                 parent_folder="/mock",
                 is_empty=True,
             )
@@ -64,7 +60,6 @@ class TestBaseStorage(unittest.TestCase):
             return FolderDataSchema(
                 path=new_path,
                 name="renamed_folder",
-                message="Folder renamed",
                 parent_folder="/mock",
                 is_empty=True,
             )
@@ -72,7 +67,6 @@ class TestBaseStorage(unittest.TestCase):
         async def delete_folder(self, folder_path, request, *args, **kwargs):
             return FolderDeleteSchema(
                 folder=folder_path,
-                message="Folder deleted",
                 date_deleted="2023-01-01",
                 deleted_by="test",
                 deleted_files_count=0,
@@ -84,7 +78,6 @@ class TestBaseStorage(unittest.TestCase):
             return FileDataSchema(
                 url=f"http://example.com/mock/{new_path}",
                 filename="renamed.txt",
-                message="File renamed",
             )
 
         async def get_file(self, file_path: str) -> FileDataSchema:
@@ -92,7 +85,6 @@ class TestBaseStorage(unittest.TestCase):
                 url=f"http://example.com/mock/{file_path}",
                 filename="test.txt",
                 content_type="text/plain",
-                message="Success",
             )
 
         async def get_folder_contents(
@@ -124,7 +116,6 @@ class TestBaseStorage(unittest.TestCase):
                     url=f"http://example.com/mock/{prefix or ''}/file1.txt",
                     filename="file1.txt",
                     content_type="text/plain",
-                    message="Success",
                 )
             ]
 
@@ -135,7 +126,6 @@ class TestBaseStorage(unittest.TestCase):
                 FolderDataSchema(
                     path=f"{prefix or ''}/subfolder",
                     name="subfolder",
-                    message="Success",
                     parent_folder=prefix or "",
                     is_empty=True,
                 )
@@ -149,7 +139,6 @@ class TestBaseStorage(unittest.TestCase):
                     url="http://example.com/mock/file.txt",
                     filename="file.txt",
                     content_type="text/plain",
-                    message="Success",
                 )
             ]
 

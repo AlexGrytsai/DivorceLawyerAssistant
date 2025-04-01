@@ -145,14 +145,12 @@ class TestCheckPdfFields(unittest.TestCase):
                 size=100,
                 filename="file1.pdf",
                 content_type="application/pdf",
-                message="Operation successful",
             ),
             FileDataSchema(
                 url="http://example.com/file2.pdf",
                 size=200,
                 filename="file2.pdf",
                 content_type="application/pdf",
-                message="Operation successful",
             ),
         ]
         mock_save.return_value = expected_file_data

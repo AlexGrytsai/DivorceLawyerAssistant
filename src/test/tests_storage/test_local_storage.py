@@ -82,14 +82,12 @@ class TestLocalStorage(unittest.TestCase):
         expected_result = [
             FileDataSchema(
                 url="http://testserver/path/to/test_file.txt",
-                message="test_file.txt saved successfully",
                 content_type="text/plain",
                 size=123,
                 filename="test_file.txt",
             ),
             FileDataSchema(
                 url="http://testserver/path/to/test_file2.txt",
-                message="test_file2.txt saved successfully",
                 content_type="text/plain",
                 size=123,
                 filename="test_file2.txt",
@@ -161,14 +159,12 @@ class TestLocalStorage(unittest.TestCase):
         expected_result = [
             FileDataSchema(
                 url="http://testserver/path/to/test_file.txt",
-                message="test_file.txt saved successfully",
                 content_type="text/plain",
                 size=123,
                 filename="test_file.txt",
             ),
             FileDataSchema(
                 url="http://testserver/path/to/test_file2.txt",
-                message="test_file2.txt saved successfully",
                 content_type="text/plain",
                 size=123,
                 filename="test_file2.txt",
