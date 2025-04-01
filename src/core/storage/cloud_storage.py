@@ -1,5 +1,4 @@
 import logging
-from dataclasses import dataclass
 from datetime import datetime
 from typing import List, Optional, Union, Set, Tuple
 
@@ -88,7 +87,11 @@ class CloudStorage(BaseStorageInterface):
 
     @handle_upload_file_exceptions
     async def upload(
-        self, file: UploadFile, request: Request, *args, **kwargs
+        self,
+        file: UploadFile,
+        request: Request,
+        *args,
+        **kwargs,
     ) -> FileDataSchema:
         content = await file.read()
         if not file.filename:
@@ -112,7 +115,11 @@ class CloudStorage(BaseStorageInterface):
 
     @handle_upload_file_exceptions
     async def multi_upload(
-        self, files: List[UploadFile], request: Request, *args, **kwargs
+        self,
+        files: List[UploadFile],
+        request: Request,
+        *args,
+        **kwargs,
     ) -> List[FileDataSchema]:
         results = []
         for file in files:
@@ -122,7 +129,11 @@ class CloudStorage(BaseStorageInterface):
 
     @handle_delete_file_exceptions
     async def delete(
-        self, file_path: str, request: Request, *args, **kwargs
+        self,
+        file_path: str,
+        request: Request,
+        *args,
+        **kwargs,
     ) -> FileDeleteSchema:
         self._cloud_storage.delete_blob(file_path)
         return FileDeleteSchema(
@@ -135,7 +146,11 @@ class CloudStorage(BaseStorageInterface):
 
     @handle_upload_file_exceptions
     async def create_folder(
-        self, folder_path: str, request: Request, *args, **kwargs
+        self,
+        folder_path: str,
+        request: Request,
+        *args,
+        **kwargs,
     ) -> FolderDataSchema:
         """Create a new folder in storage"""
         folder_path = self._path_handler.normalize_path(folder_path)
@@ -158,7 +173,12 @@ class CloudStorage(BaseStorageInterface):
 
     @handle_upload_file_exceptions
     async def rename_folder(
-        self, old_path: str, new_path: str, request: Request, *args, **kwargs
+        self,
+        old_path: str,
+        new_path: str,
+        request: Request,
+        *args,
+        **kwargs,
     ) -> FolderDataSchema:
         """Rename existing folder"""
         old_path = self._path_handler.normalize_path(old_path)
@@ -189,7 +209,11 @@ class CloudStorage(BaseStorageInterface):
 
     @handle_delete_file_exceptions
     async def delete_folder(
-        self, folder_path: str, request: Request, *args, **kwargs
+        self,
+        folder_path: str,
+        request: Request,
+        *args,
+        **kwargs,
     ) -> FolderDeleteSchema:
         """Delete folder and all its contents"""
         folder_path = self._path_handler.normalize_path(folder_path)
@@ -213,7 +237,12 @@ class CloudStorage(BaseStorageInterface):
 
     @handle_upload_file_exceptions
     async def rename_file(
-        self, old_path: str, new_path: str, request: Request, *args, **kwargs
+        self,
+        old_path: str,
+        new_path: str,
+        request: Request,
+        *args,
+        **kwargs,
     ) -> FileDataSchema:
         old_blob = self._cloud_storage.get_bucket.blob(old_path)
         if not old_blob.exists():
@@ -236,7 +265,9 @@ class CloudStorage(BaseStorageInterface):
 
     @handle_upload_file_exceptions
     async def upload_file(
-        self, file_path: str, destination_path: Optional[str] = None
+        self,
+        file_path: str,
+        destination_path: Optional[str] = None,
     ) -> str:
         if not file_path:
             raise ValueError("File path cannot be empty")
@@ -266,7 +297,8 @@ class CloudStorage(BaseStorageInterface):
         )
 
     async def list_files(
-        self, prefix: Optional[str] = ""
+        self,
+        prefix: Optional[str] = "",
     ) -> List[FileDataSchema]:
         blobs = self._cloud_storage.list_blobs(prefix=prefix)
         files: List[FileDataSchema] = []
@@ -291,7 +323,8 @@ class CloudStorage(BaseStorageInterface):
         return files
 
     async def list_folders(
-        self, prefix: Optional[str] = None
+        self,
+        prefix: Optional[str] = None,
     ) -> List[FolderDataSchema]:
         blobs = self._cloud_storage.list_blobs(prefix=prefix)
         folders = set()
@@ -399,7 +432,9 @@ class CloudStorage(BaseStorageInterface):
         )
 
     async def search_files_by_name(
-        self, search_query: str, case_sensitive: bool = False
+        self,
+        search_query: str,
+        case_sensitive: bool = False,
     ) -> List[FileDataSchema]:
         blobs = self._cloud_storage.list_blobs()
         files = []
