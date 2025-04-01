@@ -167,7 +167,7 @@ class TestCheckPdfFields(unittest.TestCase):
 
         # Act
         result = await main_check_pdf_fields(
-            paths_to_pdf=pdf_paths,
+            urls_to_pdf=pdf_paths,
             ai_assistant=self.mock_ai_assistant,
             widget_parser_type=ParserPDFWidget,
             validator_type=TextWidgetValidatorUseAI,
