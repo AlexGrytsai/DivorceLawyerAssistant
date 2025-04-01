@@ -5,25 +5,21 @@ from typing import Optional, List, Union, Literal
 from pydantic import HttpUrl, BaseModel, Field
 
 
-class BaseOperationSchema(BaseModel):
-    message: str = "Operation successful"
-
-
-class BaseFileSchema(BaseOperationSchema):
+class BaseFileSchema(BaseModel):
     filename: Optional[str] = None
     url: HttpUrl | str
     size: Optional[int] = None
     content_type: Optional[str] = None
 
 
-class BaseFolderSchema(BaseOperationSchema):
+class BaseFolderSchema(BaseModel):
     path: Path | str
     name: str
     parent_folder: Optional[Path | str] = None
     is_empty: bool = True
 
 
-class BaseDeleteSchema(BaseOperationSchema):
+class BaseDeleteSchema(BaseModel):
     date_deleted: str = Field(
         default_factory=lambda: datetime.now().isoformat()
     )
