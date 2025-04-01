@@ -21,11 +21,11 @@ MODEL_TOKEN_LIMITS: Dict[str, int] = {
 STATIC_DIR: str = "static"
 UPLOAD_DIR: str = f"{STATIC_DIR}/uploads/forms"
 
-PROJECT_ID: str = os.environ["PROJECT_ID"]
+PROJECT_ID: str = os.getenv("PROJECT_ID", "Unknown")
 
 # Bucket names
-MAIN_BUCKET_NAME: str = os.environ["MAIN_BUCKET_NAME"]
-RAG_BUCKET_NAME: str = os.environ["RAG_BUCKET_NAME"]
+MAIN_BUCKET_NAME: str = os.getenv("MAIN_BUCKET_NAME", "Unknown")
+RAG_BUCKET_NAME: str = os.getenv("RAG_BUCKET_NAME", "Unknown")
 
 # Allowed mime types
 ALLOWED_MIME_TYPES_FOR_FORMS = (
