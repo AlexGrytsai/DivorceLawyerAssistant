@@ -1,19 +1,49 @@
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, List, Union
+from typing import Optional, List, Union, Literal
 
-from pydantic import HttpUrl, BaseModel
+from pydantic import HttpUrl, BaseModel, Field
+
+
+class BaseOperationSchema(BaseModel):
+    status_code: int = 200
+    message: str = "Operation successful"
+    date_created: str = Field(default_factory=lambda: datetime.now().isoformat())
+    creator: str = "system"
+
+
+class BaseFileSchema(BaseOperationSchema):
+    filename: Optional[str] = None
+    url: HttpUrl | str
+    size: Optional[int] = None
+    content_type: Optional[str] = None
+
+
+class BaseFolderSchema(BaseOperationSchema):
+    path: Path | str
+    name: str
+    parent_folder: Optional[Path | str] = None
+    is_empty: bool = True
+
+
+class BaseDeleteSchema(BaseOperationSchema):
+    date_deleted: str = Field(default_factory=lambda: datetime.now().isoformat())
+    deleted_by: str = "system"
+
+
+class FileItem(BaseModel):
+    name: str
+    path: str
+    type: Literal["file"]
+    size: int
+    updated: Optional[str]
+    url: Optional[str] = None
 
 
 class FolderItem(BaseModel):
     name: str
     path: str
-    type: str
-
-
-class FileItem(FolderItem):
-    size: int
-    updated: Optional[str]
+    type: Literal["folder"]
 
 
 class FolderContents(BaseModel):
@@ -21,40 +51,18 @@ class FolderContents(BaseModel):
     items: List[Union[FileItem, FolderItem]]
 
 
-class FileDataSchema(BaseModel):
-    filename: Optional[str] = None
-    url: HttpUrl | str
-    size: Optional[int] = None
-    content_type: Optional[str] = None
-    status_code: int = 200
-    message: str = "File operation successful"
-    date_created: str = datetime.now().isoformat()
-    creator: str = "system"
+class FileDataSchema(BaseFileSchema):
+    pass
 
 
-class FolderDataSchema(BaseModel):
-    path: Path | str
-    name: str
-    status_code: int = 200
-    message: str = "Folder operation successful"
-    date_created: Optional[str] = datetime.now().isoformat()
-    creator: str = "system"
-    parent_folder: Optional[Path | str] = None
-    is_empty: bool = True
+class FolderDataSchema(BaseFolderSchema):
+    pass
 
 
-class FileDeleteSchema(BaseModel):
+class FileDeleteSchema(BaseDeleteSchema):
     file: Path | str
-    message: str = "File deleted successfully"
-    status_code: int = 200
-    date_deleted: str = datetime.now().isoformat()
-    deleted_by: str = "system"
 
 
-class FolderDeleteSchema(BaseModel):
+class FolderDeleteSchema(BaseDeleteSchema):
     folder: Path | str
-    message: str = "Folder deleted successfully"
-    status_code: int = 200
-    date_deleted: str = datetime.now().isoformat()
-    deleted_by: str = "system"
     deleted_files_count: int = 0
