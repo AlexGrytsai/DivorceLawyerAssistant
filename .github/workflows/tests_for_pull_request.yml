@@ -25,7 +25,7 @@ jobs:
           echo "export PATH=$HOME/.local/bin:$PATH" >> $GITHUB_ENV
       - name: Install dependencies
         run: |
-          poetry install
+          poetry install --without dev
       - name: Run unit tests
         run: |
           poetry run bash -c "DEVELOP_MODE=True poetry run python -m unittest discover"
