@@ -25,7 +25,6 @@ class TestBaseStorage(unittest.TestCase):
 
         async def upload(self, file, request, *args, **kwargs):
             return FileDataSchema(
-                path="/mock/path",
                 url="http://example.com/mock",
                 filename="test.txt",
                 content_type="text/plain",
@@ -38,7 +37,6 @@ class TestBaseStorage(unittest.TestCase):
         async def multi_upload(self, files, request, *args, **kwargs):
             return [
                 FileDataSchema(
-                    path=f"/mock/path/{i}",
                     url=f"http://example.com/mock/{i}",
                     filename=f"test{i}.txt",
                     content_type="text/plain",
@@ -99,7 +97,6 @@ class TestBaseStorage(unittest.TestCase):
             self, old_path, new_path, request, *args, **kwargs
         ):
             return FileDataSchema(
-                path=new_path,
                 url=f"http://example.com/mock/{new_path}",
                 filename="renamed.txt",
                 status_code=200,
@@ -110,7 +107,6 @@ class TestBaseStorage(unittest.TestCase):
 
         async def get_file(self, file_path: str) -> FileDataSchema:
             return FileDataSchema(
-                path=file_path,
                 url=f"http://example.com/mock/{file_path}",
                 filename="test.txt",
                 content_type="text/plain",
@@ -146,7 +142,6 @@ class TestBaseStorage(unittest.TestCase):
         ) -> List[FileDataSchema]:
             return [
                 FileDataSchema(
-                    path=f"{prefix or ''}/file1.txt",
                     url=f"http://example.com/mock/{prefix or ''}/file1.txt",
                     filename="file1.txt",
                     content_type="text/plain",
@@ -178,7 +173,6 @@ class TestBaseStorage(unittest.TestCase):
         ) -> List[FileDataSchema]:
             return [
                 FileDataSchema(
-                    path="/mock/path/file.txt",
                     url="http://example.com/mock/file.txt",
                     filename="file.txt",
                     content_type="text/plain",
@@ -208,7 +202,6 @@ class TestBaseStorage(unittest.TestCase):
         # Assert
         self.assertIsInstance(result, FileDataSchema)
         self.assertEqual(result.filename, "test.txt")
-        self.assertEqual(result.path, "/mock/path")
         self.assertEqual(result.url, "http://example.com/mock")
 
     @patch("src.core.storage.storage.logger")
@@ -225,8 +218,6 @@ class TestBaseStorage(unittest.TestCase):
         self.assertIsInstance(result, list)
         self.assertEqual(len(result), 2)
         self.assertIsInstance(result[0], FileDataSchema)
-        self.assertEqual(result[0].path, "/mock/path/0")
-        self.assertEqual(result[1].path, "/mock/path/1")
 
     @patch("src.core.storage.storage.logger")
     async def test_call_with_no_files(self, mock_logger):

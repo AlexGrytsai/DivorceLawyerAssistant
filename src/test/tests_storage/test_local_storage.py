@@ -7,13 +7,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from fastapi import UploadFile, Request, HTTPException, status
 
+from src.core.exceptions.storage import ErrorSavingFile
 from src.core.storage.local_storage import LocalStorage
 from src.core.storage.shemas import (
     FileDataSchema,
     FileDeleteSchema,
     FolderDataSchema,
 )
-from src.core.exceptions.storage import ErrorSavingFile
 
 
 class TestLocalStorage(unittest.TestCase):
@@ -65,7 +65,6 @@ class TestLocalStorage(unittest.TestCase):
         self.mock_file.close.assert_called_once()
 
         self.assertIsInstance(result, FileDataSchema)
-        self.assertEqual(result.path, expected_path)
         self.assertEqual(result.filename, "test_file.txt")
         self.assertEqual(result.content_type, "text/plain")
         self.assertEqual(result.size, 123)
@@ -84,7 +83,6 @@ class TestLocalStorage(unittest.TestCase):
 
         expected_result = [
             FileDataSchema(
-                path=os.path.join(self.test_dir, "test_user", "test_file.txt"),
                 url="http://testserver/path/to/test_file.txt",
                 message="test_file.txt saved successfully",
                 content_type="text/plain",
@@ -95,9 +93,6 @@ class TestLocalStorage(unittest.TestCase):
                 creator="test_user",
             ),
             FileDataSchema(
-                path=os.path.join(
-                    self.test_dir, "test_user", "test_file2.txt"
-                ),
                 url="http://testserver/path/to/test_file2.txt",
                 message="test_file2.txt saved successfully",
                 content_type="text/plain",
@@ -157,7 +152,6 @@ class TestLocalStorage(unittest.TestCase):
         self.mock_file.close.assert_called_once()
 
         self.assertIsInstance(result, FileDataSchema)
-        self.assertEqual(result.path, expected_path)
         self.assertEqual(result.filename, "test_file.txt")
         self.assertEqual(result.content_type, "text/plain")
         self.assertEqual(result.size, 123)
@@ -176,7 +170,6 @@ class TestLocalStorage(unittest.TestCase):
 
         expected_result = [
             FileDataSchema(
-                path=os.path.join(self.test_dir, "test_user", "test_file.txt"),
                 url="http://testserver/path/to/test_file.txt",
                 message="test_file.txt saved successfully",
                 content_type="text/plain",
@@ -187,9 +180,6 @@ class TestLocalStorage(unittest.TestCase):
                 creator="test_user",
             ),
             FileDataSchema(
-                path=os.path.join(
-                    self.test_dir, "test_user", "test_file2.txt"
-                ),
                 url="http://testserver/path/to/test_file2.txt",
                 message="test_file2.txt saved successfully",
                 content_type="text/plain",
@@ -457,7 +447,6 @@ class TestLocalStorage(unittest.TestCase):
         )
 
         self.assertIsInstance(result, FileDataSchema)
-        self.assertEqual(result.path, new_path)
         self.assertEqual(result.filename, "new_file.txt")
         self.assertEqual(result.status_code, status.HTTP_200_OK)
         self.assertEqual(result.creator, "test_user")
@@ -583,7 +572,6 @@ class TestLocalStorage(unittest.TestCase):
 
         # Assert
         self.assertIsInstance(result, FileDataSchema)
-        self.assertEqual(result.path, file_path)
         self.assertEqual(result.filename, "test_file.txt")
         self.assertEqual(result.size, 123)
         self.assertEqual(result.status_code, 200)
