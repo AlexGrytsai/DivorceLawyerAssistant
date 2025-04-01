@@ -1,4 +1,5 @@
 import unittest
+from typing import Optional, List
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from fastapi import UploadFile, Request, HTTPException
@@ -12,6 +13,9 @@ from src.core.storage.shemas import (
     FileDeleteSchema,
     FolderDataSchema,
     FolderDeleteSchema,
+    FolderContents,
+    FileItem,
+    FolderItem,
 )
 
 
@@ -103,6 +107,87 @@ class TestBaseStorage(unittest.TestCase):
                 date_created="2023-01-01",
                 creator="test",
             )
+
+        async def get_file(self, file_path: str) -> FileDataSchema:
+            return FileDataSchema(
+                path=file_path,
+                url=f"http://example.com/mock/{file_path}",
+                filename="test.txt",
+                content_type="text/plain",
+                status_code=200,
+                message="Success",
+                date_created="2023-01-01",
+                creator="test",
+            )
+
+        async def get_folder_contents(
+            self, folder_path: str
+        ) -> FolderContents:
+            return FolderContents(
+                current_path=folder_path,
+                items=[
+                    FileItem(
+                        name="file1.txt",
+                        path=f"{folder_path}/file1.txt",
+                        type="file",
+                        size=100,
+                        updated="2023-01-01",
+                    ),
+                    FolderItem(
+                        name="subfolder",
+                        path=f"{folder_path}/subfolder",
+                        type="folder",
+                    ),
+                ],
+            )
+
+        async def list_files(
+            self, prefix: Optional[str] = None
+        ) -> List[FileDataSchema]:
+            return [
+                FileDataSchema(
+                    path=f"{prefix or ''}/file1.txt",
+                    url=f"http://example.com/mock/{prefix or ''}/file1.txt",
+                    filename="file1.txt",
+                    content_type="text/plain",
+                    status_code=200,
+                    message="Success",
+                    date_created="2023-01-01",
+                    creator="test",
+                )
+            ]
+
+        async def list_folders(
+            self, prefix: Optional[str] = None
+        ) -> List[FolderDataSchema]:
+            return [
+                FolderDataSchema(
+                    path=f"{prefix or ''}/subfolder",
+                    name="subfolder",
+                    status_code=200,
+                    message="Success",
+                    date_created="2023-01-01",
+                    creator="test",
+                    parent_folder=prefix or "",
+                    is_empty=True,
+                )
+            ]
+
+        async def search_files_by_name(
+            self, search_query: str, case_sensitive: bool = False
+        ) -> List[FileDataSchema]:
+            return [
+                FileDataSchema(
+                    path="/mock/path/file.txt",
+                    url="http://example.com/mock/file.txt",
+                    filename="file.txt",
+                    content_type="text/plain",
+                    status_code=200,
+                    message="Success",
+                    date_created="2023-01-01",
+                    creator="test",
+                )
+            ]
 
     def setUp(self):
         self.storage = self.MockStorage()

@@ -2,7 +2,7 @@
 line-length = 79
 
 [tool.poetry]
-name = "Check PDF Form with AI"
+name = "Divorce Lawyer AI Assistant"
 version = "0.1.0"
 description = ""
 authors = ["Alex Grytsai <grytsai.alex@gmail.com>"]
@@ -11,7 +11,6 @@ package-mode = false
 
 [tool.poetry.dependencies]
 python = ">=3.12,<3.13"
-pypdf2 = "^3.0.1"
 pymupdf = "^1.25.3"
 pydantic = "^2.10.6"
 tabulate = "^0.9.0"

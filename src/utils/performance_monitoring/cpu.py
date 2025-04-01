@@ -7,8 +7,7 @@ from typing import Callable, List, Tuple, Optional, Dict
 import psutil
 from redis import Redis
 
-from src.core.config import settings
-from src.utils.performance_monitoring import redis_client_monitoring
+from src.core.config import settings, redis_client_monitoring
 
 running = False
 cpu_usage_data = []
@@ -16,13 +15,10 @@ cpu_usage_results: Dict[str, List[Tuple[List[float], float]]] = {}
 
 
 def monitor_cpu_usage(interval: float = 0.1):
-    global running, cpu_usage_data
     local_cpu_usage = []
-
     psutil.cpu_percent(interval=None)
     while running:
         local_cpu_usage.append(psutil.cpu_percent(interval=interval))
-
     cpu_usage_data.extend(local_cpu_usage)
 
 

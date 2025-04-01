@@ -7,8 +7,9 @@ from typing import Callable, List, Tuple, Optional, Dict
 import psutil
 from redis import Redis
 
-from src.core.config import settings
-from src.utils.performance_monitoring import redis_client_monitoring
+from src.core.config import settings, redis_client_monitoring
+
+# from src.utils.performance_monitoring import redis_client_monitoring
 
 monitoring = False
 ram_usage = []
@@ -35,13 +36,11 @@ def save_data_to_usage_results(
 
 
 def monitor_ram_usage(interval: float = 0.1) -> None:
-    global monitoring, ram_usage
     local_ram_usage = []
     process = psutil.Process()
     while monitoring:
         local_ram_usage.append(process.memory_info().rss / 1024 / 1024)
         time.sleep(interval)
-
     ram_usage.extend(local_ram_usage)
 
 

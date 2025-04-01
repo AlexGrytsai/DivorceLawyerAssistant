@@ -6,7 +6,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.lines import Line2D
 
-from src.utils.performance_monitoring import redis_client_monitoring
+from src.core.config import redis_client_monitoring
+
+# from src.utils.performance_monitoring import redis_client_monitoring
 
 logger = logging.getLogger(__name__)
 
