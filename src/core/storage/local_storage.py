@@ -92,9 +92,6 @@ class LocalStorage(BaseStorageInterface):
             message=f"{file.filename} saved successfully",
             content_type=file.content_type,
             size=file.size,
-            status_code=status.HTTP_201_CREATED,
-            date_created=datetime.datetime.now().strftime("%H:%M:%S %m-%d-%Y"),
-            creator=self._get_user_identifier(request),
         )
 
     async def multi_upload(
@@ -120,7 +117,6 @@ class LocalStorage(BaseStorageInterface):
             return FileDeleteSchema(
                 file=file_path,
                 message=f"{file_path} deleted successfully",
-                status_code=status.HTTP_204_NO_CONTENT,
                 date_deleted=datetime.datetime.now().strftime(
                     "%H:%M:%S %m-%d-%Y"
                 ),
@@ -160,7 +156,6 @@ class LocalStorage(BaseStorageInterface):
         return FolderDeleteSchema(
             folder=folder_path,
             message=f"{folder_path} deleted successfully",
-            status_code=status.HTTP_204_NO_CONTENT,
             date_deleted=current_timestamp(),
             deleted_by=self._get_user_identifier(request),
             deleted_files_count=deleted_files,
@@ -180,10 +175,7 @@ class LocalStorage(BaseStorageInterface):
         return FolderDataSchema(
             path=str(folder),
             name=folder.name,
-            status_code=status.HTTP_201_CREATED,
             message=f"Folder {folder_path} created successfully",
-            date_created=current_timestamp(),
-            creator=self._get_user_identifier(request),
             parent_folder=str(folder.parent),
             is_empty=True,
         )
@@ -205,10 +197,7 @@ class LocalStorage(BaseStorageInterface):
         return FolderDataSchema(
             path=str(new_folder),
             name=new_folder.name,
-            status_code=status.HTTP_200_OK,
             message=f"Folder renamed from {old_path} to {new_path}",
-            date_created=current_timestamp(),
-            creator=self._get_user_identifier(request),
             parent_folder=str(new_folder.parent),
             is_empty=not any(new_folder.iterdir()),
         )
@@ -229,12 +218,7 @@ class LocalStorage(BaseStorageInterface):
                 return FileDataSchema(
                     filename=new_file.name,
                     url=self._create_url_path(str(new_file), request),
-                    status_code=status.HTTP_200_OK,
                     message=f"File renamed from {old_path} to {new_path}",
-                    date_created=datetime.datetime.now().strftime(
-                        "%H:%M:%S %m-%d-%Y"
-                    ),
-                    creator=self._get_user_identifier(request),
                 )
             else:
                 logger.warning(f"Target file {new_path} already exists")
@@ -271,12 +255,7 @@ class LocalStorage(BaseStorageInterface):
             url=self._create_url_path(str(file), request),
             content_type=None,
             size=file.stat().st_size,
-            status_code=200,
             message="File retrieved successfully",
-            date_created=datetime.datetime.fromtimestamp(
-                file.stat().st_ctime
-            ).isoformat(),
-            creator="",
         )
 
     @handle_upload_file_exceptions
@@ -301,10 +280,7 @@ class LocalStorage(BaseStorageInterface):
                     url=self._create_url_path(str(file_path), request),
                     content_type=None,
                     size=file_path.stat().st_size,
-                    status_code=200,
                     message="File listed successfully",
-                    date_created=created_time,
-                    creator="",
                 )
                 files.append(file_data)
 
@@ -328,10 +304,7 @@ class LocalStorage(BaseStorageInterface):
                 folder_data = FolderDataSchema(
                     path=str(folder_path),
                     name=folder_path.name,
-                    status_code=200,
                     message="Folder listed successfully",
-                    date_created=created_time,
-                    creator="",
                     parent_folder=str(folder_path.parent),
                     is_empty=not any(folder_path.iterdir()),
                 )
@@ -402,10 +375,7 @@ class LocalStorage(BaseStorageInterface):
                         url=self._create_url_path(str(file_path), request),
                         content_type=None,
                         size=file_path.stat().st_size,
-                        status_code=200,
                         message="File found successfully",
-                        date_created=created_time,
-                        creator="",
                     )
                     files.append(file_data)
 

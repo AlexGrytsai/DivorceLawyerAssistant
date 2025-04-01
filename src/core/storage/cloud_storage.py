@@ -106,10 +106,7 @@ class CloudStorage(BaseStorageInterface):
             filename=file.filename,
             content_type=file.content_type,
             size=len(content),
-            status_code=200,
-            message="File uploaded successfully",
-            date_created=datetime.now().isoformat(),
-            creator=self._get_user_identifier(request),
+            message=f"File {file.filename} uploaded successfully",
         )
 
     @handle_upload_file_exceptions
@@ -137,8 +134,7 @@ class CloudStorage(BaseStorageInterface):
         self._cloud_storage.delete_blob(file_path)
         return FileDeleteSchema(
             file=file_path,
-            message="File deleted successfully",
-            status_code=200,
+            message=f"File {file_path} deleted successfully",
             date_deleted=datetime.now().isoformat(),
             deleted_by=self._get_user_identifier(request),
         )
@@ -162,10 +158,7 @@ class CloudStorage(BaseStorageInterface):
         return FolderDataSchema(
             path=folder_path,
             name=self._path_handler.get_basename(folder_path),
-            status_code=status.HTTP_201_CREATED,
             message=f"Folder {folder_path} created successfully",
-            date_created=current_timestamp(),
-            creator=self._get_user_identifier(request),
             parent_folder=parent_folder,
             is_empty=True,
         )
@@ -200,7 +193,6 @@ class CloudStorage(BaseStorageInterface):
             name=self._path_handler.get_basename(new_path),
             status_code=status.HTTP_200_OK,
             message=f"Folder renamed from {old_path} to {new_path}",
-            date_created=current_timestamp(),
             creator=self._get_user_identifier(request),
             parent_folder=parent_folder,
             is_empty=not any(blobs),
@@ -257,7 +249,6 @@ class CloudStorage(BaseStorageInterface):
             size=new_blob.size,
             status_code=200,
             message="File renamed successfully",
-            date_created=datetime.now().isoformat(),
             creator=self._get_user_identifier(request),
         )
 
@@ -287,9 +278,6 @@ class CloudStorage(BaseStorageInterface):
             size=blob.size,
             status_code=200,
             message="File retrieved successfully",
-            date_created=(
-                blob.time_created.isoformat() if blob.time_created else ""
-            ),
             creator="",
         )
 
@@ -308,9 +296,6 @@ class CloudStorage(BaseStorageInterface):
                 size=blob.size,
                 status_code=200,
                 message="File listed successfully",
-                date_created=(
-                    blob.time_created.isoformat() if blob.time_created else ""
-                ),
                 creator="",
             )
             for blob in blobs
@@ -338,7 +323,6 @@ class CloudStorage(BaseStorageInterface):
                 name=self._path_handler.get_basename(folder_path),
                 status_code=200,
                 message="Folder listed successfully",
-                date_created=None,
                 parent_folder=self._path_handler.get_parent_folder(
                     folder_path
                 ),
@@ -454,11 +438,6 @@ class CloudStorage(BaseStorageInterface):
                             size=blob.size,
                             status_code=200,
                             message="File found successfully",
-                            date_created=(
-                                blob.time_created.isoformat()
-                                if blob.time_created
-                                else ""
-                            ),
                             creator="",
                         )
                     )
