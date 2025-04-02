@@ -1,14 +1,14 @@
 import logging
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Type
 
 from dotenv import load_dotenv
 from google.cloud import storage  # type: ignore
 from google.cloud.storage import Blob, Bucket  # type: ignore
 from google.cloud.storage_control_v2 import (
     StorageControlClient,
-    CreateManagedFolderRequest,
     ListManagedFoldersRequest,
     DeleteManagedFolderRequest,
+    CreateFolderRequest,
 )  # type: ignore
 
 from src.core.storage.decorators import handle_cloud_storage_exceptions
@@ -89,17 +89,17 @@ class GoogleCloudStorage(CloudStorageInterface):
         return list(self.get_bucket.list_blobs(prefix=prefix))
 
     @handle_cloud_storage_exceptions
-    def create_managed_folder(self, folder_name: str) -> FolderDataSchema:
+    def create_folder(
+        self,
+        folder_name: str,
+        creator: Type[CreateFolderRequest] = CreateFolderRequest,
+    ) -> FolderDataSchema:
         """Create a new managed folder"""
-        project_path = self.get_storage_control.common_project_path("_")
-
-        request = CreateManagedFolderRequest(
-            parent=f"{project_path}/buckets/{self.bucket_name}",
-            managed_folder_id=folder_name,
+        request = creator(
+            parent=self._get_bucket_path(),
+            folder_id=folder_name,
         )
-        response = self.get_storage_control.create_managed_folder(
-            request=request
-        )
+        response = self.get_storage_control.create_folder(request=request)
 
         return FolderDataSchema(
             name="/".join(response.name.split("/")[3:]),
@@ -110,9 +110,7 @@ class GoogleCloudStorage(CloudStorageInterface):
     @handle_cloud_storage_exceptions
     def delete_managed_folder(self, folder_name: str) -> FolderDeleteSchema:
         """Delete a managed folder"""
-        folder_path = self.get_storage_control.managed_folder_path(
-            "_", self.bucket_name, folder_name
-        )
+        folder_path = self.get_storage_control.parse_folder_path(folder_name)
 
         request = DeleteManagedFolderRequest(
             name=folder_path,
@@ -154,14 +152,18 @@ class GoogleCloudStorage(CloudStorageInterface):
         """Get managed folder metadata"""
         pass
 
+    def _get_bucket_path(self) -> str:
+        project_path = self.get_storage_control.common_project_path("_")
+        return f"{project_path}/buckets/{self.bucket_name}"
+
 
 if __name__ == "__main__":
     google_cloud_storage = GoogleCloudStorage(
         bucket_name="data-for-rag", project_id="divorce-lawyer-assistant"
     )
 
-    # print(google_cloud_storage.create_managed_folder("test33"))
+    print(google_cloud_storage.create_folder("test33"))
 
-    print(google_cloud_storage.list_managed_folders(prefix="test"))
-    print(google_cloud_storage.delete_managed_folder("test33"))
-    print(google_cloud_storage.list_managed_folders())
+    # print(google_cloud_storage.list_managed_folders(prefix="test"))
+    # print(google_cloud_storage.delete_managed_folder("test33"))
+    # print(google_cloud_storage.list_managed_folders())
