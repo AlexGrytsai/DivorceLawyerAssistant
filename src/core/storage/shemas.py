@@ -50,7 +50,7 @@ class FileDataSchema(BaseFileSchema):
 
 
 class FolderDataSchema(BaseModel):
-    name: str
+    folder_name: str
     create_time: datetime
     update_time: datetime
 
@@ -60,4 +60,4 @@ class FileDeleteSchema(BaseDeleteSchema):
 
 
 class FolderDeleteSchema(BaseDeleteSchema):
-    name: Path | str
+    folder_name: Path | str
