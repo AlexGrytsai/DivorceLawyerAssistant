@@ -107,7 +107,7 @@ class CloudStorageInterface(ABC):
         pass
 
     @abstractmethod
-    def create_managed_folder(self, folder_name: str) -> FolderDataSchema:
+    def create_folder(self, folder_name: str) -> FolderDataSchema:
         """Create a new managed folder"""
         pass
 
