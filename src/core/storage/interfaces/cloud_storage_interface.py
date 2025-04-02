@@ -112,7 +112,7 @@ class CloudStorageInterface(ABC):
         pass
 
     @abstractmethod
-    def delete_managed_folder(self, folder_name: str) -> FolderDeleteSchema:
+    def delete_folder(self, folder_name: str) -> FolderDeleteSchema:
         """Delete a managed folder"""
         pass
 
