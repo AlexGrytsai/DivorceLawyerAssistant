@@ -65,17 +65,17 @@ def handle_cloud_storage_exceptions(func: Callable) -> Callable:
         try:
             return func(*args, **kwargs)
         except GoogleAuthError as exc:
-            logger.error("Failed to initialize GCS client", exc)
+            logger.error("Failed to initialize GCS client", exc_info=True)
             raise ErrorWithAuthenticationInGCP(
                 f"Failed to initialize GCS client: {exc}"
             )
         except ClientError as exc:
-            logger.error("Failed to perform GCS operation", exc)
+            logger.error("Failed to perform GCS operation", exc_info=True)
             raise ProblemWithRequestToGCP(
                 f"Failed to perform GCS operation: {exc}"
             )
         except Exception as exc:
-            logger.exception("Unexpected error")
+            logger.exception("Unexpected error", exc_info=True)
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail={
