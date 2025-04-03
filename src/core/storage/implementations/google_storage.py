@@ -21,6 +21,8 @@ from src.core.storage.shemas import (
     FolderDeleteSchema,
     FolderDataSchema,
     FolderRenameSchema,
+    FileSchema,
+    FileDeleteSchema,
 )
 
 load_dotenv()
@@ -29,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 
 class GoogleCloudStorage(CloudStorageInterface):
-    BASE_STORAGE_CLOUD_URL = "https://storage.googleapis.com"
+    _BASE_STORAGE_CLOUD_URL = "https://storage.googleapis.com"
 
     def __init__(self, bucket_name: str, project_id: str) -> None:
         self.bucket_name = bucket_name
@@ -40,7 +42,7 @@ class GoogleCloudStorage(CloudStorageInterface):
 
     @property
     def base_url(self) -> str:
-        return f"{self.BASE_STORAGE_CLOUD_URL}/{self.bucket_name}"
+        return f"{self._BASE_STORAGE_CLOUD_URL}/{self.bucket_name}"
 
     @property
     @handle_cloud_storage_exceptions
@@ -87,7 +89,7 @@ class GoogleCloudStorage(CloudStorageInterface):
         file_path: str,
         content: Union[str, bytes],
         content_type: Optional[str] = None,
-    ) -> str:
+    ) -> FileSchema:
         blob: Blob = self.bucket.blob(file_path)
 
         if content_type:
@@ -98,20 +100,50 @@ class GoogleCloudStorage(CloudStorageInterface):
 
         blob.upload_from_string(content, content_type=content_type)
 
-        return blob.public_url
+        return FileSchema(
+            filename=blob.name,
+            url=blob.public_url,
+            size=blob.size,
+            content_type=blob.content_type,
+        )
 
     @handle_cloud_storage_exceptions
-    async def delete_blob(self, file_path: str) -> None:
+    async def delete_blob(self, file_path: str) -> FileDeleteSchema:
         blob: Blob = self.bucket.blob(file_path)
         blob.delete()
 
-    @handle_cloud_storage_exceptions
-    async def copy_blob(self, source_blob: Blob, new_name: str) -> Blob:
-        return self.bucket.copy_blob(source_blob, self.bucket, new_name)
+        return FileDeleteSchema(file=file_path)
 
     @handle_cloud_storage_exceptions
-    async def list_blobs(self, prefix: str = "", delimiter=None) -> List[Blob]:
-        return list(self.bucket.list_blobs(prefix=prefix, delimiter=delimiter))
+    async def copy_blob(self, source_blob: Blob, new_name: str) -> FileSchema:
+        new_blob = self.bucket.copy_blob(source_blob, self.bucket, new_name)
+
+        return FileSchema(
+            filename=new_blob.name,
+            url=new_blob.public_url,
+            size=new_blob.size,
+            content_type=new_blob.content_type,
+        )
+
+    @handle_cloud_storage_exceptions
+    async def list_blobs(
+        self,
+        prefix: str = "",
+        delimiter=None,
+    ) -> List[FileSchema]:
+        blobs = list(
+            self.bucket.list_blobs(prefix=prefix, delimiter=delimiter)
+        )
+
+        return [
+            FileSchema(
+                filename=blob.name,
+                url=blob.public_url,
+                size=blob.size,
+                content_type=blob.content_type,
+            )
+            for blob in blobs
+        ]
 
     @handle_cloud_storage_exceptions
     async def create_folder(
