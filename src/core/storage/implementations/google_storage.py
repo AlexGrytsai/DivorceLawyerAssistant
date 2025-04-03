@@ -145,6 +145,7 @@ class GoogleCloudStorage(CloudStorageInterface):
 
         return FolderDeleteSchema(folder_name=folder_name)
 
+    @handle_cloud_storage_exceptions
     def rename_folder(
         self,
         old_name: str,
