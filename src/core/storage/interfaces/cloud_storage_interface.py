@@ -12,7 +12,7 @@ class CloudStorageInterface(ABC):
 
     @property
     @abstractmethod
-    def base_url(self) -> str:
+    async def base_url(self) -> str:
         """
         Base URL for accessing storage.
 
@@ -23,7 +23,7 @@ class CloudStorageInterface(ABC):
 
     @property
     @abstractmethod
-    def bucket(self) -> Bucket:
+    async def bucket(self) -> Bucket:
         """
         Get the cloud storage bucket instance.
 
@@ -37,7 +37,7 @@ class CloudStorageInterface(ABC):
         pass
 
     @abstractmethod
-    def upload_blob(
+    async def upload_blob(
         self,
         file_path: str,
         content: Union[str, bytes],
@@ -60,7 +60,7 @@ class CloudStorageInterface(ABC):
         pass
 
     @abstractmethod
-    def delete_blob(self, file_path: str) -> None:
+    async def delete_blob(self, file_path: str) -> None:
         """
         Delete blob from storage
 
@@ -73,7 +73,7 @@ class CloudStorageInterface(ABC):
         pass
 
     @abstractmethod
-    def copy_blob(self, source_blob: Blob, new_name: str) -> Blob:
+    async def copy_blob(self, source_blob: Blob, new_name: str) -> Blob:
         """
         Copy blob to new location
 
@@ -87,7 +87,7 @@ class CloudStorageInterface(ABC):
         pass
 
     @abstractmethod
-    def list_blobs(self, prefix: Optional[str] = "") -> List[Blob]:
+    async def list_blobs(self, prefix: Optional[str] = "") -> List[Blob]:
         """
         List blobs in storage
 
@@ -100,22 +100,22 @@ class CloudStorageInterface(ABC):
         pass
 
     @abstractmethod
-    def create_folder(self, folder_name: str) -> FolderBaseSchema:
+    async def create_folder(self, folder_name: str) -> FolderBaseSchema:
         """Create a new managed folder"""
         pass
 
     @abstractmethod
-    def delete_folder(self, folder_name: str) -> FolderDeleteSchema:
+    async def delete_folder(self, folder_name: str) -> FolderDeleteSchema:
         """Delete a managed folder"""
         pass
 
     @abstractmethod
-    def rename_folder(self, old_name: str, new_name: str) -> None:
+    async def rename_folder(self, old_name: str, new_name: str) -> None:
         """Rename a managed folder"""
         pass
 
     @abstractmethod
-    def list_folders(
+    async def list_folders(
         self, prefix: Optional[str] = None
     ) -> List[FolderBaseSchema]:
         """List managed folders"""
