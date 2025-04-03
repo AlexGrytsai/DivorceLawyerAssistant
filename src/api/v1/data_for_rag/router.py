@@ -7,8 +7,9 @@ from src.core.constants import ALLOWED_MIME_TYPES_FOR_RAG
 from src.core.storage.shemas import (
     FileSchema,
     FileDeleteSchema,
-    FolderBaseSchema,
     FolderDeleteSchema,
+    FolderDataSchema,
+    FolderContents,
 )
 from src.utils.validators.validate_file_mime import validate_file_mime
 
@@ -68,7 +69,7 @@ async def delete_file(
     return await settings.RAG_STORAGE.delete_file(file_path, request)
 
 
-@router.post("/folders", response_model=FolderBaseSchema)
+@router.post("/folders", response_model=FolderDataSchema)
 async def create_folder(
     request: Request,
     folder_path: str = Form(...),
@@ -77,7 +78,7 @@ async def create_folder(
     return await settings.RAG_STORAGE.create_folder(folder_path, request)
 
 
-@router.put("/folders/{folder_path:path}", response_model=FolderBaseSchema)
+@router.put("/folders/{folder_path:path}", response_model=FolderDataSchema)
 async def rename_folder(
     folder_path: str,
     request: Request,
@@ -110,7 +111,7 @@ async def rename_file(
     return await settings.RAG_STORAGE.rename_file(file_path, new_path, request)
 
 
-@router.get("/files/{file_path:path}")
+@router.get("/files/{file_path:path}", response_model=FileSchema)
 async def get_file(
     file_path: str,
 ):
@@ -118,7 +119,7 @@ async def get_file(
     return await settings.RAG_STORAGE.get_file(file_path)
 
 
-@router.get("/files")
+@router.get("/files", response_model=List[FileSchema])
 async def list_files(
     prefix: Optional[str] = None,
 ):
@@ -126,7 +127,7 @@ async def list_files(
     return await settings.RAG_STORAGE.list_files(prefix)
 
 
-@router.get("/folders")
+@router.get("/folders", response_model=List[FolderDataSchema])
 async def list_folders(
     prefix: Optional[str] = None,
 ):
@@ -134,7 +135,7 @@ async def list_folders(
     return await settings.RAG_STORAGE.list_folders(prefix)
 
 
-@router.get("/folder/{folder_path:path}")
+@router.get("/folder/{folder_path:path}", response_model=FolderContents)
 async def get_folder_contents(
     folder_path: str,
 ):
@@ -142,7 +143,7 @@ async def get_folder_contents(
     return await settings.RAG_STORAGE.get_folder_contents(folder_path)
 
 
-@router.get("/search-files")
+@router.get("/search-files", response_model=List[FileSchema])
 async def search_files(
     query: str,
     case_sensitive: bool = False,
