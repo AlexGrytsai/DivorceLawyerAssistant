@@ -200,17 +200,3 @@ class GoogleCloudStorage(CloudStorageInterface):
         return self.storage_control.common_folder_path(folder_name).split(
             "folders/"
         )[-1]
-
-
-if __name__ == "__main__":
-    google_cloud_storage = GoogleCloudStorage(
-        bucket_name="data-for-rag", project_id="divorce-lawyer-assistant"
-    )
-
-    # print(google_cloud_storage.create_folder("test33/test44"))
-    # print(google_cloud_storage.rename_folder("test33", "test44"))
-    # print(google_cloud_storage._get_common_folder_path("test44"))
-
-    # print(google_cloud_storage.list_managed_folders(prefix="test"))
-    print(google_cloud_storage.list_folders())
-    # print(google_cloud_storage.list_managed_folders())
