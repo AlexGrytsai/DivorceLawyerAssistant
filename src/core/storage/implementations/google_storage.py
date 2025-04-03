@@ -126,6 +126,19 @@ class GoogleCloudStorage(CloudStorageInterface):
         )
 
     @handle_cloud_storage_exceptions
+    async def rename_blob(
+        self, source_blob: Blob, new_name: str
+    ) -> FileSchema:
+        new_blob = self.bucket.rename_blob(source_blob, new_name)
+
+        return FileSchema(
+            filename=new_blob.name,
+            url=new_blob.public_url,
+            size=new_blob.size,
+            content_type=new_blob.content_type,
+        )
+
+    @handle_cloud_storage_exceptions
     async def list_blobs(
         self,
         prefix: str = "",
