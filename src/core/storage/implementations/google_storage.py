@@ -44,7 +44,7 @@ class GoogleCloudStorage(CloudStorageInterface):
 
     @property
     @handle_cloud_storage_exceptions
-    def client(self) -> storage.Client:
+    async def client(self) -> storage.Client:
         """Get cloud storage client"""
         if self._client is None:
             self._client = storage.Client(project=self.project_id)
@@ -52,7 +52,7 @@ class GoogleCloudStorage(CloudStorageInterface):
 
     @property
     @handle_cloud_storage_exceptions
-    def storage_control(self) -> StorageControlClient:
+    async def storage_control(self) -> StorageControlClient:
         """
         Get storage control client instance.
 
@@ -68,7 +68,7 @@ class GoogleCloudStorage(CloudStorageInterface):
 
     @property
     @handle_cloud_storage_exceptions
-    def bucket(self) -> Bucket:
+    async def bucket(self) -> Bucket:
         """
         Get bucket instance
 
@@ -76,19 +76,19 @@ class GoogleCloudStorage(CloudStorageInterface):
             Bucket: Cloud storage bucket
         """
         if self._bucket is None:
-            self._bucket = self.client.get_bucket(
-                bucket_or_name=self.bucket_name
-            )
+            client = await self.client
+            self._bucket = client.get_bucket(bucket_or_name=self.bucket_name)
         return self._bucket
 
     @handle_cloud_storage_exceptions
-    def upload_blob(
+    async def upload_blob(
         self,
         file_path: str,
         content: Union[str, bytes],
         content_type: Optional[str] = None,
     ) -> str:
-        blob: Blob = self.bucket.blob(file_path)
+        bucket = await self.bucket
+        blob: Blob = bucket.blob(file_path)
 
         if content_type:
             blob.content_type = content_type
@@ -101,108 +101,137 @@ class GoogleCloudStorage(CloudStorageInterface):
         return blob.public_url
 
     @handle_cloud_storage_exceptions
-    def delete_blob(self, file_path: str) -> None:
-        blob: Blob = self.bucket.blob(file_path)
+    async def delete_blob(self, file_path: str) -> None:
+        bucket = await self.bucket
+        blob: Blob = bucket.blob(file_path)
         blob.delete()
 
     @handle_cloud_storage_exceptions
-    def copy_blob(self, source_blob: Blob, new_name: str) -> Blob:
-        return self.bucket.copy_blob(source_blob, self.bucket, new_name)
+    async def copy_blob(self, source_blob: Blob, new_name: str) -> Blob:
+        bucket = await self.bucket
+        return bucket.copy_blob(source_blob, bucket, new_name)
 
     @handle_cloud_storage_exceptions
-    def list_blobs(self, prefix: str = "", delimiter=None) -> List[Blob]:
-        return list(self.bucket.list_blobs(prefix=prefix, delimiter=delimiter))
+    async def list_blobs(self, prefix: str = "", delimiter=None) -> List[Blob]:
+        bucket = await self.bucket
+        return list(bucket.list_blobs(prefix=prefix, delimiter=delimiter))
 
     @handle_cloud_storage_exceptions
-    def create_folder(
+    async def create_folder(
         self,
         folder_name: str,
         create_request: Type[CreateFolderRequest] = CreateFolderRequest,
     ) -> FolderBaseSchema:
-        """Create a new managed folder"""
-        response = self.storage_control.create_folder(
+        """Create a new folder"""
+        storage_control = await self.storage_control
+        parent = await self._get_bucket_path()
+
+        response = storage_control.create_folder(
             request=create_request(
-                parent=self._get_bucket_path(),
+                parent=parent,
                 folder_id=folder_name,
                 recursive=True,
             )
         )
+        folder_path = await self._get_common_folder_path(folder_name)
 
         return FolderDataSchema(
             folder_name=folder_name,
-            folder_path=self._get_common_folder_path(response.name),
+            folder_path=folder_path,
             create_time=response.create_time.replace(microsecond=0),
             update_time=response.update_time.replace(microsecond=0),
         )
 
     @handle_cloud_storage_exceptions
-    def delete_folder(
+    async def delete_folder(
         self,
         folder_name: str,
         delete_request: Type[DeleteFolderRequest] = DeleteFolderRequest,
     ) -> FolderDeleteSchema:
-        """Delete a managed folder"""
-        self.storage_control.delete_folder(
+        """Delete a folder"""
+        storage_control = await self.storage_control
+        folder_path = await self._get_folder_path(folder_name)
+
+        storage_control.delete_folder(
             request=delete_request(
-                name=self._get_folder_path(folder_name),
+                name=folder_path,
             )
         )
 
         return FolderDeleteSchema(folder_name=folder_name)
 
     @handle_cloud_storage_exceptions
-    def rename_folder(
+    async def rename_folder(
         self,
         old_name: str,
         new_name: str,
         rename_request: Type[RenameFolderRequest] = RenameFolderRequest,
     ) -> FolderRenameSchema:
-        """Rename a managed folder"""
-        self.storage_control.rename_folder(
+        """Rename a folder"""
+        storage_control = await self.storage_control
+        old_folder_path = await self._get_folder_path(old_name)
+        storage_control.rename_folder(
             request=rename_request(
-                name=self._get_folder_path(old_name),
+                name=old_folder_path,
                 destination_folder_id=new_name,
             )
         )
 
+        folder_path = await self._get_common_folder_path(new_name)
+
         return FolderRenameSchema(
             folder_name=new_name,
             old_name=old_name,
-            folder_path=self._get_common_folder_path(new_name),
+            folder_path=folder_path,
         )
 
-    def list_folders(
+    async def list_folders(
         self,
         prefix: Optional[str] = None,
         list_folders_request: Type[ListFoldersRequest] = ListFoldersRequest,
     ) -> List[FolderDataSchema]:
         """List folders"""
-        folders = self.storage_control.list_folders(
-            request=ListFoldersRequest(
-                parent=self._get_bucket_path(),
+        bucket = await self._get_bucket_path()
+        storage_control = await self.storage_control
+        folders_raw = storage_control.list_folders(
+            request=list_folders_request(
+                parent=bucket,
                 prefix=prefix,
             )
         )
-        return [
-            FolderDataSchema(
-                folder_name="".join(folder.name.split("/")[-2:]),
-                folder_path=self._get_common_folder_path(folder.name),
-                create_time=folder.create_time.replace(microsecond=0),
-                update_time=folder.update_time.replace(microsecond=0),
-            )
-            for folder in folders
-        ]
 
-    def _get_bucket_path(self) -> str:
-        project_path = self.storage_control.common_project_path("_")
+        folders: List[FolderDataSchema] = []
+
+        for folder in folders_raw:
+            folder_path = await self._get_common_folder_path(folder.name)
+            folders.append(
+                FolderDataSchema(
+                    folder_name=folder.name.split("/")[-2],
+                    folder_path=folder_path,
+                    create_time=folder.create_time.replace(microsecond=0),
+                    update_time=folder.update_time.replace(microsecond=0),
+                )
+            )
+
+        return folders
+
+    async def _get_bucket_path(self) -> str:
+        storage_control = await self.storage_control
+        project_path = storage_control.common_project_path("_")
+
         return f"{project_path}/buckets/{self.bucket_name}"
 
-    def _get_folder_path(self, folder_name: str) -> str:
-        return self.storage_control.folder_path(
+    async def _get_folder_path(self, folder_name: str) -> str:
+        storage_control = await self.storage_control
+
+        return storage_control.folder_path(
             project="_", bucket=self.bucket_name, folder=folder_name
         )
 
-    def _get_common_folder_path(self, folder_name: str) -> str:
-        return self.storage_control.common_folder_path(folder_name).split(
+    async def _get_common_folder_path(self, folder_name: str) -> str:
+        storage_control = await self.storage_control
+        folder_path = storage_control.common_folder_path(folder_name).split(
             "folders/"
         )[-1]
+
+        return folder_path if folder_path.endswith("/") else f"{folder_path}/"
