@@ -94,8 +94,3 @@ class CloudStorageInterface(ABC):
     ) -> List[FolderBaseSchema]:
         """List managed folders"""
         pass
-
-    @abstractmethod
-    def get_managed_folder(self, folder_name: str) -> FolderBaseSchema:
-        """Get managed folder metadata"""
-        pass

@@ -189,10 +189,6 @@ class GoogleCloudStorage(CloudStorageInterface):
             for folder in folders
         ]
 
-    def get_managed_folder(self, folder_name: str) -> FolderBaseSchema:
-        """Get managed folder metadata"""
-        pass
-
     def _get_bucket_path(self) -> str:
         project_path = self.storage_control.common_project_path("_")
         return f"{project_path}/buckets/{self.bucket_name}"
