@@ -10,6 +10,11 @@ from src.core.storage.shemas import FolderBaseSchema, FolderDeleteSchema
 class CloudStorageInterface(ABC):
     """Interface for cloud storage implementations"""
 
+    @property
+    @abstractmethod
+    def bucket(self) -> Bucket:
+        pass
+
     @abstractmethod
     def upload_blob(
         self,
