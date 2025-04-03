@@ -127,7 +127,7 @@ class GoogleCloudStorage(CloudStorageInterface):
 
         return FolderDataSchema(
             folder_name=folder_name,
-            folder_path=self._get_common_folder_path(folder_name),
+            folder_path=self._get_common_folder_path(response.name),
             create_time=response.create_time.replace(microsecond=0),
             update_time=response.update_time.replace(microsecond=0),
         )
