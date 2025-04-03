@@ -94,7 +94,7 @@ class TestCloudStorage(unittest.TestCase):
         file_path = "test.txt"
 
         # Act
-        result = await self.storage.delete(file_path, self.mock_request)
+        result = await self.storage.delete_file(file_path, self.mock_request)
 
         # Assert
         self.assertIsInstance(result, FileDeleteSchema)
@@ -515,7 +515,7 @@ class TestCloudStorage(unittest.TestCase):
 
         # Act & Assert
         with self.assertRaises(ErrorSavingFile) as context:
-            await self.storage.delete(file_path, self.mock_request)
+            await self.storage.delete_file(file_path, self.mock_request)
         self.assertIn("File not found", str(context.exception))
 
     async def test_delete_permission_error(self):
@@ -527,7 +527,7 @@ class TestCloudStorage(unittest.TestCase):
 
         # Act & Assert
         with self.assertRaises(ErrorSavingFile) as context:
-            await self.storage.delete(file_path, self.mock_request)
+            await self.storage.delete_file(file_path, self.mock_request)
         self.assertIn("Permission denied", str(context.exception))
 
     async def test_delete_network_error(self):
@@ -539,7 +539,7 @@ class TestCloudStorage(unittest.TestCase):
 
         # Act & Assert
         with self.assertRaises(ErrorSavingFile) as context:
-            await self.storage.delete(file_path, self.mock_request)
+            await self.storage.delete_file(file_path, self.mock_request)
         self.assertIn("Network error", str(context.exception))
 
     async def test_get_folder_iam_policy_success(self):

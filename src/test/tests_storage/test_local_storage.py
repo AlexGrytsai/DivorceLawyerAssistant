@@ -197,7 +197,7 @@ class TestLocalStorage(unittest.TestCase):
         mock_exists.return_value = True
 
         # Act
-        result = await self.storage.delete(
+        result = await self.storage.delete_file(
             file_path=file_path, request=self.mock_request
         )
 
@@ -225,7 +225,7 @@ class TestLocalStorage(unittest.TestCase):
 
         # Act & Assert
         with self.assertRaises(HTTPException) as context:
-            await self.storage.delete(
+            await self.storage.delete_file(
                 file_path=file_path, request=self.mock_request
             )
 

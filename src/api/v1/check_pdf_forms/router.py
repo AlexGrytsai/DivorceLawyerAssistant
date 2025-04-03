@@ -52,6 +52,6 @@ async def simple_check_pdf_forms(
 async def delete_file(
     request: Request, file_path=Body(..., embed=True)
 ) -> FileDeleteSchema:
-    return await settings.STORAGE.delete(
+    return await settings.STORAGE.delete_file(
         file_path=str(file_path), request=request
     )

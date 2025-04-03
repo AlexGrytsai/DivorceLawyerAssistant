@@ -106,7 +106,7 @@ class LocalStorage(BaseStorageInterface):
         return list(uploaded)
 
     @handle_delete_file_exceptions
-    async def delete(
+    async def delete_file(
         self, file_path: str, request: Request, *args, **kwargs
     ) -> FileDeleteSchema:
         if Path(file_path).exists():

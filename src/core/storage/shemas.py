@@ -5,23 +5,17 @@ from typing import Optional, List, Union, Literal
 from pydantic import HttpUrl, BaseModel, Field
 
 
-class BaseFileSchema(BaseModel):
-    filename: Optional[str] = None
+class FileSchema(BaseModel):
+    filename: str
     url: HttpUrl | str
-    size: Optional[int] = None
-    content_type: Optional[str] = None
+    size: int
+    content_type: str
 
 
-class BaseFolderSchema(BaseModel):
-    path: Path | str
-    name: str
-    parent_folder: Optional[Path | str] = None
-    is_empty: bool = True
-
-
-class BaseDeleteSchema(BaseModel):
-    date_deleted: str = Field(
-        default_factory=lambda: datetime.now().isoformat()
+class FileDeleteSchema(BaseModel):
+    file: Path | str
+    date_deleted: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc)
     )
 
 
@@ -45,12 +39,8 @@ class FolderContents(BaseModel):
     items: List[Union[FileItem, FolderItem]]
 
 
-class FileDataSchema(BaseFileSchema):
+class FileDataSchema(FileSchema):
     pass
-
-
-class FileDeleteSchema(BaseDeleteSchema):
-    file: Path | str
 
 
 class FolderBaseSchema(BaseModel):

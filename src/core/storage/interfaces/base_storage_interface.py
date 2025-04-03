@@ -116,7 +116,7 @@ class BaseStorageInterface(ABC):
         pass
 
     @abstractmethod
-    async def delete(
+    async def delete_file(
         self, file_path: str, request: Request, *args, **kwargs
     ) -> FileDeleteSchema:
         """

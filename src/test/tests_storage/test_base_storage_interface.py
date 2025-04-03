@@ -42,7 +42,7 @@ class TestBaseStorage(unittest.TestCase):
                 )
             ]
 
-        async def delete(self, file_path, request, *args, **kwargs):
+        async def delete_file(self, file_path, request, *args, **kwargs):
             return FileDeleteSchema(
                 file=file_path,
                 date_deleted="2023-01-01",

@@ -65,7 +65,7 @@ async def delete_file(
     request: Request,
 ):
     """Delete a file from storage"""
-    return await settings.RAG_STORAGE.delete(file_path, request)
+    return await settings.RAG_STORAGE.delete_file(file_path, request)
 
 
 @router.post("/folders", response_model=FolderBaseSchema)
