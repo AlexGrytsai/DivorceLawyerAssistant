@@ -5,7 +5,7 @@ from fastapi import APIRouter, UploadFile, Request, File, Form
 from src.core.config import settings
 from src.core.constants import ALLOWED_MIME_TYPES_FOR_RAG
 from src.core.storage.shemas import (
-    FileDataSchema,
+    FileSchema,
     FileDeleteSchema,
     FolderBaseSchema,
     FolderDeleteSchema,
@@ -32,7 +32,7 @@ async def list_folder_contents(folder_path: str = ""):
     return await settings.RAG_STORAGE.get_folder_contents(folder_path)
 
 
-@router.post("/upload", response_model=FileDataSchema)
+@router.post("/upload", response_model=FileSchema)
 async def upload_file(
     request: Request,
     file: UploadFile = File(...),
@@ -43,7 +43,7 @@ async def upload_file(
     return await settings.RAG_STORAGE.upload(file, request)
 
 
-@router.post("/upload/multiple", response_model=List[FileDataSchema])
+@router.post("/upload/multiple", response_model=List[FileSchema])
 async def upload_multiple_files(
     request: Request,
     files: List[UploadFile] = File(...),
@@ -100,7 +100,7 @@ async def delete_folder(
     return await settings.RAG_STORAGE.delete_folder(folder_path, request)
 
 
-@router.put("/files/{file_path:path}", response_model=FileDataSchema)
+@router.put("/files/{file_path:path}", response_model=FileSchema)
 async def rename_file(
     file_path: str,
     request: Request,
