@@ -9,6 +9,7 @@ from google.cloud.storage_control_v2 import (
     CreateFolderRequest,
     DeleteFolderRequest,
     RenameFolderRequest,
+    ListFoldersRequest,
 )  # type: ignore
 
 from src.core.storage.decorators import handle_cloud_storage_exceptions
@@ -16,9 +17,9 @@ from src.core.storage.interfaces.cloud_storage_interface import (
     CloudStorageInterface,
 )
 from src.core.storage.shemas import (
-    FolderDataSchema,
+    FolderBaseSchema,
     FolderDeleteSchema,
-    FolderCreateSchema,
+    FolderDataSchema,
     FolderRenameSchema,
 )
 
@@ -114,7 +115,7 @@ class GoogleCloudStorage(CloudStorageInterface):
         self,
         folder_name: str,
         create_request: Type[CreateFolderRequest] = CreateFolderRequest,
-    ) -> FolderDataSchema:
+    ) -> FolderBaseSchema:
         """Create a new managed folder"""
         response = self.storage_control.create_folder(
             request=create_request(
@@ -124,7 +125,7 @@ class GoogleCloudStorage(CloudStorageInterface):
             )
         )
 
-        return FolderCreateSchema(
+        return FolderDataSchema(
             folder_name=folder_name,
             folder_path=self._get_common_folder_path(folder_name),
             create_time=response.create_time.replace(microsecond=0),
@@ -169,33 +170,26 @@ class GoogleCloudStorage(CloudStorageInterface):
     def list_folders(
         self,
         prefix: Optional[str] = None,
+        list_folders_request: Type[ListFoldersRequest] = ListFoldersRequest,
     ) -> List[FolderDataSchema]:
         """List folders"""
-        # Create a client
-        client = storage_control_v2.StorageControlClient()
-
-        # Initialize request argument(s)
-        request = storage_control_v2.ListFoldersRequest(
-            parent="parent_value",
+        folders = self.storage_control.list_folders(
+            request=ListFoldersRequest(
+                parent=self._get_bucket_path(),
+                prefix=prefix,
+            )
         )
-
-        # Make the request
-        page_result = client.list_folders(request=request)
-
-        # Handle the response
-        for response in page_result:
-            print(response)
-
         return [
             FolderDataSchema(
-                name="/".join(managed_folder.name.split("/")[3:]),
-                create_time=managed_folder.create_time.replace(microsecond=0),
-                update_time=managed_folder.update_time.replace(microsecond=0),
+                folder_name="".join(folder.name.split("/")[-2:]),
+                folder_path=self._get_common_folder_path(folder.name),
+                create_time=folder.create_time.replace(microsecond=0),
+                update_time=folder.update_time.replace(microsecond=0),
             )
-            for managed_folder in page_result
+            for folder in folders
         ]
 
-    def get_managed_folder(self, folder_name: str) -> FolderDataSchema:
+    def get_managed_folder(self, folder_name: str) -> FolderBaseSchema:
         """Get managed folder metadata"""
         pass
 
@@ -209,7 +203,9 @@ class GoogleCloudStorage(CloudStorageInterface):
         )
 
     def _get_common_folder_path(self, folder_name: str) -> str:
-        return self.storage_control.common_folder_path(folder_name)
+        return self.storage_control.common_folder_path(folder_name).split(
+            "folders/"
+        )[-1]
 
 
 if __name__ == "__main__":
@@ -222,5 +218,5 @@ if __name__ == "__main__":
     # print(google_cloud_storage._get_common_folder_path("test44"))
 
     # print(google_cloud_storage.list_managed_folders(prefix="test"))
-    print(google_cloud_storage.delete_folder("test33/test44"))
+    print(google_cloud_storage.list_folders())
     # print(google_cloud_storage.list_managed_folders())
