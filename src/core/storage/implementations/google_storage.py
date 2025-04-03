@@ -29,6 +29,7 @@ logger = logging.getLogger(__name__)
 
 
 class GoogleCloudStorage(CloudStorageInterface):
+    BASE_STORAGE_CLOUD_URL = "https://storage.googleapis.com"
 
     def __init__(self, bucket_name: str, project_id: str) -> None:
         self.bucket_name = bucket_name
@@ -36,6 +37,10 @@ class GoogleCloudStorage(CloudStorageInterface):
         self._client: Optional[storage.Client] = None
         self._storage_control: Optional[StorageControlClient] = None
         self._bucket: Optional[Bucket] = None
+
+    @property
+    def base_url(self) -> str:
+        return f"{self.BASE_STORAGE_CLOUD_URL}/{self.bucket_name}"
 
     @property
     @handle_cloud_storage_exceptions
