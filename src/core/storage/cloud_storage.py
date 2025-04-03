@@ -226,7 +226,7 @@ class CloudStorage(BaseStorageInterface):
         *args,
         **kwargs,
     ) -> FileDataSchema:
-        old_blob = self._cloud_storage.get_bucket.blob(old_path)
+        old_blob = self._cloud_storage.bucket.blob(old_path)
         if not old_blob.exists():
             raise ErrorSavingFile(f"Source file {old_path} does not exist")
 
@@ -255,7 +255,7 @@ class CloudStorage(BaseStorageInterface):
         return self._cloud_storage.upload_blob(file_path, destination)
 
     async def get_file(self, file_path: str) -> FileDataSchema:
-        blob = self._cloud_storage.get_bucket.blob(file_path)
+        blob = self._cloud_storage.bucket.blob(file_path)
         if not blob.exists():
             raise ErrorSavingFile(f"File {file_path} not found")
 
