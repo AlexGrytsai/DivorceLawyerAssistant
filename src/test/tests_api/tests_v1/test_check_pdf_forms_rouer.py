@@ -9,7 +9,7 @@ from src.api.v1.check_pdf_forms.router import (
     simple_check_pdf_forms,
     delete_file,
 )
-from src.core.storage.shemas import FileDataSchema, FileDeleteSchema
+from src.core.storage.shemas import FileSchema, FileDeleteSchema
 from src.services.ai_service.ai_text_validator import OpenAITextAnalyzer
 
 
@@ -32,7 +32,7 @@ class TestCheckPDFFormsRouter(unittest.TestCase):
         self.mock_file.close = AsyncMock()
 
         # Create mock for file upload result
-        self.uploaded_file_data = FileDataSchema(
+        self.uploaded_file_data = FileSchema(
             url="http://testserver/mock/path/test_form.pdf",
             filename="test_form.pdf",
             content_type="application/pdf",
@@ -40,7 +40,7 @@ class TestCheckPDFFormsRouter(unittest.TestCase):
         )
 
         # Create mock for PDF checking result
-        self.checked_file_data = FileDataSchema(
+        self.checked_file_data = FileSchema(
             url="http://testserver/mock/path/test_form_with_simple_check.pdf",
             filename="test_form_with_simple_check.pdf",
             content_type="application/pdf",
@@ -51,7 +51,6 @@ class TestCheckPDFFormsRouter(unittest.TestCase):
         self.deleted_file_data = FileDeleteSchema(
             file="/mock/path/test_form.pdf",
             date_deleted="2023-01-01",
-            deleted_by="test_user",
         )
 
     @patch("src.utils.validators.validate_file_mime.validate_files")

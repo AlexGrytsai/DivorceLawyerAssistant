@@ -7,13 +7,15 @@ from fastapi import UploadFile, Request
 from src.core.exceptions.storage import ErrorSavingFile
 from src.core.storage.cloud_storage import CloudStorage
 from src.core.storage.shemas import (
-    FileDataSchema,
+    FileSchema,
     FileDeleteSchema,
     FolderBaseSchema,
     FolderDeleteSchema,
     FileItem,
     FolderItem,
     FolderContents,
+    FolderRenameSchema,
+    FolderDataSchema,
 )
 
 
@@ -48,7 +50,7 @@ class TestCloudStorage(unittest.TestCase):
         result = await self.storage.upload(mock_file, self.mock_request)
 
         # Assert
-        self.assertIsInstance(result, FileDataSchema)
+        self.assertIsInstance(result, FileSchema)
         self.assertEqual(result.filename, "test.txt")
         self.assertEqual(result.content_type, "text/plain")
         self.assertEqual(result.size, 12)
@@ -87,7 +89,7 @@ class TestCloudStorage(unittest.TestCase):
         # Assert
         self.assertEqual(len(results), 3)
         for result in results:
-            self.assertIsInstance(result, FileDataSchema)
+            self.assertIsInstance(result, FileSchema)
 
     async def test_delete_success(self):
         # Arrange
@@ -99,7 +101,6 @@ class TestCloudStorage(unittest.TestCase):
         # Assert
         self.assertIsInstance(result, FileDeleteSchema)
         self.assertEqual(result.file, file_path)
-        self.assertEqual(result.deleted_by, "127.0.0.1")
         self.mock_cloud_storage.delete_blob.assert_called_once_with(file_path)
 
     async def test_create_folder_success(self):
@@ -115,10 +116,8 @@ class TestCloudStorage(unittest.TestCase):
         )
 
         # Assert
-        self.assertIsInstance(result, FolderBaseSchema)
-        self.assertEqual(result.path, folder_path)
-        self.assertTrue(result.is_empty)
-        self.assertTrue(result.is_managed)
+        self.assertIsInstance(result, FolderDataSchema)
+        self.assertEqual(result.folder_path, folder_path)
         self.mock_cloud_storage.create_managed_folder.assert_called_once_with(
             folder_path
         )
@@ -134,12 +133,8 @@ class TestCloudStorage(unittest.TestCase):
         self.mock_path_handler.get_basename.return_value = "new_folder"
         self.mock_path_handler.get_parent_folder.return_value = ""
 
-        mock_folder = FolderBaseSchema(
-            path=new_path,
-            name="new_folder",
-            parent_folder="",
-            is_empty=True,
-            is_managed=True,
+        mock_folder = FolderRenameSchema(
+            folder_path=new_path, folder_name="new_folder", old_name=old_path
         )
         self.mock_cloud_storage.rename_managed_folder.return_value = (
             mock_folder
@@ -151,10 +146,8 @@ class TestCloudStorage(unittest.TestCase):
         )
 
         # Assert
-        self.assertIsInstance(result, FolderBaseSchema)
-        self.assertEqual(result.path, new_path)
-        self.assertTrue(result.is_empty)
-        self.assertTrue(result.is_managed)
+        self.assertIsInstance(result, FolderRenameSchema)
+        self.assertEqual(result.folder_path, new_path)
         self.mock_cloud_storage.rename_managed_folder.assert_called_once_with(
             old_path, new_path
         )
@@ -177,9 +170,7 @@ class TestCloudStorage(unittest.TestCase):
 
         # Assert
         self.assertIsInstance(result, FolderDeleteSchema)
-        self.assertEqual(result.folder, folder_path)
-        self.assertEqual(result.deleted_by, "127.0.0.1")
-        self.assertEqual(result.deleted_files_count, 2)
+        self.assertEqual(result.folder_name, folder_path)
         self.assertEqual(self.mock_cloud_storage.delete_blob.call_count, 2)
         self.mock_cloud_storage.delete_managed_folder.assert_called_once_with(
             folder_path, allow_non_empty=True
@@ -203,7 +194,7 @@ class TestCloudStorage(unittest.TestCase):
         )
 
         # Assert
-        self.assertIsInstance(result, FileDataSchema)
+        self.assertIsInstance(result, FileSchema)
         self.mock_cloud_storage.copy_blob.assert_called_once()
         self.mock_cloud_storage.delete_blob.assert_called_once_with(old_path)
 
@@ -238,7 +229,7 @@ class TestCloudStorage(unittest.TestCase):
         result = await self.storage.get_file(file_path)
 
         # Assert
-        self.assertIsInstance(result, FileDataSchema)
+        self.assertIsInstance(result, FileSchema)
         self.assertEqual(result.filename, "test.txt")
 
     async def test_get_file_not_exists(self):
@@ -281,28 +272,22 @@ class TestCloudStorage(unittest.TestCase):
         # Assert
         self.assertEqual(len(results), 2)
         for result in results:
-            self.assertIsInstance(result, FileDataSchema)
+            self.assertIsInstance(result, FileSchema)
 
     async def test_list_folders_success(self):
         # Arrange
         mock_folders = [
-            FolderBaseSchema(
-                path="folder1/",
-                name="folder1",
-                parent_folder="",
-                is_empty=True,
-                is_managed=True,
-                created_at=datetime.now(),
-                updated_at=datetime.now(),
+            FolderDataSchema(
+                folder_path="folder1/",
+                folder_name="folder1",
+                create_time=datetime.now(),
+                update_time=datetime.now(),
             ),
-            FolderBaseSchema(
-                path="folder2/",
-                name="folder2",
-                parent_folder="",
-                is_empty=False,
-                is_managed=True,
-                created_at=datetime.now(),
-                updated_at=datetime.now(),
+            FolderDataSchema(
+                folder_path="folder2/",
+                folder_name="folder2",
+                create_time=datetime.now(),
+                update_time=datetime.now(),
             ),
         ]
         self.mock_cloud_storage.list_managed_folders.return_value = (
@@ -316,7 +301,6 @@ class TestCloudStorage(unittest.TestCase):
         self.assertEqual(len(results), 2)
         for result in results:
             self.assertIsInstance(result, FolderBaseSchema)
-            self.assertTrue(result.is_managed)
 
     async def test_search_files_by_name_success(self):
         # Arrange
@@ -346,7 +330,7 @@ class TestCloudStorage(unittest.TestCase):
         # Assert
         self.assertEqual(len(results), 2)
         for result in results:
-            self.assertIsInstance(result, FileDataSchema)
+            self.assertIsInstance(result, FileSchema)
             self.assertIn("test", result.filename)
 
     async def test_search_files_by_name_case_sensitive(self):
@@ -541,41 +525,3 @@ class TestCloudStorage(unittest.TestCase):
         with self.assertRaises(ErrorSavingFile) as context:
             await self.storage.delete_file(file_path, self.mock_request)
         self.assertIn("Network error", str(context.exception))
-
-    async def test_get_folder_iam_policy_success(self):
-        # Arrange
-        folder_path = "test_folder"
-        mock_policy = {"bindings": []}
-        self.mock_path_handler.normalize_path.return_value = folder_path
-        self.mock_cloud_storage.get_managed_folder_iam_policy.return_value = (
-            mock_policy
-        )
-
-        # Act
-        result = await self.storage.get_folder_iam_policy(folder_path)
-
-        # Assert
-        self.assertEqual(result, mock_policy)
-        self.mock_cloud_storage.get_managed_folder_iam_policy.assert_called_once_with(
-            folder_path
-        )
-
-    async def test_set_folder_iam_policy_success(self):
-        # Arrange
-        folder_path = "test_folder"
-        mock_policy = {"bindings": []}
-        self.mock_path_handler.normalize_path.return_value = folder_path
-        self.mock_cloud_storage.set_managed_folder_iam_policy.return_value = (
-            mock_policy
-        )
-
-        # Act
-        result = await self.storage.set_folder_iam_policy(
-            folder_path, mock_policy
-        )
-
-        # Assert
-        self.assertEqual(result, mock_policy)
-        self.mock_cloud_storage.set_managed_folder_iam_policy.assert_called_once_with(
-            folder_path, mock_policy
-        )

@@ -4,7 +4,7 @@ import os
 import unittest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from src.core.storage.shemas import FileDataSchema
+from src.core.storage.shemas import FileSchema
 from src.services.ai_service.ai_text_validator import OpenAITextAnalyzer
 from src.services.check_pdf_fields import (
     scrap_pdf_fields,
@@ -140,13 +140,13 @@ class TestCheckPdfFields(unittest.TestCase):
         mock_check.side_effect = pdf_buffers
 
         expected_file_data = [
-            FileDataSchema(
+            FileSchema(
                 url="http://example.com/file1.pdf",
                 size=100,
                 filename="file1.pdf",
                 content_type="application/pdf",
             ),
-            FileDataSchema(
+            FileSchema(
                 url="http://example.com/file2.pdf",
                 size=200,
                 filename="file2.pdf",

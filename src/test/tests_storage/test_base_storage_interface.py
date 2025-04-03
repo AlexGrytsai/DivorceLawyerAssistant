@@ -1,7 +1,7 @@
+import datetime
 import unittest
 from typing import Optional, List
 from unittest.mock import AsyncMock, MagicMock, patch
-import datetime
 
 from fastapi import UploadFile, Request, HTTPException
 
@@ -10,7 +10,6 @@ from src.core.storage.interfaces.base_storage_interface import (
     BaseStorageInterface,
 )
 from src.core.storage.shemas import (
-    FileDataSchema,
     FileDeleteSchema,
     FolderBaseSchema,
     FolderDeleteSchema,
@@ -19,6 +18,7 @@ from src.core.storage.shemas import (
     FolderItem,
     FolderDataSchema,
     FolderRenameSchema,
+    FileSchema,
 )
 
 
@@ -27,7 +27,7 @@ class TestBaseStorage(unittest.TestCase):
         """Mock implementation of BaseStorage for testing"""
 
         async def upload(self, file, request, *args, **kwargs):
-            return FileDataSchema(
+            return FileSchema(
                 url="http://example.com/mock/test.txt",
                 filename="test.txt",
                 content_type="text/plain",
@@ -35,7 +35,7 @@ class TestBaseStorage(unittest.TestCase):
 
         async def multi_upload(self, files, request, *args, **kwargs):
             return [
-                FileDataSchema(
+                FileSchema(
                     url="http://example.com/mock/test.txt",
                     filename="test.txt",
                     content_type="text/plain",
@@ -45,7 +45,9 @@ class TestBaseStorage(unittest.TestCase):
         async def delete_file(self, file_path, request, *args, **kwargs):
             return FileDeleteSchema(
                 file=file_path,
-                date_deleted="2023-01-01",
+                date_deleted=datetime.datetime.strptime(
+                    "2023-01-01", "%Y-%m-%d"
+                ),
             )
 
         async def create_folder(self, folder_path, request, *args, **kwargs):
@@ -74,13 +76,13 @@ class TestBaseStorage(unittest.TestCase):
         async def rename_file(
             self, old_path, new_path, request, *args, **kwargs
         ):
-            return FileDataSchema(
+            return FileSchema(
                 url=f"http://example.com/mock/{new_path}",
                 filename="renamed.txt",
             )
 
-        async def get_file(self, file_path: str) -> FileDataSchema:
-            return FileDataSchema(
+        async def get_file(self, file_path: str) -> FileSchema:
+            return FileSchema(
                 url=f"http://example.com/mock/{file_path}",
                 filename="test.txt",
                 content_type="text/plain",
@@ -109,9 +111,9 @@ class TestBaseStorage(unittest.TestCase):
 
         async def list_files(
             self, prefix: Optional[str] = None
-        ) -> List[FileDataSchema]:
+        ) -> List[FileSchema]:
             return [
-                FileDataSchema(
+                FileSchema(
                     url=f"http://example.com/mock/{prefix or ''}/file1.txt",
                     filename="file1.txt",
                     content_type="text/plain",
@@ -129,9 +131,9 @@ class TestBaseStorage(unittest.TestCase):
 
         async def search_files_by_name(
             self, search_query: str, case_sensitive: bool = False
-        ) -> List[FileDataSchema]:
+        ) -> List[FileSchema]:
             return [
-                FileDataSchema(
+                FileSchema(
                     url="http://example.com/mock/file.txt",
                     filename="file.txt",
                     content_type="text/plain",
@@ -155,7 +157,7 @@ class TestBaseStorage(unittest.TestCase):
         )
 
         # Assert
-        self.assertIsInstance(result, FileDataSchema)
+        self.assertIsInstance(result, FileSchema)
         self.assertEqual(result.filename, "test.txt")
         self.assertEqual(result.url, "http://example.com/mock")
 
@@ -172,7 +174,7 @@ class TestBaseStorage(unittest.TestCase):
         # Assert
         self.assertIsInstance(result, list)
         self.assertEqual(len(result), 2)
-        self.assertIsInstance(result[0], FileDataSchema)
+        self.assertIsInstance(result[0], FileSchema)
 
     @patch("src.core.storage.storage.logger")
     async def test_call_with_no_files(self, mock_logger):

@@ -1,16 +1,17 @@
 import shutil
 import unittest
+from datetime import datetime
 from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
 from fastapi import HTTPException, status
 
+from src.core.exceptions.storage import ErrorUploadingFile, ErrorDeletingFile
 from src.core.storage.decorators import (
     handle_upload_file_exceptions,
     handle_delete_file_exceptions,
 )
-from src.core.exceptions.storage import ErrorUploadingFile, ErrorDeletingFile
-from src.core.storage.shemas import FileDataSchema, FileDeleteSchema
+from src.core.storage.shemas import FileSchema, FileDeleteSchema
 
 
 class TestUploadFileExceptionsDecorator(unittest.TestCase):
@@ -20,15 +21,11 @@ class TestUploadFileExceptionsDecorator(unittest.TestCase):
 
     def setUp(self):
         # Mock successful function
-        self.mock_success_result = FileDataSchema(
-            path="/mock/path",
+        self.mock_success_result = FileSchema(
             url="http://example.com/mock",
             filename="test.txt",
             content_type="text/plain",
-            status_code=status.HTTP_201_CREATED,
-            message="Success",
-            date_created="2023-01-01",
-            creator="test",
+            size=100,
         )
 
         # Create a mock async function that succeeds
@@ -109,10 +106,7 @@ class TestDeleteFileExceptionsDecorator(unittest.TestCase):
         # Mock successful function
         self.mock_success_result = FileDeleteSchema(
             file="/mock/path/test.txt",
-            message="File deleted successfully",
-            status_code=status.HTTP_204_NO_CONTENT,
-            date_deleted="2023-01-01",
-            deleted_by="test",
+            date_deleted=datetime.strptime("2023-01-01", "%Y-%m-%d"),
         )
 
         # Create a mock async function that succeeds
@@ -210,7 +204,3 @@ class TestDeleteFileExceptionsDecorator(unittest.TestCase):
         log_message = mock_logger.error.call_args[0][0]
         self.assertIn(self.test_file_path, log_message)
         self.assertIn(str(self.test_exception), log_message)
-
-
-if __name__ == "__main__":
-    unittest.main()

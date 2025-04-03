@@ -10,9 +10,12 @@ from fastapi import UploadFile, Request, HTTPException, status
 from src.core.exceptions.storage import ErrorSavingFile
 from src.core.storage.local_storage import LocalStorage
 from src.core.storage.shemas import (
-    FileDataSchema,
+    FileSchema,
     FileDeleteSchema,
     FolderBaseSchema,
+    FolderDataSchema,
+    FolderRenameSchema,
+    FolderDeleteSchema,
 )
 
 
@@ -64,7 +67,7 @@ class TestLocalStorage(unittest.TestCase):
         mock_file_handle.write.assert_called_once_with(self.file_content)
         self.mock_file.close.assert_called_once()
 
-        self.assertIsInstance(result, FileDataSchema)
+        self.assertIsInstance(result, FileSchema)
         self.assertEqual(result.filename, "test_file.txt")
         self.assertEqual(result.content_type, "text/plain")
         self.assertEqual(result.size, 123)
@@ -80,13 +83,13 @@ class TestLocalStorage(unittest.TestCase):
         mock_file2.filename = "test_file2.txt"
 
         expected_result = [
-            FileDataSchema(
+            FileSchema(
                 url="http://testserver/path/to/test_file.txt",
                 content_type="text/plain",
                 size=123,
                 filename="test_file.txt",
             ),
-            FileDataSchema(
+            FileSchema(
                 url="http://testserver/path/to/test_file2.txt",
                 content_type="text/plain",
                 size=123,
@@ -141,7 +144,7 @@ class TestLocalStorage(unittest.TestCase):
         mock_file_handle.write.assert_called_once_with(self.file_content)
         self.mock_file.close.assert_called_once()
 
-        self.assertIsInstance(result, FileDataSchema)
+        self.assertIsInstance(result, FileSchema)
         self.assertEqual(result.filename, "test_file.txt")
         self.assertEqual(result.content_type, "text/plain")
         self.assertEqual(result.size, 123)
@@ -157,13 +160,13 @@ class TestLocalStorage(unittest.TestCase):
         mock_file2.filename = "test_file2.txt"
 
         expected_result = [
-            FileDataSchema(
+            FileSchema(
                 url="http://testserver/path/to/test_file.txt",
                 content_type="text/plain",
                 size=123,
                 filename="test_file.txt",
             ),
-            FileDataSchema(
+            FileSchema(
                 url="http://testserver/path/to/test_file2.txt",
                 content_type="text/plain",
                 size=123,
@@ -210,7 +213,6 @@ class TestLocalStorage(unittest.TestCase):
 
         self.assertIsInstance(result, FileDeleteSchema)
         self.assertEqual(result.file, file_path)
-        self.assertEqual(result.deleted_by, "test_user")
 
     @patch("src.core.storage.local_storage.Path.exists")
     @patch("src.core.storage.local_storage.logger")
@@ -272,11 +274,9 @@ class TestLocalStorage(unittest.TestCase):
             f"Folder {folder_path} created successfully"
         )
 
-        self.assertIsInstance(result, FolderBaseSchema)
-        self.assertEqual(result.path, folder_path)
-        self.assertEqual(result.name, "new_folder")
-        self.assertEqual(result.parent_folder, str(self.test_dir))
-        self.assertTrue(result.is_empty)
+        self.assertIsInstance(result, FolderDataSchema)
+        self.assertEqual(result.folder_path, folder_path)
+        self.assertEqual(result.folder_name, "new_folder")
 
     @patch("src.core.storage.local_storage.Path.exists")
     @patch("src.core.storage.local_storage.logger")
@@ -349,11 +349,10 @@ class TestLocalStorage(unittest.TestCase):
             f"Folder renamed from {old_path} to {new_path}"
         )
 
-        self.assertIsInstance(result, FolderBaseSchema)
-        self.assertEqual(result.path, new_path)
-        self.assertEqual(result.name, "new_folder")
-        self.assertEqual(result.parent_folder, str(self.test_dir))
-        self.assertTrue(result.is_empty)
+        self.assertIsInstance(result, FolderRenameSchema)
+        self.assertEqual(result.folder_path, new_path)
+        self.assertEqual(result.folder_name, "new_folder")
+        self.assertEqual(result.old_name, "old_folder")
 
     @patch("src.core.storage.local_storage.Path.exists")
     @patch("src.core.storage.local_storage.logger")
@@ -421,7 +420,7 @@ class TestLocalStorage(unittest.TestCase):
             f"File renamed from {old_path} to {new_path}"
         )
 
-        self.assertIsInstance(result, FileDataSchema)
+        self.assertIsInstance(result, FileSchema)
         self.assertEqual(result.filename, "new_file.txt")
 
     @patch("src.core.storage.local_storage.Path.exists")
@@ -544,7 +543,7 @@ class TestLocalStorage(unittest.TestCase):
         )
 
         # Assert
-        self.assertIsInstance(result, FileDataSchema)
+        self.assertIsInstance(result, FileSchema)
         self.assertEqual(result.filename, "test_file.txt")
         self.assertEqual(result.size, 123)
         self.assertEqual(result.message, "File retrieved successfully")
@@ -596,7 +595,7 @@ class TestLocalStorage(unittest.TestCase):
 
         mock_dir = MagicMock()
         mock_dir.is_file.return_value = False
-        mock_dir.rglob.return_value = [mock_file1, mock_dir, mock_file2]
+        mock_dir.rglob.return_value = [mock_file1, mock_file2]
 
         mock_path.return_value = mock_dir
 
@@ -651,8 +650,8 @@ class TestLocalStorage(unittest.TestCase):
         # Assert
         self.assertIsInstance(result, list)
         self.assertEqual(len(result), 2)
-        self.assertEqual(result[0].name, "folder1")
-        self.assertEqual(result[1].name, "folder2")
+        self.assertEqual(result[0].folder_name, "folder1")
+        self.assertEqual(result[1].folder_name, "folder2")
 
     @patch("src.core.storage.local_storage.Path")
     @patch("src.core.storage.local_storage.logger")
