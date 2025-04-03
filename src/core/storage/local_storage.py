@@ -15,14 +15,14 @@ from src.core.storage.decorators import (
 )
 from src.core.storage.interfaces.base_storage_interface import (
     BaseStorageInterface,
-    current_timestamp,
     log_operation,
 )
 from src.core.storage.shemas import (
-    FileDataSchema,
+    FileSchema,
     FileDeleteSchema,
-    FolderBaseSchema,
     FolderDeleteSchema,
+    FolderDataSchema,
+    FolderRenameSchema,
 )
 
 logger = logging.getLogger(__name__)
@@ -75,7 +75,7 @@ class LocalStorage(BaseStorageInterface):
         request: Request,
         *args,
         **kwargs,
-    ) -> FileDataSchema:
+    ) -> FileSchema:
         file_object = await file.read()
 
         file_path = os.path.join(
@@ -86,7 +86,7 @@ class LocalStorage(BaseStorageInterface):
             fh.write(file_object)
         await file.close()
 
-        return FileDataSchema(
+        return FileSchema(
             filename=file.filename,
             url=self._create_url_path(file_path, request),
             content_type=file.content_type,
@@ -99,7 +99,7 @@ class LocalStorage(BaseStorageInterface):
         request: Request,
         *args,
         **kwargs,
-    ) -> List[FileDataSchema]:
+    ) -> List[FileSchema]:
         uploaded = await asyncio.gather(
             *[self.upload(file=file, request=request) for file in files]
         )
@@ -115,10 +115,6 @@ class LocalStorage(BaseStorageInterface):
 
             return FileDeleteSchema(
                 file=file_path,
-                date_deleted=datetime.datetime.now().strftime(
-                    "%H:%M:%S %m-%d-%Y"
-                ),
-                deleted_by=self._get_user_identifier(request),
             )
         else:
             logger.warning(
@@ -152,16 +148,13 @@ class LocalStorage(BaseStorageInterface):
 
         log_operation(f"{folder_path} deleted successfully")
         return FolderDeleteSchema(
-            folder=folder_path,
-            date_deleted=current_timestamp(),
-            deleted_by=self._get_user_identifier(request),
-            deleted_files_count=deleted_files,
+            folder_name=folder_path,
         )
 
     @handle_upload_file_exceptions
     async def create_folder(
         self, folder_path: str, request: Request, *args, **kwargs
-    ) -> FolderBaseSchema:
+    ) -> FolderDataSchema:
         """Create a new folder in storage"""
         folder = Path(folder_path)
         _validate_path_not_exists(folder, "Folder")
@@ -169,17 +162,17 @@ class LocalStorage(BaseStorageInterface):
         folder.mkdir(parents=True, exist_ok=True)
         log_operation(f"Folder {folder_path} created successfully")
 
-        return FolderBaseSchema(
-            path=str(folder),
-            name=folder.name,
-            parent_folder=str(folder.parent),
-            is_empty=True,
+        return FolderDataSchema(
+            folder_path=str(folder),
+            folder_name=folder.name,
+            create_time=datetime.datetime.now(),
+            update_time=datetime.datetime.now(),
         )
 
     @handle_upload_file_exceptions
     async def rename_folder(
         self, old_path: str, new_path: str, request: Request, *args, **kwargs
-    ) -> FolderBaseSchema:
+    ) -> FolderRenameSchema:
         """Rename existing folder"""
         old_folder = Path(old_path)
         new_folder = Path(new_path)
@@ -190,17 +183,16 @@ class LocalStorage(BaseStorageInterface):
         old_folder.rename(new_folder)
         log_operation(f"Folder renamed from {old_path} to {new_path}")
 
-        return FolderBaseSchema(
-            path=str(new_folder),
-            name=new_folder.name,
-            parent_folder=str(new_folder.parent),
-            is_empty=not any(new_folder.iterdir()),
+        return FolderRenameSchema(
+            folder_name=new_folder.name,
+            old_name=old_folder.name,
+            folder_path=str(new_folder),
         )
 
     @handle_upload_file_exceptions
     async def rename_file(
         self, old_path: str, new_path: str, request: Request, *args, **kwargs
-    ) -> FileDataSchema:
+    ) -> FileSchema:
         """Rename existing file"""
         old_file = Path(old_path)
         new_file = Path(new_path)
@@ -210,9 +202,11 @@ class LocalStorage(BaseStorageInterface):
                 old_file.rename(new_file)
                 logger.info(f"File renamed from {old_path} to {new_path}")
 
-                return FileDataSchema(
+                return FileSchema(
                     filename=new_file.name,
                     url=self._create_url_path(str(new_file), request),
+                    content_type=None,
+                    size=None,
                 )
             else:
                 logger.warning(f"Target file {new_path} already exists")
@@ -238,13 +232,13 @@ class LocalStorage(BaseStorageInterface):
         self,
         file_path: str,
         request: Request,
-    ) -> FileDataSchema:
+    ) -> FileSchema:
         """Get file by path"""
         file = Path(file_path)
         if not file.exists():
             raise ErrorSavingFile(f"File {file_path} not found")
 
-        return FileDataSchema(
+        return FileSchema(
             filename=file.name,
             url=self._create_url_path(str(file), request),
             content_type=None,
@@ -256,7 +250,7 @@ class LocalStorage(BaseStorageInterface):
         self,
         request: Request,
         prefix: Optional[str] = None,
-    ) -> List[FileDataSchema]:
+    ) -> List[FileSchema]:
         """List all files in storage"""
         storage_path = Path(self._path_to_storage)
         if prefix:
@@ -265,7 +259,7 @@ class LocalStorage(BaseStorageInterface):
         files = []
         for file_path in storage_path.rglob("*"):
             if file_path.is_file():
-                file_data = FileDataSchema(
+                file_data = FileSchema(
                     filename=file_path.name,
                     url=self._create_url_path(str(file_path), request),
                     content_type=None,
@@ -278,7 +272,7 @@ class LocalStorage(BaseStorageInterface):
     @handle_upload_file_exceptions
     async def list_folders(
         self, prefix: Optional[str] = None
-    ) -> List[FolderBaseSchema]:
+    ) -> List[FolderDataSchema]:
         """List all folders in storage"""
         storage_path = Path(self._path_to_storage)
         if prefix:
@@ -287,11 +281,11 @@ class LocalStorage(BaseStorageInterface):
         folders = []
         for folder_path in storage_path.rglob("*"):
             if folder_path.is_dir():
-                folder_data = FolderBaseSchema(
-                    path=str(folder_path),
-                    name=folder_path.name,
-                    parent_folder=str(folder_path.parent),
-                    is_empty=not any(folder_path.iterdir()),
+                folder_data = FolderDataSchema(
+                    folder_path=str(folder_path),
+                    folder_name=folder_path.name,
+                    create_time=None,
+                    update_time=None,
                 )
                 folders.append(folder_data)
 
@@ -338,7 +332,7 @@ class LocalStorage(BaseStorageInterface):
         search_query: str,
         request: Request,
         case_sensitive: bool = False,
-    ) -> List[FileDataSchema]:
+    ) -> List[FileSchema]:
         """Search files by name with optional case sensitivity"""
         storage_path = Path(self._path_to_storage)
         files = []
@@ -352,7 +346,7 @@ class LocalStorage(BaseStorageInterface):
                     filename = filename.lower()
 
                 if search_query in filename:
-                    file_data = FileDataSchema(
+                    file_data = FileSchema(
                         filename=file_path.name,
                         url=self._create_url_path(str(file_path), request),
                         content_type=None,
