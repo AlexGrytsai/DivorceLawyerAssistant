@@ -24,7 +24,7 @@ class TestGoogleCloudStorage(unittest.TestCase):
     def test_get_bucket(self, mock_client):
         mock_bucket = MagicMock(spec=Bucket)
         self.storage.client.bucket.return_value = mock_bucket
-        bucket = self.storage.get_bucket
+        bucket = self.storage.bucket
         self.assertEqual(bucket, mock_bucket)
         self.storage.client.bucket.assert_called_once_with(self.bucket_name)
 
