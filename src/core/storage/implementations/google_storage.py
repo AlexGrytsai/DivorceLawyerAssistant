@@ -63,7 +63,7 @@ class GoogleCloudStorage(CloudStorageInterface):
 
     @property
     @handle_cloud_storage_exceptions
-    def get_bucket(self) -> Bucket:
+    def bucket(self) -> Bucket:
         """
         Get bucket instance
 
@@ -83,7 +83,7 @@ class GoogleCloudStorage(CloudStorageInterface):
         content: Union[str, bytes],
         content_type: Optional[str] = None,
     ) -> str:
-        blob: Blob = self.get_bucket.blob(file_path)
+        blob: Blob = self.bucket.blob(file_path)
 
         if content_type:
             blob.content_type = content_type
@@ -97,18 +97,16 @@ class GoogleCloudStorage(CloudStorageInterface):
 
     @handle_cloud_storage_exceptions
     def delete_blob(self, file_path: str) -> None:
-        blob: Blob = self.get_bucket.blob(file_path)
+        blob: Blob = self.bucket.blob(file_path)
         blob.delete()
 
     @handle_cloud_storage_exceptions
     def copy_blob(self, source_blob: Blob, new_name: str) -> Blob:
-        return self.get_bucket.copy_blob(
-            source_blob, self.get_bucket, new_name
-        )
+        return self.bucket.copy_blob(source_blob, self.bucket, new_name)
 
     @handle_cloud_storage_exceptions
-    def list_blobs(self, prefix: str = "") -> List[Blob]:
-        return list(self.get_bucket.list_blobs(prefix=prefix))
+    def list_blobs(self, prefix: str = "", delimiter=None) -> List[Blob]:
+        return list(self.bucket.list_blobs(prefix=prefix, delimiter=delimiter))
 
     @handle_cloud_storage_exceptions
     def create_folder(
