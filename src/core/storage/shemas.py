@@ -58,7 +58,6 @@ class FolderDataSchema(BaseModel):
 
 
 class FolderCreateSchema(FolderDataSchema):
-    folder_name: str
     folder_path: str
     create_time: datetime
     update_time: datetime
