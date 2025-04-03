@@ -87,7 +87,7 @@ class LocalStorage(BaseStorageInterface):
         await file.close()
 
         return FileSchema(
-            filename=file.filename,
+            filename=file.filename or "Unknown",
             url=self._create_url_path(file_path, request),
             content_type=file.content_type,
             size=file.size,
