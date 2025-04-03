@@ -1,7 +1,7 @@
+import asyncio
 import unittest
 from datetime import datetime, timezone
-from unittest.mock import MagicMock, patch, PropertyMock
-import asyncio
+from unittest.mock import MagicMock, patch
 
 from src.core.storage.implementations.google_storage import GoogleCloudStorage
 from src.core.storage.shemas import (
@@ -123,7 +123,7 @@ class TestGoogleCloudStorage(unittest.TestCase):
         mock_blob.public_url = "https://example.com/test-file"
         mock_blob.content_type = "text/plain"
         mock_blob.size = 100
-        
+
         self.mock_bucket.blob.return_value = mock_blob
 
         result = self.loop.run_until_complete(
@@ -138,7 +138,6 @@ class TestGoogleCloudStorage(unittest.TestCase):
         mock_blob.upload_from_string.assert_called_once_with(
             b"test content", content_type="text/plain"
         )
-        
         self.assertIsInstance(result, FileSchema)
         self.assertEqual(result.filename, "test/file.txt")
         self.assertEqual(result.url, "https://example.com/test-file")
@@ -183,7 +182,7 @@ class TestGoogleCloudStorage(unittest.TestCase):
         mock_new_blob.public_url = "https://example.com/test-copy"
         mock_new_blob.content_type = "text/plain"
         mock_new_blob.size = 100
-        
+
         self.mock_bucket.copy_blob.return_value = mock_new_blob
 
         result = self.loop.run_until_complete(
@@ -207,13 +206,13 @@ class TestGoogleCloudStorage(unittest.TestCase):
         mock_blob1.public_url = "https://example.com/file1"
         mock_blob1.content_type = "text/plain"
         mock_blob1.size = 100
-        
+
         mock_blob2 = MagicMock()
         mock_blob2.name = "test/file2.txt"
         mock_blob2.public_url = "https://example.com/file2"
         mock_blob2.content_type = "text/plain"
         mock_blob2.size = 200
-        
+
         self.mock_bucket.list_blobs.return_value = [mock_blob1, mock_blob2]
 
         result = self.loop.run_until_complete(
@@ -230,14 +229,14 @@ class TestGoogleCloudStorage(unittest.TestCase):
         self.assertEqual(result[0].url, "https://example.com/file1")
         self.assertEqual(result[0].content_type, "text/plain")
         self.assertEqual(result[0].size, 100)
-        
+
         self.assertEqual(result[1].filename, "test/file2.txt")
         self.assertEqual(result[1].url, "https://example.com/file2")
 
         # Test default parameters
         self.mock_bucket.list_blobs.reset_mock()
         self.mock_bucket.list_blobs.return_value = []
-        
+
         result = self.loop.run_until_complete(self.storage.list_blobs())
 
         self.mock_bucket.list_blobs.assert_called_once_with(
@@ -325,12 +324,12 @@ class TestGoogleCloudStorage(unittest.TestCase):
         # Создаем мок-объекты папок с правильными строковыми значениями
         folder1 = MagicMock()
         folder1.name = "test-folder-1/"
-        
+
         # Используем простой класс для замены replace
         class MockDateTime:
             def replace(self, microsecond=0):
                 return datetime(2023, 1, 1, tzinfo=timezone.utc)
-        
+
         folder1.create_time = MockDateTime()
         folder1.update_time = MockDateTime()
 
@@ -341,19 +340,21 @@ class TestGoogleCloudStorage(unittest.TestCase):
 
         mock_list_request = MagicMock()
         self.mock_storage_control.list_folders.return_value = [
-            folder1, folder2
+            folder1,
+            folder2,
         ]
         self.mock_storage_control.common_project_path.return_value = (
             "projects/test-project"
         )
         self.mock_storage_control.common_folder_path.side_effect = (
-            lambda name: f"projects/test-project/buckets/test-bucket/folders/{name}"
+            lambda name: (
+                f"projects/test-project/buckets/test-bucket/folders/{name}"
+            )
         )
 
         result = self.loop.run_until_complete(
             self.storage.list_folders(
-                prefix="test",
-                list_folders_request=mock_list_request
+                prefix="test", list_folders_request=mock_list_request
             )
         )
 
@@ -410,18 +411,18 @@ class TestGoogleCloudStorage(unittest.TestCase):
     def test_edge_cases(self):
         # Test empty content
         mock_blob = MagicMock()
-        mock_blob.name = "test/empty.txt" 
+        mock_blob.name = "test/empty.txt"
         mock_blob.public_url = "https://example.com/empty-file"
         mock_blob.content_type = "text/plain"
         mock_blob.size = 0
-        
+
         self.mock_bucket.blob.return_value = mock_blob
 
         result = self.loop.run_until_complete(
             self.storage.upload_blob(
-                file_path="test/empty.txt", 
-                content="", 
-                content_type="text/plain"
+                file_path="test/empty.txt",
+                content="",
+                content_type="text/plain",
             )
         )
 
@@ -440,17 +441,3 @@ class TestGoogleCloudStorage(unittest.TestCase):
             self.storage.list_blobs(prefix="nonexistent/")
         )
         self.assertEqual(result, [])
-
-        # Тест list_folders с пустыми результатами
-        # Закомментируем этот тест, так как проблема в реализации list_folders_request
-        # self.mock_storage_control.list_folders.reset_mock()
-        # self.mock_storage_control.list_folders.return_value = []
-        #
-        # result = self.loop.run_until_complete(
-        #     self.storage.list_folders(prefix="nonexistent")
-        # )
-        # self.assertEqual(result, [])
-
-
-if __name__ == "__main__":
-    unittest.main()
