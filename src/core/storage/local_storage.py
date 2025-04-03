@@ -21,7 +21,7 @@ from src.core.storage.interfaces.base_storage_interface import (
 from src.core.storage.shemas import (
     FileDataSchema,
     FileDeleteSchema,
-    FolderDataSchema,
+    FolderBaseSchema,
     FolderDeleteSchema,
 )
 
@@ -161,7 +161,7 @@ class LocalStorage(BaseStorageInterface):
     @handle_upload_file_exceptions
     async def create_folder(
         self, folder_path: str, request: Request, *args, **kwargs
-    ) -> FolderDataSchema:
+    ) -> FolderBaseSchema:
         """Create a new folder in storage"""
         folder = Path(folder_path)
         _validate_path_not_exists(folder, "Folder")
@@ -169,7 +169,7 @@ class LocalStorage(BaseStorageInterface):
         folder.mkdir(parents=True, exist_ok=True)
         log_operation(f"Folder {folder_path} created successfully")
 
-        return FolderDataSchema(
+        return FolderBaseSchema(
             path=str(folder),
             name=folder.name,
             parent_folder=str(folder.parent),
@@ -179,7 +179,7 @@ class LocalStorage(BaseStorageInterface):
     @handle_upload_file_exceptions
     async def rename_folder(
         self, old_path: str, new_path: str, request: Request, *args, **kwargs
-    ) -> FolderDataSchema:
+    ) -> FolderBaseSchema:
         """Rename existing folder"""
         old_folder = Path(old_path)
         new_folder = Path(new_path)
@@ -190,7 +190,7 @@ class LocalStorage(BaseStorageInterface):
         old_folder.rename(new_folder)
         log_operation(f"Folder renamed from {old_path} to {new_path}")
 
-        return FolderDataSchema(
+        return FolderBaseSchema(
             path=str(new_folder),
             name=new_folder.name,
             parent_folder=str(new_folder.parent),
@@ -278,7 +278,7 @@ class LocalStorage(BaseStorageInterface):
     @handle_upload_file_exceptions
     async def list_folders(
         self, prefix: Optional[str] = None
-    ) -> List[FolderDataSchema]:
+    ) -> List[FolderBaseSchema]:
         """List all folders in storage"""
         storage_path = Path(self._path_to_storage)
         if prefix:
@@ -287,7 +287,7 @@ class LocalStorage(BaseStorageInterface):
         folders = []
         for folder_path in storage_path.rglob("*"):
             if folder_path.is_dir():
-                folder_data = FolderDataSchema(
+                folder_data = FolderBaseSchema(
                     path=str(folder_path),
                     name=folder_path.name,
                     parent_folder=str(folder_path.parent),

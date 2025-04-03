@@ -7,7 +7,7 @@ from src.core.constants import ALLOWED_MIME_TYPES_FOR_RAG
 from src.core.storage.shemas import (
     FileDataSchema,
     FileDeleteSchema,
-    FolderDataSchema,
+    FolderBaseSchema,
     FolderDeleteSchema,
 )
 from src.utils.validators.validate_file_mime import validate_file_mime
@@ -68,7 +68,7 @@ async def delete_file(
     return await settings.RAG_STORAGE.delete(file_path, request)
 
 
-@router.post("/folders", response_model=FolderDataSchema)
+@router.post("/folders", response_model=FolderBaseSchema)
 async def create_folder(
     request: Request,
     folder_path: str = Form(...),
@@ -77,7 +77,7 @@ async def create_folder(
     return await settings.RAG_STORAGE.create_folder(folder_path, request)
 
 
-@router.put("/folders/{folder_path:path}", response_model=FolderDataSchema)
+@router.put("/folders/{folder_path:path}", response_model=FolderBaseSchema)
 async def rename_folder(
     folder_path: str,
     request: Request,

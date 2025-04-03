@@ -9,7 +9,7 @@ from src.core.storage.cloud_storage import CloudStorage
 from src.core.storage.shemas import (
     FileDataSchema,
     FileDeleteSchema,
-    FolderDataSchema,
+    FolderBaseSchema,
     FolderDeleteSchema,
     FileItem,
     FolderItem,
@@ -115,11 +115,12 @@ class TestCloudStorage(unittest.TestCase):
         )
 
         # Assert
-        self.assertIsInstance(result, FolderDataSchema)
+        self.assertIsInstance(result, FolderBaseSchema)
         self.assertEqual(result.path, folder_path)
         self.assertTrue(result.is_empty)
-        self.mock_cloud_storage.upload_blob.assert_called_once_with(
-            folder_path, b""
+        self.assertTrue(result.is_managed)
+        self.mock_cloud_storage.create_managed_folder.assert_called_once_with(
+            folder_path
         )
 
     async def test_rename_folder_success(self):
@@ -133,11 +134,16 @@ class TestCloudStorage(unittest.TestCase):
         self.mock_path_handler.get_basename.return_value = "new_folder"
         self.mock_path_handler.get_parent_folder.return_value = ""
 
-        mock_blobs = [
-            Mock(name=f"{old_path}/file1.txt"),
-            Mock(name=f"{old_path}/file2.txt"),
-        ]
-        self.mock_cloud_storage.list_blobs.return_value = mock_blobs
+        mock_folder = FolderBaseSchema(
+            path=new_path,
+            name="new_folder",
+            parent_folder="",
+            is_empty=True,
+            is_managed=True,
+        )
+        self.mock_cloud_storage.rename_managed_folder.return_value = (
+            mock_folder
+        )
 
         # Act
         result = await self.storage.rename_folder(
@@ -145,11 +151,13 @@ class TestCloudStorage(unittest.TestCase):
         )
 
         # Assert
-        self.assertIsInstance(result, FolderDataSchema)
+        self.assertIsInstance(result, FolderBaseSchema)
         self.assertEqual(result.path, new_path)
-        self.assertFalse(result.is_empty)
-        self.assertEqual(self.mock_cloud_storage.copy_blob.call_count, 2)
-        self.assertEqual(self.mock_cloud_storage.delete_blob.call_count, 2)
+        self.assertTrue(result.is_empty)
+        self.assertTrue(result.is_managed)
+        self.mock_cloud_storage.rename_managed_folder.assert_called_once_with(
+            old_path, new_path
+        )
 
     async def test_delete_folder_success(self):
         # Arrange
@@ -173,6 +181,9 @@ class TestCloudStorage(unittest.TestCase):
         self.assertEqual(result.deleted_by, "127.0.0.1")
         self.assertEqual(result.deleted_files_count, 2)
         self.assertEqual(self.mock_cloud_storage.delete_blob.call_count, 2)
+        self.mock_cloud_storage.delete_managed_folder.assert_called_once_with(
+            folder_path, allow_non_empty=True
+        )
 
     async def test_rename_file_success(self):
         # Arrange
@@ -274,17 +285,29 @@ class TestCloudStorage(unittest.TestCase):
 
     async def test_list_folders_success(self):
         # Arrange
-        mock_blobs = [
-            Mock(name="folder1/file1.txt"),
-            Mock(name="folder1/file2.txt"),
-            Mock(name="folder2/file3.txt"),
+        mock_folders = [
+            FolderBaseSchema(
+                path="folder1/",
+                name="folder1",
+                parent_folder="",
+                is_empty=True,
+                is_managed=True,
+                created_at=datetime.now(),
+                updated_at=datetime.now(),
+            ),
+            FolderBaseSchema(
+                path="folder2/",
+                name="folder2",
+                parent_folder="",
+                is_empty=False,
+                is_managed=True,
+                created_at=datetime.now(),
+                updated_at=datetime.now(),
+            ),
         ]
-        self.mock_cloud_storage.list_blobs.return_value = mock_blobs
-        self.mock_path_handler.get_basename.side_effect = [
-            "folder1",
-            "folder2",
-        ]
-        self.mock_path_handler.get_parent_folder.return_value = ""
+        self.mock_cloud_storage.list_managed_folders.return_value = (
+            mock_folders
+        )
 
         # Act
         results = await self.storage.list_folders()
@@ -292,7 +315,8 @@ class TestCloudStorage(unittest.TestCase):
         # Assert
         self.assertEqual(len(results), 2)
         for result in results:
-            self.assertIsInstance(result, FolderDataSchema)
+            self.assertIsInstance(result, FolderBaseSchema)
+            self.assertTrue(result.is_managed)
 
     async def test_search_files_by_name_success(self):
         # Arrange
@@ -517,3 +541,41 @@ class TestCloudStorage(unittest.TestCase):
         with self.assertRaises(ErrorSavingFile) as context:
             await self.storage.delete(file_path, self.mock_request)
         self.assertIn("Network error", str(context.exception))
+
+    async def test_get_folder_iam_policy_success(self):
+        # Arrange
+        folder_path = "test_folder"
+        mock_policy = {"bindings": []}
+        self.mock_path_handler.normalize_path.return_value = folder_path
+        self.mock_cloud_storage.get_managed_folder_iam_policy.return_value = (
+            mock_policy
+        )
+
+        # Act
+        result = await self.storage.get_folder_iam_policy(folder_path)
+
+        # Assert
+        self.assertEqual(result, mock_policy)
+        self.mock_cloud_storage.get_managed_folder_iam_policy.assert_called_once_with(
+            folder_path
+        )
+
+    async def test_set_folder_iam_policy_success(self):
+        # Arrange
+        folder_path = "test_folder"
+        mock_policy = {"bindings": []}
+        self.mock_path_handler.normalize_path.return_value = folder_path
+        self.mock_cloud_storage.set_managed_folder_iam_policy.return_value = (
+            mock_policy
+        )
+
+        # Act
+        result = await self.storage.set_folder_iam_policy(
+            folder_path, mock_policy
+        )
+
+        # Assert
+        self.assertEqual(result, mock_policy)
+        self.mock_cloud_storage.set_managed_folder_iam_policy.assert_called_once_with(
+            folder_path, mock_policy
+        )

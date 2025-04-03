@@ -53,22 +53,22 @@ class FileDeleteSchema(BaseDeleteSchema):
     file: Path | str
 
 
-class FolderDataSchema(BaseModel):
+class FolderBaseSchema(BaseModel):
     folder_name: str
 
 
-class FolderCreateSchema(FolderDataSchema):
+class FolderDataSchema(FolderBaseSchema):
     folder_path: str
     create_time: datetime
     update_time: datetime
 
 
-class FolderRenameSchema(FolderDataSchema):
+class FolderRenameSchema(FolderBaseSchema):
     old_name: str
     folder_path: str
 
 
-class FolderDeleteSchema(FolderDataSchema):
+class FolderDeleteSchema(FolderBaseSchema):
     deleted_time: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc)
     )

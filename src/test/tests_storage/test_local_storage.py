@@ -12,7 +12,7 @@ from src.core.storage.local_storage import LocalStorage
 from src.core.storage.shemas import (
     FileDataSchema,
     FileDeleteSchema,
-    FolderDataSchema,
+    FolderBaseSchema,
 )
 
 
@@ -272,7 +272,7 @@ class TestLocalStorage(unittest.TestCase):
             f"Folder {folder_path} created successfully"
         )
 
-        self.assertIsInstance(result, FolderDataSchema)
+        self.assertIsInstance(result, FolderBaseSchema)
         self.assertEqual(result.path, folder_path)
         self.assertEqual(result.name, "new_folder")
         self.assertEqual(result.parent_folder, str(self.test_dir))
@@ -349,7 +349,7 @@ class TestLocalStorage(unittest.TestCase):
             f"Folder renamed from {old_path} to {new_path}"
         )
 
-        self.assertIsInstance(result, FolderDataSchema)
+        self.assertIsInstance(result, FolderBaseSchema)
         self.assertEqual(result.path, new_path)
         self.assertEqual(result.name, "new_folder")
         self.assertEqual(result.parent_folder, str(self.test_dir))

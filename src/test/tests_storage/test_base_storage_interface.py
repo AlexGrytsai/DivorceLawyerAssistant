@@ -11,7 +11,7 @@ from src.core.storage.interfaces.base_storage_interface import (
 from src.core.storage.shemas import (
     FileDataSchema,
     FileDeleteSchema,
-    FolderDataSchema,
+    FolderBaseSchema,
     FolderDeleteSchema,
     FolderContents,
     FileItem,
@@ -47,7 +47,7 @@ class TestBaseStorage(unittest.TestCase):
             )
 
         async def create_folder(self, folder_path, request, *args, **kwargs):
-            return FolderDataSchema(
+            return FolderBaseSchema(
                 path=folder_path,
                 name="mock_folder",
                 parent_folder="/mock",
@@ -57,7 +57,7 @@ class TestBaseStorage(unittest.TestCase):
         async def rename_folder(
             self, old_path, new_path, request, *args, **kwargs
         ):
-            return FolderDataSchema(
+            return FolderBaseSchema(
                 path=new_path,
                 name="renamed_folder",
                 parent_folder="/mock",
@@ -121,9 +121,9 @@ class TestBaseStorage(unittest.TestCase):
 
         async def list_folders(
             self, prefix: Optional[str] = None
-        ) -> List[FolderDataSchema]:
+        ) -> List[FolderBaseSchema]:
             return [
-                FolderDataSchema(
+                FolderBaseSchema(
                     path=f"{prefix or ''}/subfolder",
                     name="subfolder",
                     parent_folder=prefix or "",
