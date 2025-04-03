@@ -227,9 +227,9 @@ class GoogleCloudStorage(CloudStorageInterface):
     async def list_folders(
         self,
         prefix: Optional[str] = None,
-        list_folders_request: Type[ListFoldersRequest] = ListFoldersRequest,
-    ) -> List[FolderDataSchema]:
+    ) -> List[FolderBaseSchema]:
         """List folders"""
+        list_folders_request = ListFoldersRequest
         folders_raw = self.storage_control.list_folders(
             request=list_folders_request(
                 parent=self.bucket,
@@ -237,7 +237,7 @@ class GoogleCloudStorage(CloudStorageInterface):
             )
         )
 
-        folders: List[FolderDataSchema] = []
+        folders: List[FolderBaseSchema] = []
 
         for folder in folders_raw:
             folder_path = await self._get_common_folder_path(folder.name)
