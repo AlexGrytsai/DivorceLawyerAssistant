@@ -21,7 +21,7 @@ from src.core.storage.interfaces.cloud_storage_interface import (
 from src.core.storage.shemas import (
     FileDataSchema,
     FileDeleteSchema,
-    FolderDataSchema,
+    FolderBaseSchema,
     FolderDeleteSchema,
     FileItem,
     FolderItem,
@@ -144,20 +144,21 @@ class CloudStorage(BaseStorageInterface):
         request: Request,
         *args,
         **kwargs,
-    ) -> FolderDataSchema:
-        """Create a new folder in storage"""
+    ) -> FolderBaseSchema:
+        """Create a new managed folder in storage"""
         folder_path = self._path_handler.normalize_path(folder_path)
         _validate_blob_not_exists(self._cloud_storage, folder_path)
 
-        self._cloud_storage.upload_blob(folder_path, b"")
+        self._cloud_storage.create_folder(folder_path)
         parent_folder = self._path_handler.get_parent_folder(folder_path)
-        log_operation(f"Folder {folder_path} created successfully")
+        log_operation(f"Managed folder {folder_path} created successfully")
 
-        return FolderDataSchema(
+        return FolderBaseSchema(
             path=folder_path,
             name=self._path_handler.get_basename(folder_path),
             parent_folder=parent_folder,
             is_empty=True,
+            is_managed=True,
         )
 
     @handle_upload_file_exceptions
@@ -168,28 +169,24 @@ class CloudStorage(BaseStorageInterface):
         request: Request,
         *args,
         **kwargs,
-    ) -> FolderDataSchema:
-        """Rename existing folder"""
+    ) -> FolderBaseSchema:
+        """Rename existing managed folder"""
         old_path = self._path_handler.normalize_path(old_path)
         new_path = self._path_handler.normalize_path(new_path)
 
         _validate_blob_exists(self._cloud_storage, old_path)
         _validate_blob_not_exists(self._cloud_storage, new_path)
 
-        blobs = self._cloud_storage.list_blobs(prefix=old_path)
-        for blob in blobs:
-            new_name = blob.name.replace(old_path, new_path, 1)
-            self._cloud_storage.copy_blob(blob, new_name)
-            self._cloud_storage.delete_blob(blob.name)
-
+        self._cloud_storage.rename_folder(old_path, new_path)
         parent_folder = self._path_handler.get_parent_folder(new_path)
-        log_operation(f"Folder renamed from {old_path} to {new_path}")
+        log_operation(f"Managed folder renamed from {old_path} to {new_path}")
 
-        return FolderDataSchema(
+        return FolderBaseSchema(
             path=new_path,
             name=self._path_handler.get_basename(new_path),
             parent_folder=parent_folder,
-            is_empty=not any(blobs),
+            is_empty=not any(self._cloud_storage.list_blobs(prefix=new_path)),
+            is_managed=True,
         )
 
     @handle_delete_file_exceptions
@@ -200,7 +197,7 @@ class CloudStorage(BaseStorageInterface):
         *args,
         **kwargs,
     ) -> FolderDeleteSchema:
-        """Delete folder and all its contents"""
+        """Delete managed folder and all its contents"""
         folder_path = self._path_handler.normalize_path(folder_path)
         _validate_blob_exists(self._cloud_storage, folder_path)
 
@@ -210,7 +207,9 @@ class CloudStorage(BaseStorageInterface):
         for blob in blobs:
             self._cloud_storage.delete_blob(blob.name)
 
-        log_operation(f"Folder {folder_path} deleted successfully")
+        self._cloud_storage.delete_folder(folder_path, allow_non_empty=True)
+
+        log_operation(f"Managed folder {folder_path} deleted successfully")
         return FolderDeleteSchema(
             folder=folder_path,
             date_deleted=current_timestamp(),
@@ -289,28 +288,9 @@ class CloudStorage(BaseStorageInterface):
     async def list_folders(
         self,
         prefix: Optional[str] = None,
-    ) -> List[FolderDataSchema]:
-        blobs = self._cloud_storage.list_blobs(prefix=prefix)
-        folders = set()
-
-        for blob in blobs:
-            parts = blob.name.split("/")
-            if len(parts) > 1:  # Skip root level files
-                folder_path = "/".join(parts[:-1])
-                if folder_path not in folders:
-                    folders.add(folder_path)
-
-        return [
-            FolderDataSchema(
-                path=folder_path,
-                name=self._path_handler.get_basename(folder_path),
-                parent_folder=self._path_handler.get_parent_folder(
-                    folder_path
-                ),
-                is_empty=False,  # We don't have this information in GCS
-            )
-            for folder_path in sorted(folders)
-        ]
+    ) -> List[FolderBaseSchema]:
+        """List managed folders"""
+        return self._cloud_storage.list_folders(prefix=prefix)
 
     @staticmethod
     def _normalize_folder_path(folder_path: str) -> str:
@@ -421,6 +401,27 @@ class CloudStorage(BaseStorageInterface):
                     )
 
         return sorted(files, key=lambda x: x.filename or "")
+
+    async def get_folder_iam_policy(
+        self,
+        folder_path: str,
+    ) -> dict:
+        """Get IAM policy for managed folder"""
+        folder_path = self._path_handler.normalize_path(folder_path)
+        _validate_blob_exists(self._cloud_storage, folder_path)
+        return self._cloud_storage.get_managed_folder_iam_policy(folder_path)
+
+    async def set_folder_iam_policy(
+        self,
+        folder_path: str,
+        policy: dict,
+    ) -> dict:
+        """Set IAM policy for managed folder"""
+        folder_path = self._path_handler.normalize_path(folder_path)
+        _validate_blob_exists(self._cloud_storage, folder_path)
+        return self._cloud_storage.set_managed_folder_iam_policy(
+            folder_path, policy
+        )
 
     @staticmethod
     def _get_user_identifier(request: Request) -> str:
