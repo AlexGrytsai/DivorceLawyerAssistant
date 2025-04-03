@@ -95,11 +95,12 @@ class GoogleCloudStorage(CloudStorageInterface):
         create_request: Type[CreateFolderRequest] = CreateFolderRequest,
     ) -> FolderDataSchema:
         """Create a new managed folder"""
-        request = create_request(
-            parent=self._get_bucket_path(),
-            folder_id=folder_name,
+        response = self.get_storage_control.create_folder(
+            request=create_request(
+                parent=self._get_bucket_path(),
+                folder_id=folder_name,
+            )
         )
-        response = self.get_storage_control.create_folder(request=request)
 
         return FolderDataSchema(
             folder_name="/".join(response.name.split("/")[3:]),
