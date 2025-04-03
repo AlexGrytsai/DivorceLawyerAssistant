@@ -9,13 +9,18 @@ from google.cloud.storage_control_v2 import (
     ListManagedFoldersRequest,
     CreateFolderRequest,
     DeleteFolderRequest,
+    RenameFolderRequest,
 )  # type: ignore
 
 from src.core.storage.decorators import handle_cloud_storage_exceptions
 from src.core.storage.interfaces.cloud_storage_interface import (
     CloudStorageInterface,
 )
-from src.core.storage.shemas import FolderDataSchema, FolderDeleteSchema
+from src.core.storage.shemas import (
+    FolderDataSchema,
+    FolderDeleteSchema,
+    FolderCreateSchema,
+)
 
 load_dotenv()
 
@@ -99,11 +104,13 @@ class GoogleCloudStorage(CloudStorageInterface):
             request=create_request(
                 parent=self._get_bucket_path(),
                 folder_id=folder_name,
+                recursive=True,
             )
         )
 
-        return FolderDataSchema(
-            folder_name="/".join(response.name.split("/")[3:]),
+        return FolderCreateSchema(
+            folder_name=folder_name,
+            folder_path=self._get_common_folder_path(folder_name),
             create_time=response.create_time.replace(microsecond=0),
             update_time=response.update_time.replace(microsecond=0),
         )
@@ -123,9 +130,26 @@ class GoogleCloudStorage(CloudStorageInterface):
 
         return FolderDeleteSchema(folder_name=folder_name)
 
-    def rename_folder(self, old_name: str, new_name: str) -> None:
+    def rename_folder(
+        self,
+        old_name: str,
+        new_name: str,
+        rename_request: Type[RenameFolderRequest] = RenameFolderRequest,
+    ) -> FolderDataSchema:
         """Rename a managed folder"""
-        pass
+        operation = self.get_storage_control.rename_folder(
+            request=rename_request(
+                name=self._get_folder_path(old_name),
+                destination_folder_id=new_name,
+            )
+        )
+        response = operation.result()
+
+        return FolderDataSchema(
+            folder_name="/".join(response.name.split("/")[3:]),
+            create_time=response.create_time.replace(microsecond=0),
+            update_time=response.update_time.replace(microsecond=0),
+        )
 
     def list_managed_folders(
         self,
@@ -165,15 +189,19 @@ class GoogleCloudStorage(CloudStorageInterface):
             project="_", bucket=self.bucket_name, folder=folder_name
         )
 
+    def _get_common_folder_path(self, folder_name: str) -> str:
+        return self.get_storage_control.common_folder_path(folder_name)
+
 
 if __name__ == "__main__":
     google_cloud_storage = GoogleCloudStorage(
         bucket_name="data-for-rag", project_id="divorce-lawyer-assistant"
     )
 
-    print(google_cloud_storage.delete_folder("test33"))
-    # print(google_cloud_storage.create_folder("test33"))
+    # print(google_cloud_storage.create_folder("test33/test44"))
+    # print(google_cloud_storage.rename_folder("test33", "test44"))
+    # print(google_cloud_storage._get_common_folder_path("test44"))
 
     # print(google_cloud_storage.list_managed_folders(prefix="test"))
-    # print(google_cloud_storage.delete_managed_folder("test33"))
+    print(google_cloud_storage.delete_folder("test33/test44"))
     # print(google_cloud_storage.list_managed_folders())
