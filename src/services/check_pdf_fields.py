@@ -3,7 +3,7 @@ import io
 import logging
 from typing import List, Dict, Type, Tuple
 
-from src.core.storage.shemas import FileDataSchema
+from src.core.storage.shemas import FileSchema
 from src.services.ai_service.ai_text_validator import OpenAITextAnalyzer
 from src.services.pdf_tools.annotator import add_comments_to_widgets
 from src.services.pdf_tools.parser_pdf import ParserPDFBase, ParserPDFWidget
@@ -68,7 +68,7 @@ async def main_check_pdf_fields(
     widget_parser_type: Type[ParserPDFBase] = ParserPDFWidget,
     validator_type: Type[TextWidgetValidatorUseAI] = TextWidgetValidatorUseAI,
     **kwargs,
-) -> List[FileDataSchema]:
+) -> List[FileSchema]:
     tasks = [
         check_fields_in_pdf_file(
             url_to_pdf=pdf,

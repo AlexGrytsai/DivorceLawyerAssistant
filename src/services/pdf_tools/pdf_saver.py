@@ -8,7 +8,7 @@ from fastapi import UploadFile, Request, HTTPException, status
 from starlette.datastructures import Headers
 
 from src.core.config import settings
-from src.core.storage.shemas import FileDataSchema
+from src.core.storage.shemas import FileSchema
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +35,7 @@ async def save_pdf_to_new_file(
     pdf_buffer: io.BytesIO,
     old_pdf_path: str,
     **kwargs,
-) -> FileDataSchema:
+) -> FileSchema:
     request: Optional[Request] = kwargs.get("request")
     if request:
         file = UploadFile(
@@ -49,7 +49,7 @@ async def save_pdf_to_new_file(
             file=file,
             request=request,
         )
-        if isinstance(upload_file, FileDataSchema):
+        if isinstance(upload_file, FileSchema):
             return upload_file
     logger.warning(
         "Request is not provided in function save_pdf_to_new_file "
@@ -63,7 +63,7 @@ async def save_pdf_to_new_file(
 
 async def multi_save_pdf_to_new_file(
     list_pdf_buffer: List[Tuple[io.BytesIO, str]], **kwargs
-) -> List[FileDataSchema]:
+) -> List[FileSchema]:
     tasks = [
         save_pdf_to_new_file(pdf_buffer=pdf[0], old_pdf_path=pdf[1], **kwargs)
         for pdf in list_pdf_buffer
