@@ -7,7 +7,6 @@ from fastapi import UploadFile, status, HTTPException, Request
 
 from src.core.exceptions.storage import ErrorSavingFile
 from src.core.storage.shemas import (
-    FileDataSchema,
     FileDeleteSchema,
     FolderBaseSchema,
     FolderDeleteSchema,
@@ -205,7 +204,7 @@ class BaseStorageInterface(ABC):
             **kwargs: Additional keyword arguments
 
         Returns:
-            FileDataSchema: File rename result
+            FileSchema: File rename result
         """
         pass
 
@@ -218,7 +217,7 @@ class BaseStorageInterface(ABC):
             file_path: Path to file
 
         Returns:
-            FileDataSchema: File information
+            FileSchema: File information
 
         Raises:
             ErrorSavingFile: If file not found
