@@ -3,8 +3,14 @@ from typing import List, Optional, Union
 
 from google.cloud import storage  # type: ignore
 from google.cloud.storage import Blob, Bucket  # type: ignore
+from google.cloud.storage_control_v2 import RenameFolderRequest
 
-from src.core.storage.shemas import FolderBaseSchema, FolderDeleteSchema
+from src.core.storage.shemas import (
+    FolderBaseSchema,
+    FolderDeleteSchema,
+    FileSchema,
+    FileDeleteSchema,
+)
 
 
 class CloudStorageInterface(ABC):
@@ -42,7 +48,7 @@ class CloudStorageInterface(ABC):
         file_path: str,
         content: Union[str, bytes],
         content_type: Optional[str] = None,
-    ) -> str:
+    ) -> FileSchema:
         """
         Upload blob to storage
 
@@ -60,7 +66,7 @@ class CloudStorageInterface(ABC):
         pass
 
     @abstractmethod
-    async def delete_blob(self, file_path: str) -> None:
+    async def delete_blob(self, file_path: str) -> FileDeleteSchema:
         """
         Delete blob from storage
 
@@ -73,7 +79,7 @@ class CloudStorageInterface(ABC):
         pass
 
     @abstractmethod
-    async def copy_blob(self, source_blob: Blob, new_name: str) -> Blob:
+    async def copy_blob(self, source_blob: Blob, new_name: str) -> FileSchema:
         """
         Copy blob to new location
 
@@ -87,7 +93,7 @@ class CloudStorageInterface(ABC):
         pass
 
     @abstractmethod
-    async def list_blobs(self, prefix: Optional[str] = "") -> List[Blob]:
+    async def list_blobs(self, prefix: Optional[str] = "") -> List[FileSchema]:
         """
         List blobs in storage
 
@@ -110,7 +116,9 @@ class CloudStorageInterface(ABC):
         pass
 
     @abstractmethod
-    async def rename_folder(self, old_name: str, new_name: str) -> None:
+    async def rename_folder(
+        self, old_name: str, new_name: str
+    ) -> RenameFolderRequest:
         """Rename a managed folder"""
         pass
 
