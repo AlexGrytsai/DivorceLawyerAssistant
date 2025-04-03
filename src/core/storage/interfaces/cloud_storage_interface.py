@@ -4,7 +4,7 @@ from typing import List, Optional, Union
 from google.cloud import storage  # type: ignore
 from google.cloud.storage import Blob, Bucket  # type: ignore
 
-from src.core.storage.shemas import FolderDataSchema, FolderDeleteSchema
+from src.core.storage.shemas import FolderBaseSchema, FolderDeleteSchema
 
 
 class CloudStorageInterface(ABC):
@@ -74,7 +74,7 @@ class CloudStorageInterface(ABC):
         pass
 
     @abstractmethod
-    def create_folder(self, folder_name: str) -> FolderDataSchema:
+    def create_folder(self, folder_name: str) -> FolderBaseSchema:
         """Create a new managed folder"""
         pass
 
@@ -91,11 +91,11 @@ class CloudStorageInterface(ABC):
     @abstractmethod
     def list_folders(
         self, prefix: Optional[str] = None
-    ) -> List[FolderDataSchema]:
+    ) -> List[FolderBaseSchema]:
         """List managed folders"""
         pass
 
     @abstractmethod
-    def get_managed_folder(self, folder_name: str) -> FolderDataSchema:
+    def get_managed_folder(self, folder_name: str) -> FolderBaseSchema:
         """Get managed folder metadata"""
         pass
