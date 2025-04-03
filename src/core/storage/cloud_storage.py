@@ -1,8 +1,10 @@
+import asyncio
 import logging
 from datetime import datetime
 from typing import List, Optional, Union, Set, Tuple
 
 from fastapi import UploadFile, Request, status, HTTPException
+from google.cloud.storage_control_v2 import RenameFolderRequest
 
 from src.core.exceptions.storage import ErrorSavingFile
 from src.core.storage.decorators import (
@@ -12,14 +14,13 @@ from src.core.storage.decorators import (
 from src.core.storage.implementations.google_storage import GoogleCloudStorage
 from src.core.storage.interfaces.base_storage_interface import (
     BaseStorageInterface,
-    current_timestamp,
     log_operation,
 )
 from src.core.storage.interfaces.cloud_storage_interface import (
     CloudStorageInterface,
 )
 from src.core.storage.shemas import (
-    FileDataSchema,
+    FileSchema,
     FileDeleteSchema,
     FolderBaseSchema,
     FolderDeleteSchema,
@@ -67,7 +68,6 @@ def _validate_blob_not_exists(
 
 
 class CloudStorage(BaseStorageInterface):
-    BASE_STORAGE_CLOUD_URL = "https://storage.googleapis.com"
 
     def __init__(
         self,
@@ -77,13 +77,11 @@ class CloudStorage(BaseStorageInterface):
         cloud_storage: Optional[CloudStorageInterface] = None,
     ):
 
-        self.bucket_name = bucket_name
         self._path_handler = path_handler or PathHandler()
         self._cloud_storage = cloud_storage or GoogleCloudStorage(
             project_id=project_id,
             bucket_name=bucket_name,
         )
-        self.base_url = f"{self.BASE_STORAGE_CLOUD_URL}/{bucket_name}"
 
     @handle_upload_file_exceptions
     async def upload(
@@ -92,20 +90,13 @@ class CloudStorage(BaseStorageInterface):
         request: Request,
         *args,
         **kwargs,
-    ) -> FileDataSchema:
+    ) -> FileSchema:
         content = await file.read()
         if not file.filename:
             raise ValueError("File name cannot be empty")
 
-        blob_url = self._cloud_storage.upload_blob(
+        return await self._cloud_storage.upload_blob(
             file.filename, content, file.content_type
-        )
-
-        return FileDataSchema(
-            url=blob_url,
-            filename=file.filename,
-            content_type=file.content_type,
-            size=len(content),
         )
 
     @handle_upload_file_exceptions
@@ -115,27 +106,54 @@ class CloudStorage(BaseStorageInterface):
         request: Request,
         *args,
         **kwargs,
-    ) -> List[FileDataSchema]:
-        results = []
-        for file in files:
-            result = await self.upload(file, request)
-            results.append(result)
-        return results
+    ) -> List[FileSchema]:
+        tasks = [self.upload(file, request) for file in files]
+        return await asyncio.gather(*tasks)
 
     @handle_delete_file_exceptions
-    async def delete(
+    async def delete_file(
         self,
         file_path: str,
         request: Request,
         *args,
         **kwargs,
     ) -> FileDeleteSchema:
-        self._cloud_storage.delete_blob(file_path)
-        return FileDeleteSchema(
-            file=file_path,
-            date_deleted=datetime.now().isoformat(),
-            deleted_by=self._get_user_identifier(request),
+        return await self._cloud_storage.delete_blob(file_path)
+
+    @handle_upload_file_exceptions
+    async def rename_file(
+        self,
+        old_path: str,
+        new_path: str,
+        request: Request,
+        *args,
+        **kwargs,
+    ) -> FileSchema:
+        old_blob = self._cloud_storage.bucket.blob(old_path)
+        if not old_blob.exists():
+            raise ErrorSavingFile(f"Source file {old_path} does not exist")
+
+        new_blob = self._cloud_storage.copy_blob(old_blob, new_path)
+        await self._cloud_storage.delete_blob(old_path)
+
+        return FileSchema(
+            url=f"{self._cloud_storage.base_url}/{new_path}",
+            filename=self._path_handler.get_basename(new_path),
+            content_type=new_blob.content_type,
+            size=new_blob.size,
         )
+
+    @handle_upload_file_exceptions
+    async def delete_all_files(
+        self,
+        prefix: str,
+        request: Request,
+        *args,
+        **kwargs,
+    ) -> List[FileDeleteSchema]:
+        blobs = self._cloud_storage.list_blobs(prefix=prefix)
+        tasks = [self.delete_file(blob.name, request) for blob in blobs]
+        return await asyncio.gather(*tasks)
 
     @handle_upload_file_exceptions
     async def create_folder(
@@ -145,21 +163,11 @@ class CloudStorage(BaseStorageInterface):
         *args,
         **kwargs,
     ) -> FolderBaseSchema:
-        """Create a new managed folder in storage"""
+        """Create a new folder in storage"""
         folder_path = self._path_handler.normalize_path(folder_path)
         _validate_blob_not_exists(self._cloud_storage, folder_path)
 
-        self._cloud_storage.create_folder(folder_path)
-        parent_folder = self._path_handler.get_parent_folder(folder_path)
-        log_operation(f"Managed folder {folder_path} created successfully")
-
-        return FolderBaseSchema(
-            path=folder_path,
-            name=self._path_handler.get_basename(folder_path),
-            parent_folder=parent_folder,
-            is_empty=True,
-            is_managed=True,
-        )
+        return await self._cloud_storage.create_folder(folder_path)
 
     @handle_upload_file_exceptions
     async def rename_folder(
@@ -169,24 +177,11 @@ class CloudStorage(BaseStorageInterface):
         request: Request,
         *args,
         **kwargs,
-    ) -> FolderBaseSchema:
-        """Rename existing managed folder"""
-        old_path = self._path_handler.normalize_path(old_path)
-        new_path = self._path_handler.normalize_path(new_path)
-
-        _validate_blob_exists(self._cloud_storage, old_path)
-        _validate_blob_not_exists(self._cloud_storage, new_path)
-
-        self._cloud_storage.rename_folder(old_path, new_path)
-        parent_folder = self._path_handler.get_parent_folder(new_path)
-        log_operation(f"Managed folder renamed from {old_path} to {new_path}")
-
-        return FolderBaseSchema(
-            path=new_path,
-            name=self._path_handler.get_basename(new_path),
-            parent_folder=parent_folder,
-            is_empty=not any(self._cloud_storage.list_blobs(prefix=new_path)),
-            is_managed=True,
+    ) -> RenameFolderRequest:
+        """Rename existing folder"""
+        return await self._cloud_storage.rename_folder(
+            self._path_handler.normalize_path(old_path),
+            self._path_handler.normalize_path(new_path),
         )
 
     @handle_delete_file_exceptions
@@ -197,48 +192,11 @@ class CloudStorage(BaseStorageInterface):
         *args,
         **kwargs,
     ) -> FolderDeleteSchema:
-        """Delete managed folder and all its contents"""
+        """Delete folder and all its contents"""
         folder_path = self._path_handler.normalize_path(folder_path)
         _validate_blob_exists(self._cloud_storage, folder_path)
 
-        blobs = self._cloud_storage.list_blobs(prefix=folder_path)
-        deleted_files = len(blobs)
-
-        for blob in blobs:
-            self._cloud_storage.delete_blob(blob.name)
-
-        self._cloud_storage.delete_folder(folder_path, allow_non_empty=True)
-
-        log_operation(f"Managed folder {folder_path} deleted successfully")
-        return FolderDeleteSchema(
-            folder=folder_path,
-            date_deleted=current_timestamp(),
-            deleted_by=self._get_user_identifier(request),
-            deleted_files_count=deleted_files,
-        )
-
-    @handle_upload_file_exceptions
-    async def rename_file(
-        self,
-        old_path: str,
-        new_path: str,
-        request: Request,
-        *args,
-        **kwargs,
-    ) -> FileDataSchema:
-        old_blob = self._cloud_storage.bucket.blob(old_path)
-        if not old_blob.exists():
-            raise ErrorSavingFile(f"Source file {old_path} does not exist")
-
-        new_blob = self._cloud_storage.copy_blob(old_blob, new_path)
-        self._cloud_storage.delete_blob(old_path)
-
-        return FileDataSchema(
-            url=f"{self.base_url}/{new_path}",
-            filename=self._path_handler.get_basename(new_path),
-            content_type=new_blob.content_type,
-            size=new_blob.size,
-        )
+        return await self._cloud_storage.delete_folder(folder_path)
 
     @handle_upload_file_exceptions
     async def upload_file(
@@ -254,35 +212,35 @@ class CloudStorage(BaseStorageInterface):
         )
         return self._cloud_storage.upload_blob(file_path, destination)
 
-    async def get_file(self, file_path: str) -> FileDataSchema:
+    async def get_file(self, file_path: str) -> FileSchema:
         blob = self._cloud_storage.bucket.blob(file_path)
         if not blob.exists():
             raise ErrorSavingFile(f"File {file_path} not found")
 
-        return FileDataSchema(
-            url=f"{self.base_url}/{file_path}",
-            filename=self._path_handler.get_basename(file_path),
-            content_type=blob.content_type,
+        return FileSchema(
+            filename=blob.name,
+            url=blob.public_url,
             size=blob.size,
+            content_type=blob.content_type,
         )
 
     async def list_files(
         self,
         prefix: Optional[str] = "",
-    ) -> List[FileDataSchema]:
+    ) -> List[FileSchema]:
         blobs = self._cloud_storage.list_blobs(prefix=prefix)
-        files: List[FileDataSchema] = []
+        files: List[FileSchema] = []
 
         files.extend(
-            FileDataSchema(
+            FileSchema(
                 filename=self._path_handler.get_basename(blob.name),
-                url=f"{self.base_url}/{blob.name}",
+                url=blob.public_url,
                 content_type=blob.content_type,
                 size=blob.size,
             )
             for blob in blobs
-            if not blob.name.endswith("/")
         )
+
         return files
 
     async def list_folders(
@@ -290,7 +248,7 @@ class CloudStorage(BaseStorageInterface):
         prefix: Optional[str] = None,
     ) -> List[FolderBaseSchema]:
         """List managed folders"""
-        return self._cloud_storage.list_folders(prefix=prefix)
+        return await self._cloud_storage.list_folders(prefix=prefix)
 
     @staticmethod
     def _normalize_folder_path(folder_path: str) -> str:
@@ -376,52 +334,28 @@ class CloudStorage(BaseStorageInterface):
         self,
         search_query: str,
         case_sensitive: bool = False,
-    ) -> List[FileDataSchema]:
+    ) -> List[FileSchema]:
         blobs = self._cloud_storage.list_blobs()
-        files = []
+        if not case_sensitive:
+            search_query = search_query.lower()
 
-        search_query = search_query if case_sensitive else search_query.lower()
-
+        matching_files: List[FileSchema] = []
         for blob in blobs:
-            if not blob.name.endswith("/"):  # Skip folders
-                filename = self._path_handler.get_basename(blob.name)
-                if not case_sensitive:
-                    filename = filename.lower()
+            blob_name = blob.name
+            if not case_sensitive:
+                blob_name = blob_name.lower()
 
-                if search_query in filename:
-                    files.append(
-                        FileDataSchema(
-                            filename=self._path_handler.get_basename(
-                                blob.name
-                            ),
-                            url=f"{self.base_url}/{blob.name}",
-                            content_type=blob.content_type,
-                            size=blob.size,
-                        )
+            if search_query in blob_name:
+                matching_files.append(
+                    FileSchema(
+                        filename=self._path_handler.get_basename(blob.name),
+                        url=blob.public_url,
+                        content_type=blob.content_type,
+                        size=blob.size,
                     )
+                )
 
-        return sorted(files, key=lambda x: x.filename or "")
-
-    async def get_folder_iam_policy(
-        self,
-        folder_path: str,
-    ) -> dict:
-        """Get IAM policy for managed folder"""
-        folder_path = self._path_handler.normalize_path(folder_path)
-        _validate_blob_exists(self._cloud_storage, folder_path)
-        return self._cloud_storage.get_managed_folder_iam_policy(folder_path)
-
-    async def set_folder_iam_policy(
-        self,
-        folder_path: str,
-        policy: dict,
-    ) -> dict:
-        """Set IAM policy for managed folder"""
-        folder_path = self._path_handler.normalize_path(folder_path)
-        _validate_blob_exists(self._cloud_storage, folder_path)
-        return self._cloud_storage.set_managed_folder_iam_policy(
-            folder_path, policy
-        )
+        return matching_files
 
     @staticmethod
     def _get_user_identifier(request: Request) -> str:
