@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import List, Union, Literal
+from typing import Optional, List, Union, Literal
 
 from pydantic import HttpUrl, BaseModel, Field
 
@@ -8,8 +8,8 @@ from pydantic import HttpUrl, BaseModel, Field
 class FileSchema(BaseModel):
     filename: str
     url: HttpUrl | str
-    size: int
-    content_type: str
+    size: Optional[int] = None
+    content_type: Optional[str] = None
 
 
 class FileDeleteSchema(BaseModel):
@@ -17,6 +17,15 @@ class FileDeleteSchema(BaseModel):
     date_deleted: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc)
     )
+
+
+class FileItem(BaseModel):
+    name: str
+    path: str
+    type: Literal["file"]
+    size: int
+    updated: Optional[str]
+    url: Optional[str] = None
 
 
 class FolderItem(BaseModel):
@@ -36,8 +45,8 @@ class FolderBaseSchema(BaseModel):
 
 class FolderDataSchema(FolderBaseSchema):
     folder_path: str
-    create_time: datetime
-    update_time: datetime
+    create_time: Optional[datetime] = None
+    update_time: Optional[datetime] = None
 
 
 class FolderRenameSchema(FolderBaseSchema):
