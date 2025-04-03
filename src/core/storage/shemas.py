@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional, List, Union, Literal
 
@@ -65,4 +65,6 @@ class FolderCreateSchema(FolderDataSchema):
 
 
 class FolderDeleteSchema(FolderDataSchema):
-    pass
+    deleted_time: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc)
+    )
