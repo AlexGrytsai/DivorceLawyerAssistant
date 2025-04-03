@@ -12,7 +12,7 @@ class CloudStorageInterface(ABC):
 
     @property
     @abstractmethod
-    async def base_url(self) -> str:
+    def base_url(self) -> str:
         """
         Base URL for accessing storage.
 
@@ -23,7 +23,7 @@ class CloudStorageInterface(ABC):
 
     @property
     @abstractmethod
-    async def bucket(self) -> Bucket:
+    def bucket(self) -> Bucket:
         """
         Get the cloud storage bucket instance.
 
