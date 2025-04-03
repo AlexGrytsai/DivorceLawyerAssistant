@@ -63,6 +63,11 @@ class FolderCreateSchema(FolderDataSchema):
     update_time: datetime
 
 
+class FolderRenameSchema(FolderDataSchema):
+    old_name: str
+    folder_path: str
+
+
 class FolderDeleteSchema(FolderDataSchema):
     deleted_time: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc)
