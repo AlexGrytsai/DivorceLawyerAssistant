@@ -218,8 +218,8 @@ class GoogleCloudStorage(CloudStorageInterface):
         )
 
     async def _get_common_folder_path(self, folder_name: str) -> str:
-        folder_path = self.storage_control.common_folder_path(folder_name).split(
-            "folders/"
-        )[-1]
+        folder_path = self.storage_control.common_folder_path(
+            folder_name
+        ).split("folders/")[-1]
 
         return folder_path if folder_path.endswith("/") else f"{folder_path}/"
