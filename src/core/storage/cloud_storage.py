@@ -38,7 +38,7 @@ def _validate_blob_exists(
     error_code: int = status.HTTP_404_NOT_FOUND,
 ) -> None:
     """Validate that blob exists in cloud storage"""
-    if not cloud_storage.get_bucket.blob(blob_name).exists():
+    if not cloud_storage.bucket.blob(blob_name).exists():
         log_operation(f"Blob {blob_name} not found", "warning")
         raise HTTPException(
             status_code=error_code,
@@ -55,7 +55,7 @@ def _validate_blob_not_exists(
     error_code: int = status.HTTP_409_CONFLICT,
 ) -> None:
     """Validate that blob does not exist in cloud storage"""
-    if cloud_storage.get_bucket.blob(blob_name).exists():
+    if cloud_storage.bucket.blob(blob_name).exists():
         log_operation(f"Blob {blob_name} already exists", "warning")
         raise HTTPException(
             status_code=error_code,
