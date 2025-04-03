@@ -20,6 +20,7 @@ from src.core.storage.shemas import (
     FolderDataSchema,
     FolderDeleteSchema,
     FolderCreateSchema,
+    FolderRenameSchema,
 )
 
 load_dotenv()
@@ -151,20 +152,19 @@ class GoogleCloudStorage(CloudStorageInterface):
         old_name: str,
         new_name: str,
         rename_request: Type[RenameFolderRequest] = RenameFolderRequest,
-    ) -> FolderDataSchema:
+    ) -> FolderRenameSchema:
         """Rename a managed folder"""
-        operation = self.get_storage_control.rename_folder(
+        self.get_storage_control.rename_folder(
             request=rename_request(
                 name=self._get_folder_path(old_name),
                 destination_folder_id=new_name,
             )
         )
-        response = operation.result()
 
-        return FolderDataSchema(
-            folder_name="/".join(response.name.split("/")[3:]),
-            create_time=response.create_time.replace(microsecond=0),
-            update_time=response.update_time.replace(microsecond=0),
+        return FolderRenameSchema(
+            folder_name=new_name,
+            old_name=old_name,
+            folder_path=self._get_common_folder_path(new_name),
         )
 
     def list_managed_folders(
