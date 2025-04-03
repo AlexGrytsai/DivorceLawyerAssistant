@@ -1,6 +1,7 @@
 import unittest
 from typing import Optional, List
 from unittest.mock import AsyncMock, MagicMock, patch
+import datetime
 
 from fastapi import UploadFile, Request, HTTPException
 
@@ -16,6 +17,8 @@ from src.core.storage.shemas import (
     FolderContents,
     FileItem,
     FolderItem,
+    FolderDataSchema,
+    FolderRenameSchema,
 )
 
 
@@ -43,33 +46,29 @@ class TestBaseStorage(unittest.TestCase):
             return FileDeleteSchema(
                 file=file_path,
                 date_deleted="2023-01-01",
-                deleted_by="test",
             )
 
         async def create_folder(self, folder_path, request, *args, **kwargs):
-            return FolderBaseSchema(
-                path=folder_path,
-                name="mock_folder",
-                parent_folder="/mock",
-                is_empty=True,
+            return FolderDataSchema(
+                folder_name="mock_folder",
+                folder_path=folder_path,
+                create_time=datetime.datetime.now(),
+                update_time=datetime.datetime.now(),
             )
 
         async def rename_folder(
             self, old_path, new_path, request, *args, **kwargs
         ):
-            return FolderBaseSchema(
-                path=new_path,
-                name="renamed_folder",
-                parent_folder="/mock",
-                is_empty=True,
+            return FolderRenameSchema(
+                folder_name="renamed_folder",
+                old_name="mock_folder",
+                folder_path=new_path,
             )
 
         async def delete_folder(self, folder_path, request, *args, **kwargs):
             return FolderDeleteSchema(
-                folder=folder_path,
-                date_deleted="2023-01-01",
-                deleted_by="test",
-                deleted_files_count=0,
+                folder_name="mock_folder",
+                deleted_time=datetime.datetime.now(),
             )
 
         async def rename_file(
@@ -124,10 +123,7 @@ class TestBaseStorage(unittest.TestCase):
         ) -> List[FolderBaseSchema]:
             return [
                 FolderBaseSchema(
-                    path=f"{prefix or ''}/subfolder",
-                    name="subfolder",
-                    parent_folder=prefix or "",
-                    is_empty=True,
+                    folder_name="subfolder",
                 )
             ]
 
