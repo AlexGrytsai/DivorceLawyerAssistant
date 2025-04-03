@@ -93,6 +93,22 @@ class CloudStorageInterface(ABC):
         pass
 
     @abstractmethod
+    async def rename_blob(
+        self, source_blob: Blob, new_name: str
+    ) -> FileSchema:
+        """
+        Rename blob
+
+        Args:
+            source_blob: Source blob to rename
+            new_name: New name for blob
+
+        Returns:
+            Blob: Renamed blob
+        """
+        pass
+
+    @abstractmethod
     async def list_blobs(self, prefix: Optional[str] = "") -> List[FileSchema]:
         """
         List blobs in storage
