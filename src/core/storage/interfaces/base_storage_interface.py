@@ -12,6 +12,8 @@ from src.core.storage.shemas import (
     FolderBaseSchema,
     FolderDeleteSchema,
     FolderContents,
+    FileSchema,
+    FolderDataSchema,
 )
 
 logger = logging.getLogger(__name__)
@@ -40,7 +42,7 @@ class BaseStorageInterface(ABC):
         request: Request,
         file: Optional[UploadFile] = None,
         files: Optional[List[UploadFile]] = None,
-    ) -> Union[FileDataSchema, List[FileDataSchema]]:
+    ) -> Union[FileSchema, List[FileSchema]]:
         """
         Handle file upload requests
 
@@ -50,7 +52,7 @@ class BaseStorageInterface(ABC):
             files: Optional list of files to upload
 
         Returns:
-            Union[FileDataSchema, List[FileDataSchema]]: Upload result(s)
+            Union[FileSchema, List[FileSchema]]: Upload result(s)
 
         Raises:
             HTTPException: If no files provided or upload fails
@@ -82,7 +84,7 @@ class BaseStorageInterface(ABC):
     @abstractmethod
     async def upload(
         self, file: UploadFile, request: Request, *args, **kwargs
-    ) -> FileDataSchema:
+    ) -> FileSchema:
         """
         Upload a single file to storage
 
@@ -93,14 +95,14 @@ class BaseStorageInterface(ABC):
             **kwargs: Additional keyword arguments
 
         Returns:
-            FileDataSchema: Upload result
+            FileSchema: Upload result
         """
         pass
 
     @abstractmethod
     async def multi_upload(
         self, files: List[UploadFile], request: Request, *args, **kwargs
-    ) -> List[FileDataSchema]:
+    ) -> List[FileSchema]:
         """
         Upload multiple files to storage
 
@@ -111,7 +113,7 @@ class BaseStorageInterface(ABC):
             **kwargs: Additional keyword arguments
 
         Returns:
-            List[FileDataSchema]: List of upload results
+            List[FileSchema]: List of upload results
         """
         pass
 
@@ -136,7 +138,7 @@ class BaseStorageInterface(ABC):
     @abstractmethod
     async def create_folder(
         self, folder_path: str, request: Request, *args, **kwargs
-    ) -> FolderBaseSchema:
+    ) -> FolderDataSchema:
         """
         Create a new folder in storage
 
@@ -154,7 +156,7 @@ class BaseStorageInterface(ABC):
     @abstractmethod
     async def rename_folder(
         self, old_path: str, new_path: str, request: Request, *args, **kwargs
-    ) -> FolderBaseSchema:
+    ) -> FolderDataSchema:
         """
         Rename existing folder
 
@@ -191,7 +193,7 @@ class BaseStorageInterface(ABC):
     @abstractmethod
     async def rename_file(
         self, old_path: str, new_path: str, request: Request, *args, **kwargs
-    ) -> FileDataSchema:
+    ) -> FileSchema:
         """
         Rename existing file
 
@@ -208,7 +210,7 @@ class BaseStorageInterface(ABC):
         pass
 
     @abstractmethod
-    async def get_file(self, file_path: str) -> FileDataSchema:
+    async def get_file(self, file_path: str) -> FileSchema:
         """
         Get file by path
 
@@ -226,7 +228,7 @@ class BaseStorageInterface(ABC):
     @abstractmethod
     async def list_files(
         self, prefix: Optional[str] = None
-    ) -> List[FileDataSchema]:
+    ) -> List[FileSchema]:
         """
         List all files in storage
 
@@ -234,14 +236,14 @@ class BaseStorageInterface(ABC):
             prefix: Optional prefix to filter files
 
         Returns:
-            List[FileDataSchema]: List of files
+            List[FileSchema]: List of files
         """
         pass
 
     @abstractmethod
     async def list_folders(
         self, prefix: Optional[str] = None
-    ) -> List[FolderBaseSchema]:
+    ) -> List[FolderDataSchema]:
         """
         List all folders in storage
 
@@ -249,7 +251,7 @@ class BaseStorageInterface(ABC):
             prefix: Optional prefix to filter folders
 
         Returns:
-            List[FolderBaseSchema]: List of folders
+            List[FolderDataSchema]: List of folders
         """
         pass
 
@@ -269,7 +271,7 @@ class BaseStorageInterface(ABC):
     @abstractmethod
     async def search_files_by_name(
         self, search_query: str, case_sensitive: bool = False
-    ) -> List[FileDataSchema]:
+    ) -> List[FileSchema]:
         """
         Search files by name with optional case sensitivity
 
@@ -278,6 +280,6 @@ class BaseStorageInterface(ABC):
             case_sensitive: Whether to perform case-sensitive search
 
         Returns:
-            List[FileDataSchema]: List of matching files
+            List[FileSchema]: List of matching files
         """
         pass
