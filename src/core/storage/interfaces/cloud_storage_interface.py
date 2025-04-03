@@ -3,45 +3,12 @@ from typing import List, Optional, Union
 
 from google.cloud import storage  # type: ignore
 from google.cloud.storage import Blob, Bucket  # type: ignore
-from google.cloud.storage_control_v2 import (
-    StorageControlClient,
-)  # type: ignore
 
 from src.core.storage.shemas import FolderDataSchema, FolderDeleteSchema
 
 
 class CloudStorageInterface(ABC):
     """Interface for cloud storage implementations"""
-
-    @abstractmethod
-    def get_client(self) -> storage.Client:
-        """Get cloud storage client"""
-        pass
-
-    @property
-    @abstractmethod
-    def get_bucket(self) -> Bucket:
-        """
-        Get bucket instance
-
-        Returns:
-            Bucket: Cloud storage bucket
-        """
-        pass
-
-    @property
-    @abstractmethod
-    def get_storage_control(self) -> StorageControlClient:
-        """
-        Get storage control client instance.
-
-        This property returns a StorageControlClient instance, which is used to
-        manage storage resources.
-
-        Returns:
-            StorageControlClient: Storage control client instance.
-        """
-        pass
 
     @abstractmethod
     def upload_blob(

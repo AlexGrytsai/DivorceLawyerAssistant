@@ -39,6 +39,7 @@ class GoogleCloudStorage(CloudStorageInterface):
     @property
     @handle_cloud_storage_exceptions
     def get_client(self) -> storage.Client:
+        """Get cloud storage client"""
         if self._client is None:
             self._client = storage.Client(project=self.project_id)
         return self._client
@@ -46,6 +47,15 @@ class GoogleCloudStorage(CloudStorageInterface):
     @property
     @handle_cloud_storage_exceptions
     def get_storage_control(self) -> StorageControlClient:
+        """
+        Get storage control client instance.
+
+        This property returns a StorageControlClient instance, which is used to
+        manage storage resources.
+
+        Returns:
+            StorageControlClient: Storage control client instance.
+        """
         if self._storage_control is None:
             self._storage_control = StorageControlClient()
         return self._storage_control
@@ -53,6 +63,12 @@ class GoogleCloudStorage(CloudStorageInterface):
     @property
     @handle_cloud_storage_exceptions
     def get_bucket(self) -> Bucket:
+        """
+        Get bucket instance
+
+        Returns:
+            Bucket: Cloud storage bucket
+        """
         if self._bucket is None:
             self._bucket = self.get_client.get_bucket(
                 bucket_or_name=self.bucket_name
