@@ -49,14 +49,14 @@ class FileDataSchema(BaseFileSchema):
     pass
 
 
+class FileDeleteSchema(BaseDeleteSchema):
+    file: Path | str
+
+
 class FolderDataSchema(BaseModel):
     folder_name: str
     create_time: datetime
     update_time: datetime
-
-
-class FileDeleteSchema(BaseDeleteSchema):
-    file: Path | str
 
 
 class FolderDeleteSchema(BaseDeleteSchema):
