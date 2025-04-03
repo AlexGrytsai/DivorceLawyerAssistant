@@ -4,7 +4,8 @@ from datetime import datetime
 from typing import List, Optional, Union, Set, Tuple
 
 from fastapi import UploadFile, Request, status, HTTPException
-from google.cloud.storage_control_v2 import RenameFolderRequest
+from google.cloud.storage import Blob  # type: ignore
+from google.cloud.storage_control_v2 import RenameFolderRequest  # type: ignore
 
 from src.core.exceptions.storage import ErrorSavingFile
 from src.core.storage.decorators import (
@@ -133,7 +134,7 @@ class CloudStorage(BaseStorageInterface):
         if not old_blob.exists():
             raise ErrorSavingFile(f"Source file {old_path} does not exist")
 
-        new_blob = self._cloud_storage.copy_blob(old_blob, new_path)
+        new_blob = await self._cloud_storage.copy_blob(old_blob, new_path)
         await self._cloud_storage.delete_blob(old_path)
 
         return FileSchema(
@@ -151,7 +152,7 @@ class CloudStorage(BaseStorageInterface):
         *args,
         **kwargs,
     ) -> List[FileDeleteSchema]:
-        blobs = self._cloud_storage.list_blobs(prefix=prefix)
+        blobs: List[Blob] = await self._cloud_storage.list_blobs(prefix=prefix)
         tasks = [self.delete_file(blob.name, request) for blob in blobs]
         return await asyncio.gather(*tasks)
 
@@ -203,14 +204,14 @@ class CloudStorage(BaseStorageInterface):
         self,
         file_path: str,
         destination_path: Optional[str] = None,
-    ) -> str:
+    ) -> FileSchema:
         if not file_path:
             raise ValueError("File path cannot be empty")
 
         destination = destination_path or self._path_handler.get_basename(
             file_path
         )
-        return self._cloud_storage.upload_blob(file_path, destination)
+        return await self._cloud_storage.upload_blob(file_path, destination)
 
     async def get_file(self, file_path: str) -> FileSchema:
         blob = self._cloud_storage.bucket.blob(file_path)
@@ -228,7 +229,7 @@ class CloudStorage(BaseStorageInterface):
         self,
         prefix: Optional[str] = "",
     ) -> List[FileSchema]:
-        blobs = self._cloud_storage.list_blobs(prefix=prefix)
+        blobs: List[Blob] = await self._cloud_storage.list_blobs(prefix=prefix)
         files: List[FileSchema] = []
 
         files.extend(
@@ -292,7 +293,9 @@ class CloudStorage(BaseStorageInterface):
 
     async def get_folder_contents(self, folder_path: str) -> FolderContents:
         folder_path = self._normalize_folder_path(folder_path)
-        blobs = self._cloud_storage.list_blobs(prefix=folder_path)
+        blobs: List[Blob] = await self._cloud_storage.list_blobs(
+            prefix=folder_path
+        )
         files: List[FileItem] = []
         folders: Set[str] = set()
 
@@ -335,7 +338,7 @@ class CloudStorage(BaseStorageInterface):
         search_query: str,
         case_sensitive: bool = False,
     ) -> List[FileSchema]:
-        blobs = self._cloud_storage.list_blobs()
+        blobs: List[Blob] = await self._cloud_storage.list_blobs()
         if not case_sensitive:
             search_query = search_query.lower()
 
