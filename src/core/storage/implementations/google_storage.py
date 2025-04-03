@@ -6,7 +6,6 @@ from google.cloud import storage  # type: ignore
 from google.cloud.storage import Blob, Bucket  # type: ignore
 from google.cloud.storage_control_v2 import (
     StorageControlClient,
-    ListManagedFoldersRequest,
     CreateFolderRequest,
     DeleteFolderRequest,
     RenameFolderRequest,
@@ -39,7 +38,7 @@ class GoogleCloudStorage(CloudStorageInterface):
 
     @property
     @handle_cloud_storage_exceptions
-    def get_client(self) -> storage.Client:
+    def client(self) -> storage.Client:
         """Get cloud storage client"""
         if self._client is None:
             self._client = storage.Client(project=self.project_id)
@@ -47,7 +46,7 @@ class GoogleCloudStorage(CloudStorageInterface):
 
     @property
     @handle_cloud_storage_exceptions
-    def get_storage_control(self) -> StorageControlClient:
+    def storage_control(self) -> StorageControlClient:
         """
         Get storage control client instance.
 
@@ -71,7 +70,7 @@ class GoogleCloudStorage(CloudStorageInterface):
             Bucket: Cloud storage bucket
         """
         if self._bucket is None:
-            self._bucket = self.get_client.get_bucket(
+            self._bucket = self.client.get_bucket(
                 bucket_or_name=self.bucket_name
             )
         return self._bucket
@@ -117,7 +116,7 @@ class GoogleCloudStorage(CloudStorageInterface):
         create_request: Type[CreateFolderRequest] = CreateFolderRequest,
     ) -> FolderDataSchema:
         """Create a new managed folder"""
-        response = self.get_storage_control.create_folder(
+        response = self.storage_control.create_folder(
             request=create_request(
                 parent=self._get_bucket_path(),
                 folder_id=folder_name,
@@ -139,7 +138,7 @@ class GoogleCloudStorage(CloudStorageInterface):
         delete_request: Type[DeleteFolderRequest] = DeleteFolderRequest,
     ) -> FolderDeleteSchema:
         """Delete a managed folder"""
-        self.get_storage_control.delete_folder(
+        self.storage_control.delete_folder(
             request=delete_request(
                 name=self._get_folder_path(folder_name),
             )
@@ -154,7 +153,7 @@ class GoogleCloudStorage(CloudStorageInterface):
         rename_request: Type[RenameFolderRequest] = RenameFolderRequest,
     ) -> FolderRenameSchema:
         """Rename a managed folder"""
-        self.get_storage_control.rename_folder(
+        self.storage_control.rename_folder(
             request=rename_request(
                 name=self._get_folder_path(old_name),
                 destination_folder_id=new_name,
@@ -167,21 +166,25 @@ class GoogleCloudStorage(CloudStorageInterface):
             folder_path=self._get_common_folder_path(new_name),
         )
 
-    def list_managed_folders(
+    def list_folders(
         self,
         prefix: Optional[str] = None,
     ) -> List[FolderDataSchema]:
-        """List managed folders"""
-        project_path = self.get_storage_control.common_project_path("_")
+        """List folders"""
+        # Create a client
+        client = storage_control_v2.StorageControlClient()
 
-        request = ListManagedFoldersRequest(
-            parent=f"{project_path}/buckets/{self.bucket_name}",
-            prefix=prefix,
+        # Initialize request argument(s)
+        request = storage_control_v2.ListFoldersRequest(
+            parent="parent_value",
         )
 
-        page_result = self.get_storage_control.list_managed_folders(
-            request=request
-        )
+        # Make the request
+        page_result = client.list_folders(request=request)
+
+        # Handle the response
+        for response in page_result:
+            print(response)
 
         return [
             FolderDataSchema(
@@ -197,16 +200,16 @@ class GoogleCloudStorage(CloudStorageInterface):
         pass
 
     def _get_bucket_path(self) -> str:
-        project_path = self.get_storage_control.common_project_path("_")
+        project_path = self.storage_control.common_project_path("_")
         return f"{project_path}/buckets/{self.bucket_name}"
 
     def _get_folder_path(self, folder_name: str) -> str:
-        return self.get_storage_control.folder_path(
+        return self.storage_control.folder_path(
             project="_", bucket=self.bucket_name, folder=folder_name
         )
 
     def _get_common_folder_path(self, folder_name: str) -> str:
-        return self.get_storage_control.common_folder_path(folder_name)
+        return self.storage_control.common_folder_path(folder_name)
 
 
 if __name__ == "__main__":
