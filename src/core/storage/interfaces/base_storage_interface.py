@@ -1,7 +1,7 @@
+import datetime
 import logging
 from abc import ABC, abstractmethod
 from typing import List, Optional, Union
-import datetime
 
 from fastapi import UploadFile, status, HTTPException, Request
 
@@ -9,7 +9,7 @@ from src.core.exceptions.storage import ErrorSavingFile
 from src.core.storage.shemas import (
     FileDataSchema,
     FileDeleteSchema,
-    FolderDataSchema,
+    FolderBaseSchema,
     FolderDeleteSchema,
     FolderContents,
 )
@@ -136,7 +136,7 @@ class BaseStorageInterface(ABC):
     @abstractmethod
     async def create_folder(
         self, folder_path: str, request: Request, *args, **kwargs
-    ) -> FolderDataSchema:
+    ) -> FolderBaseSchema:
         """
         Create a new folder in storage
 
@@ -147,14 +147,14 @@ class BaseStorageInterface(ABC):
             **kwargs: Additional keyword arguments
 
         Returns:
-            FolderDataSchema: Folder creation result
+            FolderBaseSchema: Folder creation result
         """
         pass
 
     @abstractmethod
     async def rename_folder(
         self, old_path: str, new_path: str, request: Request, *args, **kwargs
-    ) -> FolderDataSchema:
+    ) -> FolderBaseSchema:
         """
         Rename existing folder
 
@@ -166,7 +166,7 @@ class BaseStorageInterface(ABC):
             **kwargs: Additional keyword arguments
 
         Returns:
-            FolderDataSchema: Folder rename result
+            FolderBaseSchema: Folder rename result
         """
         pass
 
@@ -241,7 +241,7 @@ class BaseStorageInterface(ABC):
     @abstractmethod
     async def list_folders(
         self, prefix: Optional[str] = None
-    ) -> List[FolderDataSchema]:
+    ) -> List[FolderBaseSchema]:
         """
         List all folders in storage
 
@@ -249,7 +249,7 @@ class BaseStorageInterface(ABC):
             prefix: Optional prefix to filter folders
 
         Returns:
-            List[FolderDataSchema]: List of folders
+            List[FolderBaseSchema]: List of folders
         """
         pass
 
