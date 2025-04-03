@@ -89,7 +89,7 @@ class CloudStorageInterface(ABC):
         pass
 
     @abstractmethod
-    def list_managed_folders(
+    def list_folders(
         self, prefix: Optional[str] = None
     ) -> List[FolderDataSchema]:
         """List managed folders"""
