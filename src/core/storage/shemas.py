@@ -55,9 +55,14 @@ class FileDeleteSchema(BaseDeleteSchema):
 
 class FolderDataSchema(BaseModel):
     folder_name: str
+
+
+class FolderCreateSchema(FolderDataSchema):
+    folder_name: str
+    folder_path: str
     create_time: datetime
     update_time: datetime
 
 
-class FolderDeleteSchema(BaseDeleteSchema):
-    folder_name: Path | str
+class FolderDeleteSchema(FolderDataSchema):
+    pass
