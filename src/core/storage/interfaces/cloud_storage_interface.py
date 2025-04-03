@@ -12,7 +12,28 @@ class CloudStorageInterface(ABC):
 
     @property
     @abstractmethod
+    def base_url(self) -> str:
+        """
+        Base URL for accessing storage.
+
+        Returns:
+            str: The base URL.
+        """
+        pass
+
+    @property
+    @abstractmethod
     def bucket(self) -> Bucket:
+        """
+        Get the cloud storage bucket instance.
+
+        This property returns a Bucket instance, which represents a bucket in
+        the cloud storage.
+        The bucket is used to store and manage files.
+
+        Returns:
+            Bucket: The cloud storage bucket instance.
+        """
         pass
 
     @abstractmethod
