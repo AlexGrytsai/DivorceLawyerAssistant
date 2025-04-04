@@ -242,7 +242,7 @@ class BaseStorageInterface(ABC):
     @abstractmethod
     async def list_folders(
         self, prefix: Optional[str] = None
-    ) -> List[FolderBaseSchema]:
+    ) -> List[FolderDataSchema]:
         """
         List all folders in storage
 
