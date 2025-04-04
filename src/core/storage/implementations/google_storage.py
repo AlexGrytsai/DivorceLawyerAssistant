@@ -229,13 +229,11 @@ class GoogleCloudStorage(CloudStorageInterface):
         prefix: Optional[str] = None,
     ) -> List[FolderBaseSchema]:
         """List folders"""
-        list_folders_request = ListFoldersRequest
-        folders_raw = self.storage_control.list_folders(
-            request=list_folders_request(
-                parent=self.bucket,
-                prefix=prefix,
-            )
+        list_folders_request = ListFoldersRequest(
+            parent=f"projects/{self.project_id}/buckets/{self.bucket_name}",
+            prefix=prefix if prefix else ""
         )
+        folders_raw = self.storage_control.list_folders(request=list_folders_request)
 
         folders: List[FolderBaseSchema] = []
 
