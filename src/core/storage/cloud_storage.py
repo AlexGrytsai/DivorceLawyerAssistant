@@ -287,8 +287,8 @@ class CloudStorage(BaseStorageInterface):
 
     def _process_folder_item(self, folder_path: str) -> FolderItem:
         return FolderItem(
-            name=self._path_handler.get_basename(folder_path),
-            path=folder_path,
+            folder_name=self._path_handler.get_basename(folder_path),
+            folder_path=folder_path,
             type="folder",
         )
 
@@ -299,9 +299,10 @@ class CloudStorage(BaseStorageInterface):
         def sort_key(
             item: Union[FileSchemaForFolder, FolderItem],
         ) -> Tuple[bool, str]:
-            is_file = isinstance(item, FileSchemaForFolder)
-            name = item.name or ""
-            return is_file, name
+            if isinstance(item, FileSchemaForFolder):
+                return True, item.filename or ""
+            else:
+                return False, item.folder_name
 
         return sorted(items, key=sort_key)
 
