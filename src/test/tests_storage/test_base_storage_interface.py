@@ -11,7 +11,6 @@ from src.core.storage.interfaces.base_storage_interface import (
 )
 from src.core.storage.shemas import (
     FileDeleteSchema,
-    FolderBaseSchema,
     FolderDeleteSchema,
     FolderContentsSchema,
     FileSchemaForFolder,
@@ -122,9 +121,10 @@ class TestBaseStorage(unittest.TestCase):
 
         async def list_folders(
             self, prefix: Optional[str] = None
-        ) -> List[FolderBaseSchema]:
+        ) -> List[FolderDataSchema]:
             return [
-                FolderBaseSchema(
+                FolderDataSchema(
+                    folder_path="subfolder",
                     folder_name="subfolder",
                 )
             ]
