@@ -95,15 +95,15 @@ class TestBaseStorage(unittest.TestCase):
                 current_path=folder_path,
                 items=[
                     FileSchemaForFolder(
-                        name="file1.txt",
-                        path=f"{folder_path}/file1.txt",
+                        filename="file1.txt",
+                        url=f"{folder_path}/file1.txt",
+                        content_type="file",
                         type="file",
                         size=100,
-                        updated="2023-01-01",
                     ),
                     FolderItem(
-                        name="subfolder",
-                        path=f"{folder_path}/subfolder",
+                        folder_name="subfolder",
+                        folder_path=f"{folder_path}/subfolder",
                         type="folder",
                     ),
                 ],
