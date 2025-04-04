@@ -9,7 +9,7 @@ from src.core.storage.shemas import (
     FileDeleteSchema,
     FolderDeleteSchema,
     FolderDataSchema,
-    FolderContents,
+    FolderContentsSchema,
 )
 from src.utils.validators.validate_file_mime import validate_file_mime
 
@@ -135,7 +135,7 @@ async def list_folders(
     return await settings.RAG_STORAGE.list_folders(prefix)
 
 
-@router.get("/folder/{folder_path:path}", response_model=FolderContents)
+@router.get("/folder/{folder_path:path}", response_model=FolderContentsSchema)
 async def get_folder_contents(
     folder_path: str,
 ):

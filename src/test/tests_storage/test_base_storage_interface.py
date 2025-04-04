@@ -13,8 +13,8 @@ from src.core.storage.shemas import (
     FileDeleteSchema,
     FolderBaseSchema,
     FolderDeleteSchema,
-    FolderContents,
-    FileItem,
+    FolderContentsSchema,
+    FileSchemaForFolder,
     FolderItem,
     FolderDataSchema,
     FolderRenameSchema,
@@ -90,11 +90,11 @@ class TestBaseStorage(unittest.TestCase):
 
         async def get_folder_contents(
             self, folder_path: str
-        ) -> FolderContents:
-            return FolderContents(
+        ) -> FolderContentsSchema:
+            return FolderContentsSchema(
                 current_path=folder_path,
                 items=[
-                    FileItem(
+                    FileSchemaForFolder(
                         name="file1.txt",
                         path=f"{folder_path}/file1.txt",
                         type="file",

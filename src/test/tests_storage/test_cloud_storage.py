@@ -11,9 +11,9 @@ from src.core.storage.shemas import (
     FileDeleteSchema,
     FolderBaseSchema,
     FolderDeleteSchema,
-    FileItem,
+    FileSchemaForFolder,
     FolderItem,
-    FolderContents,
+    FolderContentsSchema,
     FolderRenameSchema,
     FolderDataSchema,
 )
@@ -383,11 +383,11 @@ class TestCloudStorage(unittest.TestCase):
         result = await self.storage.get_folder_contents(folder_path)
 
         # Assert
-        self.assertIsInstance(result, FolderContents)
+        self.assertIsInstance(result, FolderContentsSchema)
         self.assertEqual(result.current_path, folder_path)
         self.assertEqual(len(result.items), 2)
         self.assertTrue(
-            any(isinstance(item, FileItem) for item in result.items)
+            any(isinstance(item, FileSchemaForFolder) for item in result.items)
         )
         self.assertTrue(
             any(isinstance(item, FolderItem) for item in result.items)
@@ -402,7 +402,7 @@ class TestCloudStorage(unittest.TestCase):
         result = await self.storage.get_folder_contents(folder_path)
 
         # Assert
-        self.assertIsInstance(result, FolderContents)
+        self.assertIsInstance(result, FolderContentsSchema)
         self.assertEqual(result.current_path, folder_path)
         self.assertEqual(len(result.items), 0)
 

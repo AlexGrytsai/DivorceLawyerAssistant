@@ -353,9 +353,7 @@ class TestGoogleCloudStorage(unittest.TestCase):
         )
 
         result = self.loop.run_until_complete(
-            self.storage.list_folders(
-                prefix="test", list_folders_request=mock_list_request
-            )
+            self.storage.list_folders(prefix="test")
         )
 
         self.mock_storage_control.list_folders.assert_called_once()

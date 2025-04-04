@@ -10,7 +10,7 @@ from src.core.storage.shemas import (
     FileDeleteSchema,
     FolderBaseSchema,
     FolderDeleteSchema,
-    FolderContents,
+    FolderContentsSchema,
     FileSchema,
     FolderDataSchema,
 )
@@ -242,7 +242,7 @@ class BaseStorageInterface(ABC):
     @abstractmethod
     async def list_folders(
         self, prefix: Optional[str] = None
-    ) -> List[FolderDataSchema]:
+    ) -> List[FolderBaseSchema]:
         """
         List all folders in storage
 
@@ -250,12 +250,14 @@ class BaseStorageInterface(ABC):
             prefix: Optional prefix to filter folders
 
         Returns:
-            List[FolderDataSchema]: List of folders
+            List[FolderBaseSchema]: List of folders
         """
         pass
 
     @abstractmethod
-    async def get_folder_contents(self, folder_path: str) -> FolderContents:
+    async def get_folder_contents(
+        self, folder_path: str
+    ) -> FolderContentsSchema:
         """
         Get contents of a folder
 
@@ -263,7 +265,7 @@ class BaseStorageInterface(ABC):
             folder_path: Path to folder
 
         Returns:
-            FolderContents: Contents of the folder
+            FolderContentsSchema: Contents of the folder
         """
         pass
 
