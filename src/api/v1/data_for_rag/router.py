@@ -27,13 +27,14 @@ def _process_file_path(
 @router.get(
     "/files-in-folder/{folder_path:path}",
     status_code=200,
+    tags=["Folders"],
 )
 async def list_folder_contents(folder_path: str = ""):
     """List contents of a specific folder"""
     return await settings.RAG_STORAGE.get_folder_contents(folder_path)
 
 
-@router.post("/upload", response_model=FileSchema)
+@router.post("/upload", response_model=FileSchema, tags=["Files"])
 async def upload_file(
     request: Request,
     file: UploadFile = File(...),
@@ -44,7 +45,9 @@ async def upload_file(
     return await settings.RAG_STORAGE.upload(file, request)
 
 
-@router.post("/upload/multiple", response_model=List[FileSchema])
+@router.post(
+    "/upload/multiple", response_model=List[FileSchema], tags=["Files"]
+)
 async def upload_multiple_files(
     request: Request,
     files: List[UploadFile] = File(...),
@@ -60,7 +63,11 @@ async def upload_multiple_files(
     return await settings.RAG_STORAGE.multi_upload(checked_files, request)
 
 
-@router.delete("/files/{file_path:path}", response_model=FileDeleteSchema)
+@router.delete(
+    "/files/{file_path:path}",
+    response_model=FileDeleteSchema,
+    tags=["Files"],
+)
 async def delete_file(
     file_path: str,
     request: Request,
@@ -69,7 +76,11 @@ async def delete_file(
     return await settings.RAG_STORAGE.delete_file(file_path, request)
 
 
-@router.post("/folders", response_model=FolderDataSchema)
+@router.post(
+    "/folders",
+    response_model=FolderDataSchema,
+    tags=["Folders"],
+)
 async def create_folder(
     request: Request,
     folder_path: str = Form(...),
@@ -78,7 +89,11 @@ async def create_folder(
     return await settings.RAG_STORAGE.create_folder(folder_path, request)
 
 
-@router.put("/folders/{folder_path:path}", response_model=FolderDataSchema)
+@router.put(
+    "/folders/{folder_path:path}",
+    response_model=FolderDataSchema,
+    tags=["Folders"],
+)
 async def rename_folder(
     folder_path: str,
     request: Request,
@@ -91,7 +106,9 @@ async def rename_folder(
 
 
 @router.delete(
-    "/folders/{folder_path:path}", response_model=FolderDeleteSchema
+    "/folders/{folder_path:path}",
+    response_model=FolderDeleteSchema,
+    tags=["Folders"],
 )
 async def delete_folder(
     folder_path: str,
@@ -101,7 +118,11 @@ async def delete_folder(
     return await settings.RAG_STORAGE.delete_folder(folder_path, request)
 
 
-@router.put("/files/{file_path:path}", response_model=FileSchema)
+@router.put(
+    "/files/{file_path:path}",
+    response_model=FileSchema,
+    tags=["Files"],
+)
 async def rename_file(
     file_path: str,
     request: Request,
@@ -111,7 +132,11 @@ async def rename_file(
     return await settings.RAG_STORAGE.rename_file(file_path, new_path, request)
 
 
-@router.get("/files/{file_path:path}", response_model=FileSchema)
+@router.get(
+    "/files/{file_path:path}",
+    response_model=FileSchema,
+    tags=["Files"],
+)
 async def get_file(
     file_path: str,
 ):
@@ -119,7 +144,7 @@ async def get_file(
     return await settings.RAG_STORAGE.get_file(file_path)
 
 
-@router.get("/files", response_model=List[FileSchema])
+@router.get("/files", response_model=List[FileSchema], tags=["Files"])
 async def list_files(
     prefix: Optional[str] = None,
 ):
@@ -127,7 +152,11 @@ async def list_files(
     return await settings.RAG_STORAGE.list_files(prefix)
 
 
-@router.get("/folders", response_model=List[FolderDataSchema])
+@router.get(
+    "/folders",
+    response_model=List[FolderDataSchema],
+    tags=["Folders"],
+)
 async def list_folders(
     prefix: Optional[str] = None,
 ):
@@ -135,7 +164,11 @@ async def list_folders(
     return await settings.RAG_STORAGE.list_folders(prefix)
 
 
-@router.get("/folder/{folder_path:path}", response_model=FolderContentsSchema)
+@router.get(
+    "/folder/{folder_path:path}",
+    response_model=FolderContentsSchema,
+    tags=["Folders"],
+)
 async def get_folder_contents(
     folder_path: str,
 ):
@@ -143,7 +176,11 @@ async def get_folder_contents(
     return await settings.RAG_STORAGE.get_folder_contents(folder_path)
 
 
-@router.get("/search-files", response_model=List[FileSchema])
+@router.get(
+    "/search-files",
+    response_model=List[FileSchema],
+    tags=["Files"],
+)
 async def search_files(
     query: str,
     case_sensitive: bool = False,
