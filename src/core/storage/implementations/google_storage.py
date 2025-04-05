@@ -101,7 +101,8 @@ class GoogleCloudStorage(CloudStorageInterface):
         blob.upload_from_string(content, content_type=content_type)
 
         return FileSchema(
-            filename=blob.name,
+            filename=blob.name.split("/")[-1],
+            path="/".join(blob.name.split("/")[:-1]),
             url=blob.public_url,
             size=blob.size,
             content_type=blob.content_type,
@@ -119,7 +120,8 @@ class GoogleCloudStorage(CloudStorageInterface):
         new_blob = self.bucket.copy_blob(source_blob, self.bucket, new_name)
 
         return FileSchema(
-            filename=new_blob.name,
+            filename=new_blob.name.split("/")[-1],
+            path="/".join(new_blob.name.split("/")[:-1]),
             url=new_blob.public_url,
             size=new_blob.size,
             content_type=new_blob.content_type,
@@ -132,7 +134,8 @@ class GoogleCloudStorage(CloudStorageInterface):
         new_blob = self.bucket.rename_blob(source_blob, new_name)
 
         return FileSchema(
-            filename=new_blob.name,
+            filename=new_blob.name.split("/")[-1],
+            path="/".join(new_blob.name.split("/")[:-1]),
             url=new_blob.public_url,
             size=new_blob.size,
             content_type=new_blob.content_type,
@@ -145,17 +148,26 @@ class GoogleCloudStorage(CloudStorageInterface):
         delimiter=None,
     ) -> List[FileSchema]:
         blobs = list(
-            self.bucket.list_blobs(prefix=prefix, delimiter=delimiter)
+            self.bucket.list_blobs(
+                prefix=prefix,
+                delimiter=delimiter,
+            )
         )
 
         return [
             FileSchema(
-                filename=blob.name,
+                filename=str(blob.name).split("/")[-1],
+                path=(
+                    "/".join(blob.name.split("/")[:-1] + [""])
+                    if "/" in blob.name
+                    else None
+                ),
                 url=blob.public_url,
                 size=blob.size,
                 content_type=blob.content_type,
             )
             for blob in blobs
+            if not blob.name.endswith("/")
         ]
 
     @handle_cloud_storage_exceptions
@@ -231,9 +243,11 @@ class GoogleCloudStorage(CloudStorageInterface):
         """List folders"""
         list_folders_request = ListFoldersRequest(
             parent=f"projects/{self.project_id}/buckets/{self.bucket_name}",
-            prefix=prefix if prefix else ""
+            prefix=prefix if prefix else "",
         )
-        folders_raw = self.storage_control.list_folders(request=list_folders_request)
+        folders_raw = self.storage_control.list_folders(
+            request=list_folders_request
+        )
 
         folders: List[FolderBaseSchema] = []
 
