@@ -25,16 +25,41 @@ def _process_file_path(
 
 
 @router.get(
-    "/files-in-folder/{folder_path:path}",
-    status_code=200,
-    tags=["Folders"],
+    "/files/{file_path:path}",
+    response_model=FileSchema,
+    tags=["RAG Files"],
 )
-async def list_folder_contents(folder_path: str = ""):
-    """List contents of a specific folder"""
-    return await settings.RAG_STORAGE.get_folder_contents(folder_path)
+async def get_file(
+    file_path: str,
+):
+    """Get file details by path"""
+    return await settings.RAG_STORAGE.get_file(file_path)
 
 
-@router.post("/upload", response_model=FileSchema, tags=["Files"])
+@router.get("/files", response_model=List[FileSchema], tags=["RAG Files"])
+async def list_files(
+    prefix: Optional[str] = None,
+):
+    """List all files in storage with optional prefix filter"""
+    return await settings.RAG_STORAGE.list_files(prefix)
+
+
+@router.get(
+    "/search-files",
+    response_model=List[FileSchema],
+    tags=["RAG Files"],
+)
+async def search_files(
+    query: str,
+    case_sensitive: bool = False,
+):
+    """Search files by name with optional case sensitivity"""
+    return await settings.RAG_STORAGE.search_files_by_name(
+        query, case_sensitive
+    )
+
+
+@router.post("/upload", response_model=FileSchema, tags=["RAG Files"])
 async def upload_file(
     request: Request,
     file: UploadFile = File(...),
@@ -46,7 +71,9 @@ async def upload_file(
 
 
 @router.post(
-    "/upload/multiple", response_model=List[FileSchema], tags=["Files"]
+    "/upload/multiple",
+    response_model=List[FileSchema],
+    tags=["RAG Files"],
 )
 async def upload_multiple_files(
     request: Request,
@@ -63,10 +90,24 @@ async def upload_multiple_files(
     return await settings.RAG_STORAGE.multi_upload(checked_files, request)
 
 
+@router.put(
+    "/files/{file_path:path}",
+    response_model=FileSchema,
+    tags=["RAG Files"],
+)
+async def rename_file(
+    file_path: str,
+    request: Request,
+    new_path: str = Form(...),
+):
+    """Rename a file in storage"""
+    return await settings.RAG_STORAGE.rename_file(file_path, new_path, request)
+
+
 @router.delete(
     "/files/{file_path:path}",
     response_model=FileDeleteSchema,
-    tags=["Files"],
+    tags=["RAG Files"],
 )
 async def delete_file(
     file_path: str,
@@ -76,10 +117,44 @@ async def delete_file(
     return await settings.RAG_STORAGE.delete_file(file_path, request)
 
 
+@router.get(
+    "/folders",
+    response_model=List[FolderDataSchema],
+    tags=["RAG Folders"],
+)
+async def list_folders(
+    prefix: Optional[str] = None,
+):
+    """List folders with optional prefix filter"""
+    return await settings.RAG_STORAGE.list_folders(prefix)
+
+
+@router.get(
+    "/folder/{folder_path:path}",
+    response_model=FolderContentsSchema,
+    tags=["RAG Folders"],
+)
+async def get_folder_contents(
+    folder_path: str,
+):
+    """Get contents of a specific folder"""
+    return await settings.RAG_STORAGE.get_folder_contents(folder_path)
+
+
+@router.get(
+    "/files-in-folder/{folder_path:path}",
+    status_code=200,
+    tags=["RAG Folders"],
+)
+async def list_folder_contents(folder_path: str = ""):
+    """List contents of a specific folder"""
+    return await settings.RAG_STORAGE.get_folder_contents(folder_path)
+
+
 @router.post(
     "/folders",
     response_model=FolderDataSchema,
-    tags=["Folders"],
+    tags=["RAG Folders"],
 )
 async def create_folder(
     request: Request,
@@ -92,7 +167,7 @@ async def create_folder(
 @router.put(
     "/folders/{folder_path:path}",
     response_model=FolderDataSchema,
-    tags=["Folders"],
+    tags=["RAG Folders"],
 )
 async def rename_folder(
     folder_path: str,
@@ -108,7 +183,7 @@ async def rename_folder(
 @router.delete(
     "/folders/{folder_path:path}",
     response_model=FolderDeleteSchema,
-    tags=["Folders"],
+    tags=["RAG Folders"],
 )
 async def delete_folder(
     folder_path: str,
@@ -116,76 +191,3 @@ async def delete_folder(
 ):
     """Delete a folder and its contents from storage"""
     return await settings.RAG_STORAGE.delete_folder(folder_path, request)
-
-
-@router.put(
-    "/files/{file_path:path}",
-    response_model=FileSchema,
-    tags=["Files"],
-)
-async def rename_file(
-    file_path: str,
-    request: Request,
-    new_path: str = Form(...),
-):
-    """Rename a file in storage"""
-    return await settings.RAG_STORAGE.rename_file(file_path, new_path, request)
-
-
-@router.get(
-    "/files/{file_path:path}",
-    response_model=FileSchema,
-    tags=["Files"],
-)
-async def get_file(
-    file_path: str,
-):
-    """Get file details by path"""
-    return await settings.RAG_STORAGE.get_file(file_path)
-
-
-@router.get("/files", response_model=List[FileSchema], tags=["Files"])
-async def list_files(
-    prefix: Optional[str] = None,
-):
-    """List all files in storage with optional prefix filter"""
-    return await settings.RAG_STORAGE.list_files(prefix)
-
-
-@router.get(
-    "/folders",
-    response_model=List[FolderDataSchema],
-    tags=["Folders"],
-)
-async def list_folders(
-    prefix: Optional[str] = None,
-):
-    """List folders with optional prefix filter"""
-    return await settings.RAG_STORAGE.list_folders(prefix)
-
-
-@router.get(
-    "/folder/{folder_path:path}",
-    response_model=FolderContentsSchema,
-    tags=["Folders"],
-)
-async def get_folder_contents(
-    folder_path: str,
-):
-    """Get contents of a specific folder"""
-    return await settings.RAG_STORAGE.get_folder_contents(folder_path)
-
-
-@router.get(
-    "/search-files",
-    response_model=List[FileSchema],
-    tags=["Files"],
-)
-async def search_files(
-    query: str,
-    case_sensitive: bool = False,
-):
-    """Search files by name with optional case sensitivity"""
-    return await settings.RAG_STORAGE.search_files_by_name(
-        query, case_sensitive
-    )
