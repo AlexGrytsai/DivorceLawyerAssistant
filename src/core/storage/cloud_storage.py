@@ -229,20 +229,7 @@ class CloudStorage(BaseStorageInterface):
         self,
         prefix: Optional[str] = "",
     ) -> List[FileSchema]:
-        blobs: List[Blob] = await self._cloud_storage.list_blobs(prefix=prefix)
-        files: List[FileSchema] = []
-
-        files.extend(
-            FileSchema(
-                filename=self._path_handler.get_basename(blob.name),
-                url=blob.public_url,
-                content_type=blob.content_type,
-                size=blob.size,
-            )
-            for blob in blobs
-        )
-
-        return files
+        return await self._cloud_storage.list_blobs(prefix=prefix)
 
     async def list_folders(
         self,
@@ -371,7 +358,7 @@ class CloudStorage(BaseStorageInterface):
             if search_query in blob_name:
                 matching_files.append(
                     FileSchema(
-                        filename=self._path_handler.get_basename(blob.name),
+                        filename=blob.name,
                         url=blob.public_url,
                         content_type=blob.content_type,
                         size=blob.size,
