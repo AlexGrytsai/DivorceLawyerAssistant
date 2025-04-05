@@ -23,7 +23,7 @@ app.mount(
     name="static",
 )
 
-templates = Jinja2Templates(directory=Path("templates"))
+templates = Jinja2Templates(directory=Path("src/templates"))
 
 
 @app.get("/", response_class=HTMLResponse)
