@@ -6,7 +6,6 @@ from fastapi import UploadFile, Request, status, HTTPException
 from google.cloud.storage import Blob  # type: ignore
 from google.cloud.storage_control_v2 import RenameFolderRequest  # type: ignore
 
-from src.core.exceptions.storage import ErrorSavingFile
 from src.core.storage.decorators import (
     handle_upload_file_exceptions,
     handle_delete_file_exceptions,
@@ -125,23 +124,13 @@ class CloudStorage(BaseStorageInterface):
     async def rename_file(
         self,
         old_path: str,
-        new_path: str,
+        new_file_name: str,
         request: Request,
         *args,
         **kwargs,
     ) -> FileSchema:
-        old_blob = self._cloud_storage.bucket.blob(old_path)
-        if not old_blob.exists():
-            raise ErrorSavingFile(f"Source file {old_path} does not exist")
-
-        new_blob = await self._cloud_storage.copy_blob(old_blob, new_path)
-        await self._cloud_storage.delete_blob(old_path)
-
-        return FileSchema(
-            url=f"{self._cloud_storage.base_url}/{new_path}",
-            filename=self._path_handler.get_basename(new_path),
-            content_type=new_blob.content_type,
-            size=new_blob.size,
+        return await self._cloud_storage.rename_blob(
+            self._cloud_storage.bucket.get_blob(old_path), new_file_name
         )
 
     @handle_upload_file_exceptions
@@ -187,7 +176,7 @@ class CloudStorage(BaseStorageInterface):
             self._path_handler.normalize_path(new_path),
         )
 
-    # @handle_delete_file_exceptions
+    @handle_delete_file_exceptions
     async def delete_folder(
         self,
         folder_path: str,
