@@ -89,10 +89,12 @@ async def upload_multiple_files(
 async def rename_file(
     file_path: str,
     request: Request,
-    new_path: str = Form(...),
+    new_file_name: str = Form(...),
 ):
     """Rename a file in storage"""
-    return await settings.RAG_STORAGE.rename_file(file_path, new_path, request)
+    return await settings.RAG_STORAGE.rename_file(
+        file_path, new_file_name, request
+    )
 
 
 @router.delete(
