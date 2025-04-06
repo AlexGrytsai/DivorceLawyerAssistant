@@ -218,6 +218,8 @@ class GoogleCloudStorage(CloudStorageInterface):
         self,
         folder_name: str,
         create_request: Type[CreateFolderRequest] = CreateFolderRequest,
+        *args,
+        **kwargs,
     ) -> FolderBaseSchema:
         """
         Create a new managed folder in the storage.
@@ -234,7 +236,7 @@ class GoogleCloudStorage(CloudStorageInterface):
 
         Returns:
             FolderDataSchema: Information about the created folder including
-                              folder path and timestamps
+                              a folder path and timestamps
 
         Raises:
             Exception: If folder creation fails (handled by decorator)
@@ -243,13 +245,13 @@ class GoogleCloudStorage(CloudStorageInterface):
             request=create_request(
                 parent=self._get_bucket_path(),
                 folder_id=folder_name,
-                recursive=True,
+                recursive=False,
             )
         )
 
         return FolderDataSchema(
             folder_name=folder_name.split("/")[-1],
-            folder_path=folder_name,
+            folder_path=self._get_common_folder_path(folder_name),
             create_time=response.create_time.replace(microsecond=0),
             update_time=response.update_time.replace(microsecond=0),
         )
