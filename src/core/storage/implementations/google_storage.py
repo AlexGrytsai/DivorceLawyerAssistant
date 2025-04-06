@@ -120,7 +120,7 @@ class GoogleCloudStorage(CloudStorageInterface):
 
         return FileSchema(
             filename=blob.name.split("/")[-1],
-            path="/".join(blob.name.split("/")[:-1]),
+            path=self._get_blob_path(blob.name),
             url=blob.public_url,
             size=blob.size,
             content_type=blob.content_type,
@@ -139,7 +139,7 @@ class GoogleCloudStorage(CloudStorageInterface):
 
         return FileSchema(
             filename=new_blob.name.split("/")[-1],
-            path="/".join(new_blob.name.split("/")[:-1]),
+            path=self._get_blob_path(new_blob.name),
             url=new_blob.public_url,
             size=new_blob.size,
             content_type=new_blob.content_type,
@@ -153,7 +153,7 @@ class GoogleCloudStorage(CloudStorageInterface):
 
         return FileSchema(
             filename=new_blob.name.split("/")[-1],
-            path="/".join(new_blob.name.split("/")[:-1]),
+            path=self._get_blob_path(new_blob.name),
             url=new_blob.public_url,
             size=new_blob.size,
             content_type=new_blob.content_type,
@@ -180,7 +180,7 @@ class GoogleCloudStorage(CloudStorageInterface):
         return [
             FileSchema(
                 filename=blob.name.split("/")[-1],
-                path=blob.name,
+                path=self._get_blob_path(blob.name),
                 url=blob.public_url,
                 size=blob.size,
                 content_type=blob.content_type,
@@ -362,6 +362,10 @@ class GoogleCloudStorage(CloudStorageInterface):
 
         return f"{project_path}/buckets/{self.bucket_name}"
 
+    @staticmethod
+    def _get_blob_path(blob_name: str) -> str:
+        return f"/{blob_name}"
+
     def _get_folder_path(self, folder_name: str) -> str:
         """
         Get the full path to a folder in Google Cloud Storage.
@@ -403,8 +407,8 @@ class GoogleCloudStorage(CloudStorageInterface):
 
         return folder_path if folder_path.endswith("/") else f"{folder_path}/"
 
-    @staticmethod
     def _search_blobs(
+        self,
         blobs: List[Blob],
         search_query: str,
         case_sensitive: Optional[bool] = False,
@@ -440,7 +444,7 @@ class GoogleCloudStorage(CloudStorageInterface):
                     matching_files.append(
                         FileSchema(
                             filename=blob_name,
-                            path=blob.name,
+                            path=self._get_blob_path(blob.name),
                             url=blob.public_url,
                             content_type=blob.content_type,
                             size=blob.size,
