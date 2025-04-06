@@ -196,9 +196,6 @@ class CloudStorage(BaseStorageInterface):
         **kwargs,
     ) -> FolderDeleteSchema:
         """Delete folder and all its contents"""
-        folder_path = self._path_handler.normalize_path(folder_path)
-        _validate_blob_exists(self._cloud_storage, folder_path)
-
         return await self._cloud_storage.delete_folder(folder_path)
 
     @handle_upload_file_exceptions
@@ -244,16 +241,7 @@ class CloudStorage(BaseStorageInterface):
         prefix: Optional[str] = None,
     ) -> List[FolderDataSchema]:
         """List managed folders"""
-        folders = await self._cloud_storage.list_folders(prefix=prefix)
-        return [
-            FolderDataSchema(
-                folder_name=folder.folder_name,
-                folder_path=folder.folder_name,
-                create_time=None,
-                update_time=None,
-            )
-            for folder in folders
-        ]
+        return await self._cloud_storage.list_folders(prefix=prefix)
 
     @staticmethod
     def _normalize_folder_path(folder_path: str) -> str:
