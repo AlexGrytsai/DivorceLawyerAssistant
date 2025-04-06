@@ -191,14 +191,14 @@ class BaseStorageInterface(ABC):
 
     @abstractmethod
     async def rename_file(
-        self, old_path: str, new_path: str, request: Request, *args, **kwargs
+        self, old_path: str, new_file_name: str, request: Request, *args, **kwargs
     ) -> FileSchema:
         """
         Rename existing file
 
         Args:
             old_path: Current file path
-            new_path: New file path
+            new_file_name: New file name
             request: FastAPI request object
             *args: Additional positional arguments
             **kwargs: Additional keyword arguments
