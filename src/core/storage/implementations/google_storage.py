@@ -119,7 +119,7 @@ class GoogleCloudStorage(CloudStorageInterface):
         blob.upload_from_string(content, content_type=content_type)
 
         return FileSchema(
-            filename=blob.name.split("/")[-1],
+            filename=self._get_blob_name(blob.name),
             path=self._get_blob_path(blob.name),
             url=blob.public_url,
             size=blob.size,
@@ -138,7 +138,7 @@ class GoogleCloudStorage(CloudStorageInterface):
         new_blob = self.bucket.copy_blob(source_blob, self.bucket, new_name)
 
         return FileSchema(
-            filename=new_blob.name.split("/")[-1],
+            filename=self._get_blob_name(new_blob.name),
             path=self._get_blob_path(new_blob.name),
             url=new_blob.public_url,
             size=new_blob.size,
@@ -152,7 +152,7 @@ class GoogleCloudStorage(CloudStorageInterface):
         new_blob = self.bucket.rename_blob(source_blob, new_name)
 
         return FileSchema(
-            filename=new_blob.name.split("/")[-1],
+            filename=self._get_blob_name(new_blob.name),
             path=self._get_blob_path(new_blob.name),
             url=new_blob.public_url,
             size=new_blob.size,
@@ -179,7 +179,7 @@ class GoogleCloudStorage(CloudStorageInterface):
 
         return [
             FileSchema(
-                filename=blob.name.split("/")[-1],
+                filename=self._get_blob_name(blob.name),
                 path=self._get_blob_path(blob.name),
                 url=blob.public_url,
                 size=blob.size,
@@ -365,6 +365,10 @@ class GoogleCloudStorage(CloudStorageInterface):
     @staticmethod
     def _get_blob_path(blob_name: str) -> str:
         return f"/{blob_name}"
+
+    @staticmethod
+    def _get_blob_name(blob_path: str) -> str:
+        return blob_path.split("/")[-1]
 
     def _get_folder_path(self, folder_name: str) -> str:
         """
