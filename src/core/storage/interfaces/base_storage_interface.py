@@ -226,16 +226,27 @@ class BaseStorageInterface(ABC):
 
     @abstractmethod
     async def list_files(
-        self, prefix: Optional[str] = None
+        self,
+        prefix: Optional[str] = "",
+        search_query: Optional[str] = "",
+        case_sensitive: Optional[bool] = False,
     ) -> List[FileSchema]:
         """
-        List all files in storage
+        List all files in storage, with optional filtering by prefix and
+        search query.
 
         Args:
-            prefix: Optional prefix to filter files
+            prefix (str, optional): Optional prefix to filter files.
+                                    Defaults to "".
+            search_query (str, optional): Optional search term to filter files.
+                                          Defaults to "".
+            case_sensitive (bool, optional): Whether the search should
+                                             be case-sensitive.
+                                             Defaults to False.
 
         Returns:
-            List[FileSchema]: List of files
+            List[FileSchema]: A list of file schemas representing the matching
+                              files.
         """
         pass
 
