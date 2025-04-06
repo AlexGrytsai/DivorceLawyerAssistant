@@ -129,9 +129,7 @@ class CloudStorage(BaseStorageInterface):
         *args,
         **kwargs,
     ) -> FileSchema:
-        return await self._cloud_storage.rename_blob(
-            self._cloud_storage.bucket.get_blob(old_path), new_file_name
-        )
+        return await self._cloud_storage.rename_blob(old_path, new_file_name)
 
     @handle_upload_file_exceptions
     async def delete_all_files(
