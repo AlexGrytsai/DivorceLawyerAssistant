@@ -28,3 +28,7 @@ class IndexRAGSchema(BaseModel):
 
 class IndexCreateSchema(IndexRAGSchema):
     create_time: str
+
+
+class IndexGetSchema(IndexCreateSchema):
+    update_time: str
