@@ -290,7 +290,7 @@ class TestGoogleCloudStorage(unittest.TestCase):
 
         result = self.loop.run_until_complete(
             self.storage.delete_folder(
-                folder_name="test-folder", delete_request=mock_delete_request
+                folder_path="test-folder", delete_request=mock_delete_request
             )
         )
 
