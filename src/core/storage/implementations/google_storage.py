@@ -144,30 +144,33 @@ class GoogleCloudStorage(CloudStorageInterface):
     @handle_cloud_storage_exceptions
     async def list_blobs(
         self,
-        prefix: str = "",
-        delimiter=None,
+        prefix: Optional[str] = "",
+        search_query: Optional[str] = None,
+        case_sensitive: Optional[bool] = False,
     ) -> List[FileSchema]:
         blobs = list(
             self.bucket.list_blobs(
                 prefix=prefix,
-                delimiter=delimiter,
             )
         )
+        if not case_sensitive:
+            search_query = search_query.lower()
+
+        if search_query:
+            return await self._search_blobs(
+                blobs, search_query, case_sensitive
+            )
 
         return [
             FileSchema(
-                filename=str(blob.name).split("/")[-1],
-                path=(
-                    "/".join(blob.name.split("/")[:-1] + [""])
-                    if "/" in blob.name
-                    else None
-                ),
+                filename=blob.name.split("/")[-1],
+                path=blob.name,
                 url=blob.public_url,
                 size=blob.size,
                 content_type=blob.content_type,
             )
             for blob in blobs
-            if not blob.name.endswith("/")
+            if blob.content_type != "folder"
         ]
 
     @handle_cloud_storage_exceptions
@@ -280,3 +283,32 @@ class GoogleCloudStorage(CloudStorageInterface):
         ).split("folders/")[-1]
 
         return folder_path if folder_path.endswith("/") else f"{folder_path}/"
+
+    @staticmethod
+    async def _search_blobs(
+        blobs: List[Blob],
+        search_query: str,
+        case_sensitive: Optional[bool] = False,
+    ) -> List[FileSchema]:
+        if not case_sensitive:
+            search_query = search_query.lower()
+
+        matching_files: List[FileSchema] = []
+        for blob in blobs:
+            if blob.content_type != "folder":
+                blob_name = blob.name.split("/")[-1]
+                if not case_sensitive:
+                    blob_name = blob_name.lower()
+
+                if search_query in blob_name:
+                    matching_files.append(
+                        FileSchema(
+                            filename=blob_name,
+                            path=blob.name,
+                            url=blob.public_url,
+                            content_type=blob.content_type,
+                            size=blob.size,
+                        )
+                    )
+
+        return matching_files
