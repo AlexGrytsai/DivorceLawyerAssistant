@@ -109,15 +109,14 @@ class CloudStorageInterface(ABC):
         pass
 
     @abstractmethod
-    async def list_blobs(self, prefix: Optional[str] = "") -> List[FileSchema]:
+    async def list_blobs(
+        self,
+        prefix: Optional[str] = "",
+        search_query: Optional[str] = None,
+        case_sensitive: Optional[bool] = False,
+    ) -> List[FileSchema]:
         """
         List blobs in storage
-
-        Args:
-            prefix: Optional prefix to filter blobs
-
-        Returns:
-            List[Blob]: List of blobs
         """
         pass
 
