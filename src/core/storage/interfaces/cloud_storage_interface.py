@@ -92,6 +92,19 @@ class CloudStorageInterface(ABC):
         pass
 
     @abstractmethod
+    async def get_blob(self, file_path: str) -> FileSchema:
+        """
+        Get blob (file) from cloud storage.
+
+        Args:
+            file_path: Path to the file to retrieve in the bucket
+
+        Returns:
+            FileSchema: Information about the retrieved file
+        """
+        pass
+
+    @abstractmethod
     async def copy_blob(self, source_blob: Blob, new_name: str) -> FileSchema:
         """
         Copy blob (file) to a new location in cloud storage.
