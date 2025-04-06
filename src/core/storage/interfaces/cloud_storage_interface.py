@@ -124,13 +124,13 @@ class CloudStorageInterface(ABC):
 
     @abstractmethod
     async def rename_blob(
-        self, source_blob: Blob, new_name: str
+        self, source_blob_path: str, new_name: str
     ) -> FileSchema:
         """
         Rename blob (file) in cloud storage.
 
         Args:
-            source_blob: Source blob object to rename
+            source_blob_path: Source blob path object to rename
             new_name: New name/path for the blob
 
         Returns:
