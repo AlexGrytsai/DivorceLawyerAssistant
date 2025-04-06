@@ -2,6 +2,10 @@ from typing import List, Optional
 
 from fastapi import APIRouter, UploadFile, Request, File, Form
 
+from src.api.v1.data_for_rag.schemas import (
+    IndexRAGSchema,
+    IndexCreateSchema,
+)
 from src.core.config import settings
 from src.core.constants import ALLOWED_MIME_TYPES_FOR_RAG
 from src.core.storage.shemas import (
@@ -47,6 +51,23 @@ async def list_files(
         prefix,
         search_query,
         case_sensitive,
+    )
+
+
+@router.post(
+    "/rag-index", response_model=IndexCreateSchema, tags=["RAG Index"]
+)
+async def create_rag_index(request: Request, name_index: IndexRAGSchema):
+    """
+    Create a new index for RAG (Retrieval-Augmented Generation).
+    The index is a root folder in the storage.
+    """
+    folder = await settings.RAG_STORAGE.create_folder(
+        name_index.name_index, request
+    )
+    return IndexCreateSchema(
+        name_index=name_index.name_index,
+        create_time=folder.create_time,
     )
 
 
