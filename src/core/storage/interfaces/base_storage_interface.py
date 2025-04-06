@@ -279,19 +279,3 @@ class BaseStorageInterface(ABC):
             FolderContentsSchema: Contents of the folder
         """
         pass
-
-    @abstractmethod
-    async def search_files_by_name(
-        self, search_query: str, case_sensitive: bool = False
-    ) -> List[FileSchema]:
-        """
-        Search files by name with optional case sensitivity
-
-        Args:
-            search_query: Search query string
-            case_sensitive: Whether to perform case-sensitive search
-
-        Returns:
-            List[FileSchema]: List of matching files
-        """
-        pass
