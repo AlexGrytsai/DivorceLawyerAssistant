@@ -191,16 +191,21 @@ class LocalStorage(BaseStorageInterface):
 
     @handle_upload_file_exceptions
     async def rename_file(
-        self, old_path: str, new_path: str, request: Request, *args, **kwargs
+        self,
+        old_path: str,
+        new_file_name: str,
+        request: Request,
+        *args,
+        **kwargs,
     ) -> FileSchema:
         """Rename existing file"""
         old_file = Path(old_path)
-        new_file = Path(new_path)
+        new_file = Path(new_file_name)
 
         if old_file.exists():
             if not new_file.exists():
                 old_file.rename(new_file)
-                logger.info(f"File renamed from {old_path} to {new_path}")
+                logger.info(f"File renamed from {old_path} to {new_file_name}")
 
                 return FileSchema(
                     filename=new_file.name,
@@ -209,12 +214,12 @@ class LocalStorage(BaseStorageInterface):
                     size=None,
                 )
             else:
-                logger.warning(f"Target file {new_path} already exists")
+                logger.warning(f"Target file {new_file_name} already exists")
                 raise HTTPException(
                     status_code=status.HTTP_409_CONFLICT,
                     detail={
                         "error": "Target file exists",
-                        "message": f"Target file {new_path} already exists",
+                        "message": f"Target file {new_file_name} already exists",
                     },
                 )
         else:

@@ -73,10 +73,10 @@ class TestBaseStorage(unittest.TestCase):
             )
 
         async def rename_file(
-            self, old_path, new_path, request, *args, **kwargs
+            self, old_path, new_file_name, request, *args, **kwargs
         ):
             return FileSchema(
-                url=f"http://example.com/mock/{new_path}",
+                url=f"http://example.com/mock/{new_file_name}",
                 filename="renamed.txt",
             )
 

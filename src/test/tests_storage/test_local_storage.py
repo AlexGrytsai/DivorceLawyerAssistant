@@ -12,10 +12,8 @@ from src.core.storage.local_storage import LocalStorage
 from src.core.storage.shemas import (
     FileSchema,
     FileDeleteSchema,
-    FolderBaseSchema,
     FolderDataSchema,
     FolderRenameSchema,
-    FolderDeleteSchema,
 )
 
 
@@ -410,7 +408,9 @@ class TestLocalStorage(unittest.TestCase):
 
         # Act
         result = await self.storage.rename_file(
-            old_path=old_path, new_path=new_path, request=self.mock_request
+            old_path=old_path,
+            new_file_name=new_path,
+            request=self.mock_request,
         )
 
         # Assert
@@ -440,7 +440,9 @@ class TestLocalStorage(unittest.TestCase):
         # Act & Assert
         with self.assertRaises(HTTPException) as context:
             await self.storage.rename_file(
-                old_path=old_path, new_path=new_path, request=self.mock_request
+                old_path=old_path,
+                new_file_name=new_path,
+                request=self.mock_request,
             )
 
         # Assert
