@@ -7,9 +7,9 @@ from src.core.constants import ALLOWED_MIME_TYPES_FOR_RAG
 from src.core.storage.shemas import (
     FileSchema,
     FileDeleteSchema,
-    FolderDeleteSchema,
     FolderDataSchema,
     FolderContentsSchema,
+    FolderDeleteSchema,
 )
 from src.utils.validators.validate_file_mime import validate_file_mime
 
@@ -38,10 +38,16 @@ async def get_file(
 
 @router.get("/files", response_model=List[FileSchema], tags=["RAG Files"])
 async def list_files(
-    prefix: Optional[str] = None,
+    prefix: Optional[str] = "",
+    search_query: Optional[str] = "",
+    case_sensitive: Optional[bool] = False,
 ):
     """List all files in storage with optional prefix filter"""
-    return await settings.RAG_STORAGE.list_files(prefix)
+    return await settings.RAG_STORAGE.list_files(
+        prefix,
+        search_query,
+        case_sensitive,
+    )
 
 
 @router.get(
