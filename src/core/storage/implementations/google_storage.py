@@ -255,7 +255,7 @@ class GoogleCloudStorage(CloudStorageInterface):
         Raises:
             Exception: If folder deletion fails (handled by decorator)
         """
-        folder_full_path = await self._get_folder_path(folder_path)
+        folder_full_path = self._get_folder_path(folder_path)
 
         self.storage_control.delete_folder(
             request=delete_request(
@@ -292,7 +292,7 @@ class GoogleCloudStorage(CloudStorageInterface):
         Raises:
             Exception: If folder renaming fails (handled by decorator)
         """
-        old_folder_path = await self._get_folder_path(old_name)
+        old_folder_path = self._get_folder_path(old_name)
         self.storage_control.rename_folder(
             request=rename_request(
                 name=old_folder_path,
@@ -364,7 +364,7 @@ class GoogleCloudStorage(CloudStorageInterface):
 
         return f"{project_path}/buckets/{self.bucket_name}"
 
-    async def _get_folder_path(self, folder_name: str) -> str:
+    def _get_folder_path(self, folder_name: str) -> str:
         """
         Get the full path to a folder in Google Cloud Storage.
 
