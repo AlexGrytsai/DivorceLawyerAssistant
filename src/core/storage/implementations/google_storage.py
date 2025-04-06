@@ -223,11 +223,10 @@ class GoogleCloudStorage(CloudStorageInterface):
                 recursive=True,
             )
         )
-        folder_path = await self._get_common_folder_path(folder_name)
 
         return FolderDataSchema(
-            folder_name=folder_name,
-            folder_path=folder_path,
+            folder_name=folder_name.split("/")[-1],
+            folder_path=folder_name,
             create_time=response.create_time.replace(microsecond=0),
             update_time=response.update_time.replace(microsecond=0),
         )
@@ -235,7 +234,7 @@ class GoogleCloudStorage(CloudStorageInterface):
     @handle_cloud_storage_exceptions
     async def delete_folder(
         self,
-        folder_name: str,
+        folder_path: str,
         delete_request: Type[DeleteFolderRequest] = DeleteFolderRequest,
     ) -> FolderDeleteSchema:
         """
@@ -246,7 +245,7 @@ class GoogleCloudStorage(CloudStorageInterface):
         It constructs the necessary request with the full folder path.
 
         Args:
-            folder_name: Name of the folder to delete
+            folder_path: Path of the folder to delete
             delete_request: Type of DeleteFolderRequest to use
                             (for testing/mocking)
 
@@ -256,15 +255,15 @@ class GoogleCloudStorage(CloudStorageInterface):
         Raises:
             Exception: If folder deletion fails (handled by decorator)
         """
-        folder_path = await self._get_folder_path(folder_name)
+        folder_full_path = await self._get_folder_path(folder_path)
 
         self.storage_control.delete_folder(
             request=delete_request(
-                name=folder_path,
+                name=folder_full_path,
             )
         )
 
-        return FolderDeleteSchema(folder_name=folder_name)
+        return FolderDeleteSchema(folder_name=folder_path)
 
     @handle_cloud_storage_exceptions
     async def rename_folder(
@@ -301,7 +300,7 @@ class GoogleCloudStorage(CloudStorageInterface):
             )
         )
 
-        folder_path = await self._get_common_folder_path(new_name)
+        folder_path = self._get_common_folder_path(new_name)
 
         return FolderRenameSchema(
             folder_name=new_name,
@@ -312,7 +311,7 @@ class GoogleCloudStorage(CloudStorageInterface):
     async def list_folders(
         self,
         prefix: Optional[str] = None,
-    ) -> List[FolderBaseSchema]:
+    ) -> List[FolderDataSchema]:
         """
         List managed folders in the storage.
 
@@ -325,7 +324,7 @@ class GoogleCloudStorage(CloudStorageInterface):
             prefix: Optional prefix to filter results
 
         Returns:
-            List[FolderBaseSchema]: List of folder schemas representing
+            List[FolderDataSchema]: List of folder schemas representing
                                     the matching folders
         """
         list_folders_request = ListFoldersRequest(
@@ -336,12 +335,12 @@ class GoogleCloudStorage(CloudStorageInterface):
             request=list_folders_request
         )
 
-        folders: List[FolderBaseSchema] = []
+        folders: List[FolderDataSchema] = []
 
         folders.extend(
             FolderDataSchema(
                 folder_name=folder.name.split("/")[-2],
-                folder_path=folder.name,
+                folder_path=self._get_common_folder_path(folder.name),
                 create_time=folder.create_time.replace(microsecond=0),
                 update_time=folder.update_time.replace(microsecond=0),
             )
@@ -384,7 +383,7 @@ class GoogleCloudStorage(CloudStorageInterface):
             project="_", bucket=self.bucket_name, folder=folder_name
         )
 
-    async def _get_common_folder_path(self, folder_name: str) -> str:
+    def _get_common_folder_path(self, folder_name: str) -> str:
         """
         Get a standardized folder path format for consistent usage.
 
