@@ -3,7 +3,7 @@ import logging
 from typing import Callable
 
 from fastapi import HTTPException, status
-from google.api_core.exceptions import ClientError
+from google.api_core.exceptions import ClientError, NotFound
 from google.auth.exceptions import GoogleAuthError
 
 from src.core.exceptions.storage import (
@@ -96,6 +96,15 @@ def async_handle_cloud_storage_exceptions(func: Callable) -> Callable:
             logger.error("Failed to initialize GCS client", exc_info=True)
             raise ErrorWithAuthenticationInGCP(
                 f"Failed to initialize GCS client: {exc}"
+            )
+        except NotFound as exc:
+            logger.error("File or folder not found", exc_info=True)
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={
+                    "error": str(exc),
+                    "message": "File or folder not found",
+                },
             )
         except ClientError as exc:
             logger.error("Failed to perform GCS operation", exc_info=True)
