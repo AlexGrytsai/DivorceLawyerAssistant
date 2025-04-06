@@ -185,7 +185,7 @@ class GoogleCloudStorage(CloudStorageInterface):
                 content_type=blob.content_type,
             )
             for blob in blobs
-            if blob.content_type != "folder"
+            if blob.content_type != "Folder"
         ]
 
     @handle_cloud_storage_exceptions
@@ -329,7 +329,7 @@ class GoogleCloudStorage(CloudStorageInterface):
                                     the matching folders
         """
         list_folders_request = ListFoldersRequest(
-            parent=f"projects/{self.project_id}/buckets/{self.bucket_name}",
+            parent=await self._get_bucket_path(),
             prefix=prefix if prefix else "",
         )
         folders_raw = self.storage_control.list_folders(
@@ -338,17 +338,15 @@ class GoogleCloudStorage(CloudStorageInterface):
 
         folders: List[FolderBaseSchema] = []
 
-        for folder in folders_raw:
-            folder_path = await self._get_common_folder_path(folder.name)
-            folders.append(
-                FolderDataSchema(
-                    folder_name=folder.name.split("/")[-2],
-                    folder_path=folder_path,
-                    create_time=folder.create_time.replace(microsecond=0),
-                    update_time=folder.update_time.replace(microsecond=0),
-                )
+        folders.extend(
+            FolderDataSchema(
+                folder_name=folder.name.split("/")[-2],
+                folder_path=folder.name,
+                create_time=folder.create_time.replace(microsecond=0),
+                update_time=folder.update_time.replace(microsecond=0),
             )
-
+            for folder in folders_raw
+        )
         return folders
 
     async def _get_bucket_path(self) -> str:
@@ -436,7 +434,7 @@ class GoogleCloudStorage(CloudStorageInterface):
 
         matching_files: List[FileSchema] = []
         for blob in blobs:
-            if blob.content_type != "folder":
+            if blob.content_type != "Folder":
                 blob_name = blob.name.split("/")[-1]
                 if not case_sensitive:
                     blob_name = blob_name.lower()
