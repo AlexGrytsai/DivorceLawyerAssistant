@@ -345,27 +345,27 @@ class CloudStorage(BaseStorageInterface):
         search_query: str,
         case_sensitive: bool = False,
     ) -> List[FileSchema]:
-        blobs: List[Blob] = await self._cloud_storage.list_blobs()
-        if not case_sensitive:
-            search_query = search_query.lower()
-
-        matching_files: List[FileSchema] = []
-        for blob in blobs:
-            blob_name = blob.name
-            if not case_sensitive:
-                blob_name = blob_name.lower()
-
-            if search_query in blob_name:
-                matching_files.append(
-                    FileSchema(
-                        filename=blob.name,
-                        url=blob.public_url,
-                        content_type=blob.content_type,
-                        size=blob.size,
-                    )
-                )
-
-        return matching_files
+        return await self._cloud_storage.list_blobs(prefix=search_query)
+        # if not case_sensitive:
+        #     search_query = search_query.lower()
+        #
+        # matching_files: List[FileSchema] = []
+        # for blob in blobs:
+        #     blob_name = blob.name
+        #     if not case_sensitive:
+        #         blob_name = blob_name.lower()
+        #
+        #     if search_query in blob_name:
+        #         matching_files.append(
+        #             FileSchema(
+        #                 filename=blob.name,
+        #                 url=blob.public_url,
+        #                 content_type=blob.content_type,
+        #                 size=blob.size,
+        #             )
+        #         )
+        #
+        # return matching_files
 
     @staticmethod
     def _get_user_identifier(request: Request) -> str:
