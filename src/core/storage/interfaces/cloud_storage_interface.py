@@ -9,7 +9,7 @@ from src.core.storage.shemas import (
     FolderBaseSchema,
     FolderDeleteSchema,
     FileSchema,
-    FileDeleteSchema,
+    FileDeleteSchema, FolderDataSchema,
 )
 
 
@@ -214,7 +214,7 @@ class CloudStorageInterface(ABC):
     @abstractmethod
     async def list_folders(
         self, prefix: Optional[str] = None
-    ) -> List[FolderBaseSchema]:
+    ) -> List[FolderDataSchema]:
         """
         List managed folders in the storage.
 
@@ -222,7 +222,7 @@ class CloudStorageInterface(ABC):
             prefix: Optional prefix to filter results
 
         Returns:
-            List[FolderBaseSchema]: List of folder schemas representing
+            List[FolderDataSchema]: List of folder schemas representing
             the matching folders
         """
         pass
