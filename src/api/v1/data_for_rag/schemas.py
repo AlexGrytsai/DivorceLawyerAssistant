@@ -26,6 +26,5 @@ class IndexRAGSchema(BaseModel):
         return value
 
 
-class IndexCreateSchema(BaseModel):
-    name_index: str
+class IndexCreateSchema(IndexRAGSchema):
     create_time: str
