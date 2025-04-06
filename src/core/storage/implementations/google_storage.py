@@ -214,7 +214,7 @@ class GoogleCloudStorage(CloudStorageInterface):
         Raises:
             Exception: If folder creation fails (handled by decorator)
         """
-        parent = await self._get_bucket_path()
+        parent = self._get_bucket_path()
 
         response = self.storage_control.create_folder(
             request=create_request(
@@ -328,7 +328,7 @@ class GoogleCloudStorage(CloudStorageInterface):
                                     the matching folders
         """
         list_folders_request = ListFoldersRequest(
-            parent=await self._get_bucket_path(),
+            parent=self._get_bucket_path(),
             prefix=prefix if prefix else "",
         )
         folders_raw = self.storage_control.list_folders(
@@ -348,7 +348,7 @@ class GoogleCloudStorage(CloudStorageInterface):
         )
         return folders
 
-    async def _get_bucket_path(self) -> str:
+    def _get_bucket_path(self) -> str:
         """
         Get the full path to the bucket in Google Cloud Storage.
 
