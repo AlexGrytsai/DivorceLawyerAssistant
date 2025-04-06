@@ -50,21 +50,6 @@ async def list_files(
     )
 
 
-@router.get(
-    "/search-files",
-    response_model=List[FileSchema],
-    tags=["RAG Files"],
-)
-async def search_files(
-    query: str,
-    case_sensitive: bool = False,
-):
-    """Search files by name with optional case sensitivity"""
-    return await settings.RAG_STORAGE.search_files_by_name(
-        query, case_sensitive
-    )
-
-
 @router.post("/upload", response_model=FileSchema, tags=["RAG Files"])
 async def upload_file(
     request: Request,
