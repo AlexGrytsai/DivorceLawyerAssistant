@@ -85,3 +85,31 @@ def handle_cloud_storage_exceptions(func: Callable) -> Callable:
             )
 
     return wrapper
+
+
+def async_handle_cloud_storage_exceptions(func: Callable) -> Callable:
+    @functools.wraps(func)
+    async def wrapper(*args, **kwargs):
+        try:
+            return await func(*args, **kwargs)
+        except GoogleAuthError as exc:
+            logger.error("Failed to initialize GCS client", exc_info=True)
+            raise ErrorWithAuthenticationInGCP(
+                f"Failed to initialize GCS client: {exc}"
+            )
+        except ClientError as exc:
+            logger.error("Failed to perform GCS operation", exc_info=True)
+            raise ProblemWithRequestToGCP(
+                f"Failed to perform GCS operation: {exc}"
+            )
+        except Exception as exc:
+            logger.exception("Unexpected error", exc_info=True)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail={
+                    "error": str(exc),
+                    "message": "Unexpected error",
+                },
+            )
+
+    return wrapper
