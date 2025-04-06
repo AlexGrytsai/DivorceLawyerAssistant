@@ -187,7 +187,7 @@ class CloudStorage(BaseStorageInterface):
             self._path_handler.normalize_path(new_path),
         )
 
-    @handle_delete_file_exceptions
+    # @handle_delete_file_exceptions
     async def delete_folder(
         self,
         folder_path: str,
@@ -213,16 +213,7 @@ class CloudStorage(BaseStorageInterface):
         return await self._cloud_storage.upload_blob(file_path, destination)
 
     async def get_file(self, file_path: str) -> FileSchema:
-        blob = self._cloud_storage.bucket.blob(file_path)
-        if not blob.exists():
-            raise ErrorSavingFile(f"File {file_path} not found")
-
-        return FileSchema(
-            filename=blob.name,
-            url=blob.public_url,
-            size=blob.size,
-            content_type=blob.content_type,
-        )
+        return await self._cloud_storage.get_blob(file_path)
 
     async def list_files(
         self,

@@ -129,13 +129,9 @@ class GoogleCloudStorage(CloudStorageInterface):
     @async_handle_cloud_storage_exceptions
     async def get_blob(self, file_path: str) -> FileSchema:
         """Get blob (file) by path"""
-        print(
-            self.bucket.blob("Oleksandr-Grytsai-Python-Developer_UKR.pdf").size
-        )
-        blob: Blob = self.bucket.blob(
+        blob: Blob = self.bucket.get_blob(
             file_path[1:] if file_path.startswith("/") else file_path
         )
-        print(blob)
 
         return FileSchema(
             filename=self._get_blob_name(blob.name),
