@@ -129,9 +129,7 @@ class GoogleCloudStorage(CloudStorageInterface):
     @async_handle_cloud_storage_exceptions
     async def get_blob(self, file_path: str) -> FileSchema:
         """Get blob (file) by path"""
-        blob: Blob = self.bucket.get_blob(
-            file_path[1:] if file_path.startswith("/") else file_path
-        )
+        blob: Blob = self.bucket.get_blob(self._normalize_file_path(file_path))
 
         return FileSchema(
             filename=self._get_blob_name(blob.name),
@@ -143,7 +141,7 @@ class GoogleCloudStorage(CloudStorageInterface):
 
     @async_handle_cloud_storage_exceptions
     async def delete_blob(self, file_path: str) -> FileDeleteSchema:
-        blob: Blob = self.bucket.blob(file_path)
+        blob: Blob = self.bucket.blob(self._normalize_file_path(file_path))
         blob.delete()
 
         return FileDeleteSchema(file=file_path)
@@ -162,9 +160,20 @@ class GoogleCloudStorage(CloudStorageInterface):
 
     @async_handle_cloud_storage_exceptions
     async def rename_blob(
-        self, source_blob: Blob, new_name: str
+        self, source_blob_path: str, new_name: str
     ) -> FileSchema:
-        new_blob = self.bucket.rename_blob(source_blob, new_name)
+
+        source_blob = self.bucket.get_blob(
+            self._normalize_file_path(source_blob_path)
+        )
+
+        new_blob = self.bucket.rename_blob(
+            source_blob,
+            (
+                f"{self._normalize_file_path(source_blob_path).split('/')[:-1]}"
+                f"/{new_name}"
+            ),
+        )
 
         return FileSchema(
             filename=self._get_blob_name(new_blob.name),
@@ -425,6 +434,10 @@ class GoogleCloudStorage(CloudStorageInterface):
         ).split("folders/")[-1]
 
         return folder_path if folder_path.endswith("/") else f"{folder_path}/"
+
+    @staticmethod
+    def _normalize_file_path(file_path: str) -> str:
+        return file_path[1:] if file_path.startswith("/") else file_path
 
     def _search_blobs(
         self,
