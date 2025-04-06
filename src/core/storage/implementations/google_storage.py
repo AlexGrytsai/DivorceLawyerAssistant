@@ -47,7 +47,17 @@ class GoogleCloudStorage(CloudStorageInterface):
     @property
     @handle_cloud_storage_exceptions
     def client(self) -> storage.Client:
-        """Get cloud storage client"""
+        """
+        Get cloud storage client instance.
+
+        This property returns a Google Cloud Storage Client instance,
+        which is used to interact with Google Cloud Storage.
+        The client is initialized with the project ID specified during
+        class initialization.
+
+        Returns:
+            storage.Client: Google Cloud Storage client instance
+        """
         if self._client is None:
             self._client = storage.Client(project=self.project_id)
         return self._client
@@ -72,10 +82,15 @@ class GoogleCloudStorage(CloudStorageInterface):
     @handle_cloud_storage_exceptions
     def bucket(self) -> Bucket:
         """
-        Get bucket instance
+        Get the cloud storage bucket instance.
+
+        This property returns a Bucket instance for the bucket specified during
+        class initialization.
+        The bucket is used for all blob (file) operations.
+        The bucket is lazily initialized on first access.
 
         Returns:
-            Bucket: Cloud storage bucket
+            Bucket: Google Cloud Storage bucket instance
         """
         if self._bucket is None:
             self._bucket = self.client.get_bucket(
@@ -179,7 +194,26 @@ class GoogleCloudStorage(CloudStorageInterface):
         folder_name: str,
         create_request: Type[CreateFolderRequest] = CreateFolderRequest,
     ) -> FolderBaseSchema:
-        """Create a new folder"""
+        """
+        Create a new managed folder in the storage.
+
+        This method creates a new folder in Google Cloud Storage
+        using the Storage Control API.
+        It constructs the necessary request with the parent bucket path
+        and folder ID.
+
+        Args:
+            folder_name: Name of the folder to create
+            create_request: Type of CreateFolderRequest to use
+                            (for testing/mocking)
+
+        Returns:
+            FolderDataSchema: Information about the created folder including
+                              folder path and timestamps
+
+        Raises:
+            Exception: If folder creation fails (handled by decorator)
+        """
         parent = await self._get_bucket_path()
 
         response = self.storage_control.create_folder(
@@ -204,7 +238,24 @@ class GoogleCloudStorage(CloudStorageInterface):
         folder_name: str,
         delete_request: Type[DeleteFolderRequest] = DeleteFolderRequest,
     ) -> FolderDeleteSchema:
-        """Delete a folder"""
+        """
+        Delete a managed folder from the storage.
+
+        This method deletes a folder from Google Cloud Storage using
+        the Storage Control API.
+        It constructs the necessary request with the full folder path.
+
+        Args:
+            folder_name: Name of the folder to delete
+            delete_request: Type of DeleteFolderRequest to use
+                            (for testing/mocking)
+
+        Returns:
+            FolderDeleteSchema: Information about the deleted folder
+
+        Raises:
+            Exception: If folder deletion fails (handled by decorator)
+        """
         folder_path = await self._get_folder_path(folder_name)
 
         self.storage_control.delete_folder(
@@ -222,7 +273,26 @@ class GoogleCloudStorage(CloudStorageInterface):
         new_name: str,
         rename_request: Type[RenameFolderRequest] = RenameFolderRequest,
     ) -> FolderRenameSchema:
-        """Rename a folder"""
+        """
+        Rename a managed folder in the storage.
+
+        This method renames a folder in Google Cloud Storage using
+        the Storage Control API.
+        It constructs the necessary request with the old folder path and
+        new folder ID.
+
+        Args:
+            old_name: Current name of the folder
+            new_name: New name for the folder
+            rename_request: Type of RenameFolderRequest to use
+                            (for testing/mocking)
+
+        Returns:
+            FolderRenameSchema: Information about the renamed folder
+
+        Raises:
+            Exception: If folder renaming fails (handled by decorator)
+        """
         old_folder_path = await self._get_folder_path(old_name)
         self.storage_control.rename_folder(
             request=rename_request(
@@ -243,7 +313,21 @@ class GoogleCloudStorage(CloudStorageInterface):
         self,
         prefix: Optional[str] = None,
     ) -> List[FolderBaseSchema]:
-        """List folders"""
+        """
+        List managed folders in the storage.
+
+        This method lists folders in Google Cloud Storage using
+        the Storage Control API.
+        It constructs the necessary request with the parent bucket path and
+        optional prefix.
+
+        Args:
+            prefix: Optional prefix to filter results
+
+        Returns:
+            List[FolderBaseSchema]: List of folder schemas representing
+                                    the matching folders
+        """
         list_folders_request = ListFoldersRequest(
             parent=f"projects/{self.project_id}/buckets/{self.bucket_name}",
             prefix=prefix if prefix else "",
@@ -268,16 +352,56 @@ class GoogleCloudStorage(CloudStorageInterface):
         return folders
 
     async def _get_bucket_path(self) -> str:
+        """
+        Get the full path to the bucket in Google Cloud Storage.
+
+        This method constructs the full path to the bucket using
+        the project path and bucket name. The path is used for operations that
+        require the full bucket path, such as folder creation.
+
+        Returns:
+            str: The full path to the bucket in the format
+                 "projects/{project_id}/buckets/{bucket_name}"
+        """
         project_path = self.storage_control.common_project_path("_")
 
         return f"{project_path}/buckets/{self.bucket_name}"
 
     async def _get_folder_path(self, folder_name: str) -> str:
+        """
+        Get the full path to a folder in Google Cloud Storage.
+
+        This method constructs the full path to a folder using the storage
+        control client's folder_path method. The path is used for operations
+        that require the full folder path, such as folder deletion or renaming.
+
+        Args:
+            folder_name: Name of the folder to get the path for
+
+        Returns:
+            str: The full path to the folder in the format required by the
+                 Storage Control API
+        """
         return self.storage_control.folder_path(
             project="_", bucket=self.bucket_name, folder=folder_name
         )
 
     async def _get_common_folder_path(self, folder_name: str) -> str:
+        """
+        Get a standardized folder path format for consistent usage.
+
+        This method takes a folder name and converts it to a standardized path
+        format by extracting the relevant part from the common_folder_path
+        and ensuring it ends with a trailing slash. This standardized format
+        is used for consistent folder path representation across
+        the application.
+
+        Args:
+            folder_name: Name of the folder to get the standardized path for
+
+        Returns:
+            str: The standardized folder path with a trailing slash
+        """
         folder_path = self.storage_control.common_folder_path(
             folder_name
         ).split("folders/")[-1]
@@ -290,6 +414,23 @@ class GoogleCloudStorage(CloudStorageInterface):
         search_query: str,
         case_sensitive: Optional[bool] = False,
     ) -> List[FileSchema]:
+        """
+        Search for blobs that match a given query string.
+
+        This method filters a list of blobs based on whether their names
+        contain the specified search query. The search can be case-sensitive
+        or case-insensitive based on the provided parameter.
+
+        Args:
+            blobs: List of Blob objects to search through
+            search_query: The string to search for in blob names
+            case_sensitive: Whether the search should be case-sensitive
+                            (default: False)
+
+        Returns:
+            List[FileSchema]: A list of FileSchema objects representing
+                              the blobs whose names contain the search query
+        """
         if not case_sensitive:
             search_query = search_query.lower()
 
