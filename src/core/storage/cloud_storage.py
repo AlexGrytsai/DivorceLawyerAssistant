@@ -152,8 +152,10 @@ class CloudStorage(BaseStorageInterface):
         *args,
         **kwargs,
     ) -> List[FileDeleteSchema]:
-        blobs: List[Blob] = await self._cloud_storage.list_blobs(prefix=prefix)
-        tasks = [self.delete_file(blob.name, request) for blob in blobs]
+        blobs: List[FileSchema] = await self._cloud_storage.list_blobs(
+            prefix=prefix
+        )
+        tasks = [self.delete_file(blob.path, request) for blob in blobs]
         return await asyncio.gather(*tasks)
 
     @handle_upload_file_exceptions
@@ -228,8 +230,14 @@ class CloudStorage(BaseStorageInterface):
     async def list_files(
         self,
         prefix: Optional[str] = "",
+        search_query: Optional[str] = "",
+        case_sensitive: Optional[bool] = False,
     ) -> List[FileSchema]:
-        return await self._cloud_storage.list_blobs(prefix=prefix)
+        return await self._cloud_storage.list_blobs(
+            prefix=prefix,
+            search_query=search_query,
+            case_sensitive=case_sensitive,
+        )
 
     async def list_folders(
         self,
@@ -297,14 +305,14 @@ class CloudStorage(BaseStorageInterface):
         self, folder_path: str
     ) -> FolderContentsSchema:
         folder_path = self._normalize_folder_path(folder_path)
-        blobs: List[Blob] = await self._cloud_storage.list_blobs(
+        blobs: List[FileSchema] = await self._cloud_storage.list_blobs(
             prefix=folder_path
         )
         files: List[FileSchemaForFolder] = []
         folders: Set[str] = set()
 
         for blob in blobs:
-            relative_path = self._get_relative_path(blob.name, folder_path)
+            relative_path = self._get_relative_path(blob.filename, folder_path)
             if not relative_path:
                 continue
 
@@ -313,7 +321,7 @@ class CloudStorage(BaseStorageInterface):
                 files.append(
                     self._process_file_item(
                         filename=parts[0],
-                        url=blob.public_url,
+                        url=blob.url,
                         size=blob.size,
                         content_type=blob.content_type,
                     )
@@ -339,33 +347,6 @@ class CloudStorage(BaseStorageInterface):
             current_path=folder_path.rstrip("/") if folder_path else "",
             items=self._sort_folder_items(all_items),
         )
-
-    async def search_files_by_name(
-        self,
-        search_query: str,
-        case_sensitive: bool = False,
-    ) -> List[FileSchema]:
-        return await self._cloud_storage.list_blobs(prefix=search_query)
-        # if not case_sensitive:
-        #     search_query = search_query.lower()
-        #
-        # matching_files: List[FileSchema] = []
-        # for blob in blobs:
-        #     blob_name = blob.name
-        #     if not case_sensitive:
-        #         blob_name = blob_name.lower()
-        #
-        #     if search_query in blob_name:
-        #         matching_files.append(
-        #             FileSchema(
-        #                 filename=blob.name,
-        #                 url=blob.public_url,
-        #                 content_type=blob.content_type,
-        #                 size=blob.size,
-        #             )
-        #         )
-        #
-        # return matching_files
 
     @staticmethod
     def _get_user_identifier(request: Request) -> str:
