@@ -127,6 +127,25 @@ class GoogleCloudStorage(CloudStorageInterface):
         )
 
     @async_handle_cloud_storage_exceptions
+    async def get_blob(self, file_path: str) -> FileSchema:
+        """Get blob (file) by path"""
+        print(
+            self.bucket.blob("Oleksandr-Grytsai-Python-Developer_UKR.pdf").size
+        )
+        blob: Blob = self.bucket.blob(
+            file_path[1:] if file_path.startswith("/") else file_path
+        )
+        print(blob)
+
+        return FileSchema(
+            filename=self._get_blob_name(blob.name),
+            path=self._get_blob_path(blob.name),
+            url=blob.public_url,
+            size=blob.size,
+            content_type=blob.content_type,
+        )
+
+    @async_handle_cloud_storage_exceptions
     async def delete_blob(self, file_path: str) -> FileDeleteSchema:
         blob: Blob = self.bucket.blob(file_path)
         blob.delete()
@@ -171,10 +190,10 @@ class GoogleCloudStorage(CloudStorageInterface):
                 prefix=prefix,
             )
         )
-        if not case_sensitive:
-            search_query = search_query.lower()
 
         if search_query:
+            if not case_sensitive:
+                search_query = search_query.lower()
             return self._search_blobs(blobs, search_query, case_sensitive)
 
         return [
