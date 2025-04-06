@@ -12,7 +12,10 @@ from google.cloud.storage_control_v2 import (
     ListFoldersRequest,
 )  # type: ignore
 
-from src.core.storage.decorators import handle_cloud_storage_exceptions
+from src.core.storage.decorators import (
+    handle_cloud_storage_exceptions,
+    async_handle_cloud_storage_exceptions,
+)
 from src.core.storage.interfaces.cloud_storage_interface import (
     CloudStorageInterface,
 )
@@ -98,7 +101,7 @@ class GoogleCloudStorage(CloudStorageInterface):
             )
         return self._bucket
 
-    @handle_cloud_storage_exceptions
+    @async_handle_cloud_storage_exceptions
     async def upload_blob(
         self,
         file_path: str,
@@ -123,14 +126,14 @@ class GoogleCloudStorage(CloudStorageInterface):
             content_type=blob.content_type,
         )
 
-    @handle_cloud_storage_exceptions
+    @async_handle_cloud_storage_exceptions
     async def delete_blob(self, file_path: str) -> FileDeleteSchema:
         blob: Blob = self.bucket.blob(file_path)
         blob.delete()
 
         return FileDeleteSchema(file=file_path)
 
-    @handle_cloud_storage_exceptions
+    @async_handle_cloud_storage_exceptions
     async def copy_blob(self, source_blob: Blob, new_name: str) -> FileSchema:
         new_blob = self.bucket.copy_blob(source_blob, self.bucket, new_name)
 
@@ -142,7 +145,7 @@ class GoogleCloudStorage(CloudStorageInterface):
             content_type=new_blob.content_type,
         )
 
-    @handle_cloud_storage_exceptions
+    @async_handle_cloud_storage_exceptions
     async def rename_blob(
         self, source_blob: Blob, new_name: str
     ) -> FileSchema:
@@ -156,7 +159,7 @@ class GoogleCloudStorage(CloudStorageInterface):
             content_type=new_blob.content_type,
         )
 
-    @handle_cloud_storage_exceptions
+    @async_handle_cloud_storage_exceptions
     async def list_blobs(
         self,
         prefix: Optional[str] = "",
@@ -172,9 +175,7 @@ class GoogleCloudStorage(CloudStorageInterface):
             search_query = search_query.lower()
 
         if search_query:
-            return await self._search_blobs(
-                blobs, search_query, case_sensitive
-            )
+            return self._search_blobs(blobs, search_query, case_sensitive)
 
         return [
             FileSchema(
@@ -188,7 +189,7 @@ class GoogleCloudStorage(CloudStorageInterface):
             if blob.content_type != "Folder"
         ]
 
-    @handle_cloud_storage_exceptions
+    @async_handle_cloud_storage_exceptions
     async def create_folder(
         self,
         folder_name: str,
@@ -214,11 +215,9 @@ class GoogleCloudStorage(CloudStorageInterface):
         Raises:
             Exception: If folder creation fails (handled by decorator)
         """
-        parent = self._get_bucket_path()
-
         response = self.storage_control.create_folder(
             request=create_request(
-                parent=parent,
+                parent=self._get_bucket_path(),
                 folder_id=folder_name,
                 recursive=True,
             )
@@ -231,7 +230,7 @@ class GoogleCloudStorage(CloudStorageInterface):
             update_time=response.update_time.replace(microsecond=0),
         )
 
-    @handle_cloud_storage_exceptions
+    @async_handle_cloud_storage_exceptions
     async def delete_folder(
         self,
         folder_path: str,
@@ -255,17 +254,16 @@ class GoogleCloudStorage(CloudStorageInterface):
         Raises:
             Exception: If folder deletion fails (handled by decorator)
         """
-        folder_full_path = self._get_folder_path(folder_path)
 
         self.storage_control.delete_folder(
             request=delete_request(
-                name=folder_full_path,
+                name=self._get_folder_path(folder_path),
             )
         )
 
         return FolderDeleteSchema(folder_name=folder_path)
 
-    @handle_cloud_storage_exceptions
+    @async_handle_cloud_storage_exceptions
     async def rename_folder(
         self,
         old_name: str,
@@ -292,10 +290,9 @@ class GoogleCloudStorage(CloudStorageInterface):
         Raises:
             Exception: If folder renaming fails (handled by decorator)
         """
-        old_folder_path = self._get_folder_path(old_name)
         self.storage_control.rename_folder(
             request=rename_request(
-                name=old_folder_path,
+                name=self._get_folder_path(old_name),
                 destination_folder_id=new_name,
             )
         )
@@ -308,6 +305,7 @@ class GoogleCloudStorage(CloudStorageInterface):
             folder_path=folder_path,
         )
 
+    @async_handle_cloud_storage_exceptions
     async def list_folders(
         self,
         prefix: Optional[str] = None,
@@ -406,7 +404,7 @@ class GoogleCloudStorage(CloudStorageInterface):
         return folder_path if folder_path.endswith("/") else f"{folder_path}/"
 
     @staticmethod
-    async def _search_blobs(
+    def _search_blobs(
         blobs: List[Blob],
         search_query: str,
         case_sensitive: Optional[bool] = False,
