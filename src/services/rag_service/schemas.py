@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Dict, List, Optional, Union, Any
+from typing import Dict, List, Optional, Any
 
 from pydantic import BaseModel, Field
 
@@ -74,6 +74,6 @@ class PineconeIndexStatsSchema(BaseModel):
     namespaces: Dict[str, PineconeNamespaceStatsSchema] = Field(
         default_factory=dict
     )
-    dimension: int = 1536
+    dimension: int = 1024
     index_fullness: float = 0.0
-    total_vector_count: int = 0 
+    total_vector_count: int = 0
