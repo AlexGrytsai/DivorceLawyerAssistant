@@ -29,9 +29,9 @@ def handle_pinecone_exceptions(return_value: T = None) -> Callable:
 
     def decorator(func: Callable) -> Callable:
         @functools.wraps(func)
-        async def wrapper(*args, **kwargs) -> T:
+        def wrapper(*args, **kwargs) -> T:
             try:
-                return await func(*args, **kwargs)
+                return func(*args, **kwargs)
             except PineconeException as exc:
                 operation_name = func.__name__
                 logger.error(
