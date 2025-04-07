@@ -34,4 +34,6 @@ ALLOWED_MIME_TYPES_FOR_FORMS = (
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 )
 
-ALLOWED_MIME_TYPES_FOR_RAG = ("application/pdf",)
+ALLOWED_MIME_TYPES_FOR_RAG = {
+    "application/pdf": "pdf",
+}
