@@ -11,11 +11,13 @@ from src.services.rag_service.decorators import (
     handle_dict_operation_exceptions,
     handle_index_stats_exceptions,
 )
+from src.services.rag_service.interfaces import (
+    VectorDBInterface,
+)
 from src.services.rag_service.schemas import (
     PineconeIndexStatsSchema,
     PineconeNamespaceStatsSchema,
 )
-from src.services.rag_service.vector_db_interface import VectorDBInterface
 
 logger = logging.getLogger(__name__)
 
