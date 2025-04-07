@@ -1,10 +1,10 @@
 from typing import List, Optional
 
-from fastapi import APIRouter, UploadFile, Request, File, Form
+from fastapi import APIRouter, UploadFile, Request, File, Form, Body
 
 from src.api.v1.data_for_rag.schemas import (
-    IndexRAGSchema,
-    IndexCreateSchema,
+    KnowledgeBaseSchema,
+    KnowledgeBaseCreateSchema,
 )
 from src.core.config import settings
 from src.core.constants import ALLOWED_MIME_TYPES_FOR_RAG
@@ -17,7 +17,7 @@ from src.core.storage.shemas import (
 )
 from src.utils.validators.validate_file_mime import validate_file_mime
 
-router = APIRouter(prefix="/api/v1/data-for-rag", tags=["Data for RAG"])
+router = APIRouter(prefix="/api/v1/knowledge-base", tags=["Knowledge Base"])
 
 
 def _process_file_path(
@@ -26,6 +26,31 @@ def _process_file_path(
     if folder_path:
         original_filename = file.filename
         file.filename = f"{folder_path.rstrip('/')}/{original_filename}"
+
+
+@router.post(
+    "/", response_model=KnowledgeBaseCreateSchema, tags=["Knowledge Base"]
+)
+async def create_new_knowledge_base(
+    request: Request, name_knowledge_base: KnowledgeBaseSchema = Body(...)
+):
+    """
+    Creates a new knowledge base for RAG (Retrieval-Augmented Generation).
+
+    The knowledge base represents a new index in the vector database, which
+    will be used for retrieving relevant documents during response generation.
+    The process of creating a knowledge base includes:
+    - Creating a new index in the vector database
+    - Initializing storage structure for documents
+    - Generating a unique knowledge base identifier
+    """
+    base = await settings.RAG_STORAGE.create_folder(
+        name_knowledge_base.name_knowledge_base, request
+    )
+    return KnowledgeBaseCreateSchema(
+        name_knowledge_base=name_knowledge_base.name_knowledge_base,
+        create_time=base.create_time,
+    )
 
 
 @router.get(
@@ -51,23 +76,6 @@ async def list_files(
         prefix,
         search_query,
         case_sensitive,
-    )
-
-
-@router.post(
-    "/rag-index", response_model=IndexCreateSchema, tags=["RAG Index"]
-)
-async def create_rag_index(request: Request, name_index: IndexRAGSchema):
-    """
-    Create a new index for RAG (Retrieval-Augmented Generation).
-    The index is a root folder in the storage.
-    """
-    folder = await settings.RAG_STORAGE.create_folder(
-        name_index.name_index, request
-    )
-    return IndexCreateSchema(
-        name_index=name_index.name_index,
-        create_time=folder.create_time,
     )
 
 
