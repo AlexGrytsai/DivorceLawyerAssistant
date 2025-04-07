@@ -11,9 +11,6 @@ from src.services.rag_service.decorators import (
     handle_dict_operation_exceptions,
     handle_index_stats_exceptions,
 )
-from src.services.rag_service.exceptions import (
-    ErrorWithInitializationVectorDBClient,
-)
 from src.services.rag_service.schemas import (
     PineconeIndexStatsSchema,
     PineconeNamespaceStatsSchema,
