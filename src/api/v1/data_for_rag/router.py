@@ -5,6 +5,7 @@ from fastapi import APIRouter, UploadFile, Request, File, Form, Body
 from src.api.v1.data_for_rag.schemas import (
     KnowledgeBaseSchema,
     KnowledgeBaseCreateSchema,
+    KnowledgeBaseGetSchema,
 )
 from src.core.config import settings
 from src.core.constants import ALLOWED_MIME_TYPES_FOR_RAG
@@ -51,6 +52,31 @@ async def create_new_knowledge_base(
         name_knowledge_base=name_knowledge_base.name_knowledge_base,
         create_time=base.create_time,
     )
+
+
+@router.get(
+    "/", response_model=KnowledgeBaseGetSchema, tags=["Knowledge Base"]
+)
+async def get_knowledge_base(request: Request):
+    pass
+
+
+@router.put(
+    "/", response_model=KnowledgeBaseCreateSchema, tags=["Knowledge Base"]
+)
+async def rename_knowledge_base(
+    request: Request, name_knowledge_base: KnowledgeBaseSchema = Body(...)
+):
+    pass
+
+
+@router.delete(
+    "/", response_model=KnowledgeBaseCreateSchema, tags=["Knowledge Base"]
+)
+async def delete_knowledge_base(
+    request: Request, name_knowledge_base: KnowledgeBaseSchema = Body(...)
+):
+    pass
 
 
 @router.get(
