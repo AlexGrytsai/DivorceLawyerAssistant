@@ -44,7 +44,9 @@ class Settings:
         project_id=PROJECT_ID, bucket_name=RAG_BUCKET_NAME
     )
 
-    # Model settings
+    # Model AI settings
+    EMBEDDING_MODEL: str = "text-embedding-3-large"
+
     MODEL_TOKEN_LIMITS: TokenLimitsMapping = MappingProxyType(
         MODEL_TOKEN_LIMITS
     )
