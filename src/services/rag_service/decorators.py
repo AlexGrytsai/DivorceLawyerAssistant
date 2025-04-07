@@ -66,9 +66,9 @@ def handle_pinecone_init_exceptions(func: Callable) -> Callable:
     """
 
     @functools.wraps(func)
-    async def wrapper(*args, **kwargs):
+    def wrapper(*args, **kwargs):
         try:
-            return await func(*args, **kwargs)
+            return func(*args, **kwargs)
         except Exception as exc:
             logger.error(
                 f"Error initializing Pinecone client: {exc}", exc_info=True
