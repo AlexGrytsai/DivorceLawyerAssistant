@@ -1,9 +1,9 @@
 import logging
-import os
 from typing import Dict, List, Optional, Any
 
 from pinecone import Pinecone, ServerlessSpec
 
+from src.core.config import settings
 from src.services.rag_service.decorators import (
     handle_pinecone_init_exceptions,
     handle_boolean_operation_exceptions,
@@ -26,7 +26,7 @@ class PineconeClient(VectorDBInterface):
     @handle_pinecone_init_exceptions
     def __init__(self, vector_db_client: Optional[Pinecone] = None):
         self.client = vector_db_client or Pinecone(
-            api_key=os.environ.get("PINECONE_API_KEY")
+            api_key=settings.PINECONE_API_KEY
         )
 
     @handle_boolean_operation_exceptions
