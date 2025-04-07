@@ -29,9 +29,9 @@ def handle_pinecone_exceptions(return_value: T = None) -> Callable:
 
     def decorator(func: Callable) -> Callable:
         @functools.wraps(func)
-        def wrapper(*args, **kwargs) -> T:
+        async def wrapper(*args, **kwargs) -> T:
             try:
-                return func(*args, **kwargs)
+                return await func(*args, **kwargs)
             except PineconeException as exc:
                 operation_name = func.__name__
                 logger.error(
@@ -66,9 +66,9 @@ def handle_pinecone_init_exceptions(func: Callable) -> Callable:
     """
 
     @functools.wraps(func)
-    def wrapper(*args, **kwargs):
+    async def wrapper(*args, **kwargs):
         try:
-            return func(*args, **kwargs)
+            return await func(*args, **kwargs)
         except Exception as exc:
             logger.error(
                 f"Error initializing Pinecone client: {exc}", exc_info=True
