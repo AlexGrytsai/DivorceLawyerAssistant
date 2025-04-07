@@ -31,6 +31,7 @@ class Settings:
     # Required environment variables
     BASE_AI_MODEL: str = os.getenv("BASE_AI_MODEL", "Not Found")
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "Not Found")
+    PINECONE_API_KEY: str = os.getenv("PINECONE_API_KEY", "Not Found")
 
     # Directory settings
     STATIC_DIR: str = STATIC_DIR
