@@ -55,7 +55,9 @@ async def create_new_knowledge_base(
 
 
 @router.get(
-    "/", response_model=KnowledgeBaseGetSchema, tags=["Knowledge Base"]
+    "/{name_knowledge_base}",
+    response_model=KnowledgeBaseGetSchema,
+    tags=["Knowledge Base"],
 )
 async def get_knowledge_base(request: Request):
     pass
