@@ -47,6 +47,7 @@ class Settings:
 
     # Model AI settings
     EMBEDDING_MODEL: str = "text-embedding-3-large"
+    DIMENSIONS_EMBEDDING: int = 3072
 
     MODEL_TOKEN_LIMITS: TokenLimitsMapping = MappingProxyType(
         MODEL_TOKEN_LIMITS
