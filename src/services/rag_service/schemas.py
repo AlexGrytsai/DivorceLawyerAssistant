@@ -3,6 +3,8 @@ from typing import Dict, List, Optional, Any
 
 from pydantic import BaseModel, Field
 
+from src.core.config import settings
+
 
 class IndexSchema(BaseModel):
     name: str
@@ -74,6 +76,6 @@ class PineconeIndexStatsSchema(BaseModel):
     namespaces: Dict[str, PineconeNamespaceStatsSchema] = Field(
         default_factory=dict
     )
-    dimension: int = 1024
+    dimension: int = settings.DIMENSIONS_EMBEDDING
     index_fullness: float = 0.0
     total_vector_count: int = 0

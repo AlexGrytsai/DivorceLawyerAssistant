@@ -33,7 +33,7 @@ class PineconeClient(VectorDBInterface):
     def create_index(
         self,
         name: str,
-        dimension: int = 1024,
+        dimension: int = settings.DIMENSIONS_EMBEDDING,
         vector_type: str = "dense",
         metric: str = "cosine",
         cloud: str = "aws",
@@ -100,7 +100,7 @@ class PineconeClient(VectorDBInterface):
 
         return PineconeIndexStatsSchema(
             namespaces=namespaces,
-            dimension=stats.get("dimension", 1024),
+            dimension=stats.get("dimension", settings.DIMENSIONS_EMBEDDING),
             index_fullness=stats.get("index_fullness", 0.0),
             total_vector_count=stats.get("total_vector_count", 0),
         )
