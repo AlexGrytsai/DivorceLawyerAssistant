@@ -5,7 +5,6 @@ from langchain_core.embeddings import Embeddings
 from langchain_openai import OpenAIEmbeddings
 
 from src.core.config import settings
-from src.services.rag_service import VectorDBInterface
 from src.services.rag_service.decorators import handle_document_processing
 from src.services.rag_service.document_processors import (
     LangChainDocumentProcessor,
@@ -22,7 +21,6 @@ from src.services.rag_service.interfaces import (
     SearchServiceInterface,
     RAGManagerInterface,
 )
-from src.services.rag_service.pinecone_client import PineconeClient
 from src.services.rag_service.schemas import DocumentSchema, QueryResultSchema
 from src.services.rag_service.search.langchain_search_service import (
     LangChainSearchService,
@@ -56,14 +54,12 @@ class LangChainRAGManager(RAGManagerInterface):
 
     def __init__(
         self,
-        vector_db_client: Optional[VectorDBInterface] = None,
         embeddings: Optional[Embeddings] = None,
         document_processor: Optional[DocumentProcessorInterface] = None,
         file_processor_factory: Optional[FileProcessorFactory] = None,
         search_service: Optional[SearchServiceInterface] = None,
         directory_processor: Optional[DirectoryProcessor] = None,
     ) -> None:
-        self.vector_db_client = vector_db_client or PineconeClient()
         self.embeddings = embeddings or OpenAIEmbeddings(
             client=settings.OPENAI_API_KEY,
             model=settings.EMBEDDING_MODEL,
