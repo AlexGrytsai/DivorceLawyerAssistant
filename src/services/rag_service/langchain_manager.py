@@ -1,73 +1,80 @@
-import asyncio
 import logging
-import uuid
 from typing import Dict, List, Optional, Any
 
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.document_loaders import (
-    PyMuPDFLoader,
-)
 from langchain_core.embeddings import Embeddings
-from langchain_core.vectorstores import VectorStore
 from langchain_openai import OpenAIEmbeddings
-from langchain_text_splitters import TextSplitter
 
 from src.core.config import settings
 from src.services.rag_service import VectorDBInterface
-from src.services.rag_service.decorators import (
-    handle_async_document_exceptions,
-    handle_async_search_exceptions,
+from src.services.rag_service.decorators import handle_document_processing
+from src.services.rag_service.document_processors import (
+    LangChainDocumentProcessor,
 )
-from src.services.rag_service.interfaces.vector_store_factory import (
+from src.services.rag_service.factory.file_processor_factory import (
+    FileProcessorFactory,
+)
+from src.services.rag_service.factory.vector_store_factory import (
     VectorStoreFactory,
 )
+from src.services.rag_service.file_processors import DirectoryProcessor
+from src.services.rag_service.interfaces import (
+    DocumentProcessorInterface,
+    SearchServiceInterface,
+)
 from src.services.rag_service.pinecone_client import PineconeClient
-from src.services.rag_service.schemas import (
-    DocumentSchema,
-    QueryResultSchema,
+from src.services.rag_service.schemas import DocumentSchema, QueryResultSchema
+from src.services.rag_service.search.langchain_search_service import (
+    LangChainSearchService,
 )
 from src.services.rag_service.vector_stores.pinecone_factory import (
     PineconeVectorStoreFactory,
-)
-from src.services.storage.interfaces.base_storage_interface import (
-    BaseStorageInterface,
 )
 
 logger = logging.getLogger(__name__)
 
 
-class LangChainManager:
+class LangChainRAGManager:
     def __init__(
         self,
-        vector_db_client: VectorDBInterface = PineconeClient(),
-        embeddings: Embeddings = OpenAIEmbeddings(
+        vector_db_client: Optional[VectorDBInterface] = None,
+        embeddings: Optional[Embeddings] = None,
+        document_processor: Optional[DocumentProcessorInterface] = None,
+        file_processor_factory: Optional[FileProcessorFactory] = None,
+        search_service: Optional[SearchServiceInterface] = None,
+        directory_processor: Optional[DirectoryProcessor] = None,
+    ) -> None:
+        self.vector_db_client = vector_db_client or PineconeClient()
+        self.embeddings = embeddings or OpenAIEmbeddings(
             client=settings.OPENAI_API_KEY,
             model=settings.EMBEDDING_MODEL,
             dimensions=settings.DIMENSIONS_EMBEDDING,
-        ),
-        text_splitter: TextSplitter = RecursiveCharacterTextSplitter(
-            chunk_size=1000,
-            chunk_overlap=200,
-            length_function=len,
-        ),
-    ):
-        self.vector_db_client = vector_db_client
-        self.embeddings = embeddings
-        self.text_splitter = text_splitter
+        )
+        self.document_processor = (
+            document_processor
+            or LangChainDocumentProcessor(embeddings=self.embeddings)
+        )
+        self.file_processor = file_processor_factory or FileProcessorFactory()
+        self.directory_processor = directory_processor or DirectoryProcessor(
+            file_processor_factory=self.file_processor
+        )
+        self.search_service = search_service or LangChainSearchService(
+            embeddings=self.embeddings
+        )
 
     def get_vector_store(
         self,
         index_name: str,
         namespace: str,
-        vector_store: VectorStoreFactory = PineconeVectorStoreFactory(),
-    ) -> VectorStore:
+        vector_store: Optional[VectorStoreFactory] = None,
+    ):
+        vector_store = vector_store or PineconeVectorStoreFactory()
         return vector_store.create_vector_store(
             index_name=index_name,
             namespace=namespace,
             embeddings=self.embeddings,
         )
 
-    @handle_async_document_exceptions([])
+    @handle_document_processing
     async def process_pdf_file(
         self,
         file_path: str,
@@ -80,97 +87,34 @@ class LangChainManager:
             f"for index: {index_name}, namespace: {namespace}"
         )
 
-        # Load and split the document
-        loader = PyMuPDFLoader(file_path)
-        documents = loader.load()
-
-        # Add a file path to metadata if not provided
-        base_metadata = metadata or {}
-        base_metadata["source"] = file_path
-
-        # Process and store documents
-        return await self._process_and_store_documents(
-            documents=documents,
+        processor = self.file_processor.get_processor(file_path)
+        return await processor.process_file(
             file_path=file_path,
             index_name=index_name,
             namespace=namespace,
-            metadata=base_metadata,
+            metadata=metadata,
         )
 
-    @handle_async_document_exceptions([])
+    @handle_document_processing
     async def process_directory(
         self,
         directory_path: str,
         index_name: str,
         namespace: str,
         metadata: Optional[Dict[str, Any]] = None,
-        rag_storage: BaseStorageInterface = settings.RAG_STORAGE,
     ) -> List[DocumentSchema]:
         logger.info(
             f"Processing of the directory: {directory_path} "
             f"for the index: {index_name}, namespaces: {namespace}"
         )
 
-        # Add a directory path to metadata if not provided
-        base_metadata = metadata or {}
-        base_metadata["source_directory"] = directory_path
+        return await self.directory_processor.process_directory(
+            directory_path=directory_path,
+            index_name=index_name,
+            namespace=namespace,
+            metadata=metadata,
+        )
 
-        folder_contents = await rag_storage.get_folder_contents(directory_path)
-
-        documents_result = []
-
-        for item in folder_contents.items:
-            if item.type == "file":
-                file_documents = await self._process_file_by_type(
-                    file_path=item.url,
-                    index_name=index_name,
-                    namespace=namespace,
-                    metadata=base_metadata,
-                )
-                documents_result.extend(file_documents)
-
-        return documents_result
-
-    @handle_async_document_exceptions([])
-    async def _process_file_by_type(
-        self,
-        file_path: str,
-        index_name: str,
-        namespace: str,
-        metadata: Dict[str, Any],
-    ) -> List[DocumentSchema]:
-        file_ext = file_path.split(".")[-1].lower()
-
-        if file_ext == "pdf":
-            return await self.process_pdf_file(
-                file_path=file_path,
-                index_name=index_name,
-                namespace=namespace,
-                metadata=metadata,
-            )
-        elif file_ext in ["txt", "md", "rst"]:
-            # Future implementation for text files processing
-            logger.warning(
-                f"Support for text files is not yet implemented: {file_path}"
-            )
-            return []
-        elif file_ext in ["docx", "doc"]:
-            # Future implementation for Word documents processing
-            logger.warning(
-                f"Support for Word documents not implemented: {file_path}"
-            )
-            return []
-        elif file_ext in ["xlsx", "xls"]:
-            # Future implementation for Excel files processing
-            logger.warning(
-                f"Support for Excel files is not yet implemented: {file_path}"
-            )
-            return []
-        else:
-            logger.warning(f"Unsupported file type: {file_path}")
-            return []
-
-    @handle_async_search_exceptions([])
     async def search(
         self,
         query: str,
@@ -179,91 +123,10 @@ class LangChainManager:
         top_k: int = 5,
         filters: Optional[Dict[str, Any]] = None,
     ) -> List[QueryResultSchema]:
-        vector_store = self.get_vector_store(index_name, namespace)
-
-        search_results = vector_store.similarity_search_with_score(
+        return await self.search_service.search(
             query=query,
-            k=top_k,
-            filter=filters,
+            index_name=index_name,
+            namespace=namespace,
+            top_k=top_k,
+            filters=filters,
         )
-
-        # Format results
-        search_results_format: List[QueryResultSchema] = []
-        search_results_format.extend(
-            QueryResultSchema(
-                id=doc.metadata.get("chunk_id", ""),
-                text=doc.page_content,
-                metadata=doc.metadata,
-                score=float(score),
-                file_path=doc.metadata.get("source", ""),
-            )
-            for doc, score in search_results
-        )
-        return search_results_format
-
-    @handle_async_document_exceptions([])
-    async def _process_and_store_documents(
-        self,
-        documents: List[Any],
-        file_path: str,
-        index_name: str,
-        namespace: str,
-        metadata: Dict[str, Any],
-    ) -> List[DocumentSchema]:
-        # Split documents into chunks
-        splits = self.text_splitter.split_documents(documents)
-
-        if not splits:
-            logger.warning(f"No content extracted from {file_path}")
-            return []
-
-        # Get vector store
-        vector_store = self.get_vector_store(index_name, namespace)
-
-        # Prepare document records for tracking
-        doc_records = []
-
-        # Create IDs and prepare documents for adding to vector store
-        documents_with_ids = []
-        for doc in splits:
-            doc_id = str(uuid.uuid4())
-
-            # Add document metadata
-            doc.metadata.update(metadata)
-            doc.metadata["chunk_id"] = doc_id
-
-            documents_with_ids.append((doc_id, doc))
-
-            # Create document record
-            doc_records.append(
-                DocumentSchema(
-                    id=doc_id,
-                    text=doc.page_content,
-                    metadata=doc.metadata,
-                    file_path=file_path,
-                    index_name=index_name,
-                    namespace=namespace,
-                )
-            )
-
-        # Add documents to vector store
-        vector_store.add_documents([doc for _, doc in documents_with_ids])
-
-        return doc_records
-
-
-if __name__ == "__main__":
-    chain = LangChainManager()
-    print(
-        asyncio.run(
-            chain.process_pdf_file(
-                file_path="https://storage.googleapis.com/data-for-rag/test33/"
-                "%D0%92%D0%B5%D0%BB%D0%B8%D0%BA%D0%B0_%D0%9A%D1%96%D0%BB"
-                "%D1%8C%D1%86%D0%B5%D0%B2%D0%B0_4%D0%91_%D0%9B%D0%B8%D1%81"
-                "%D1%82_%D0%B4%D0%BB%D1%8F_%D0%B4%D0%BE%D0%B2%D1%96%D0%B4"
-                "%D0%BA%D0%B8.pdf",
-                index_name="test_index",
-                namespace="test_namespace",
-            )
-        )
-    )
