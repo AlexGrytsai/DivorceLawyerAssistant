@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from typing import Dict, List, Optional, Any
 
@@ -5,8 +6,9 @@ from fastapi import UploadFile, Request, HTTPException, status
 
 from src.core.config import settings
 from src.core.constants import ALLOWED_MIME_TYPES_FOR_RAG
-from src.services.rag_service import VectorDBInterface, LangChainRAGManager
+from src.services.rag_service import VectorDBInterface
 from src.services.rag_service.interfaces import RAGManagerInterface
+from src.services.rag_service.langchain_rag_manager import LangChainRAGManager
 from src.services.rag_service.pinecone_client import PineconeClient
 from src.services.rag_service.schemas import (
     IndexCreateSchema,
@@ -72,9 +74,18 @@ class RAGService:
         )
 
         if not success:
-            logger.warning(
-                f"Failed to create Vector DB index: {index_name}, "
-                f"but folder was created"
+            await self.storage.delete_folder(index_name, request)
+
+            logger.warning(f"Failed to create Vector DB index: {index_name}.")
+
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail={
+                    "error": "Error creating index in Vector DB",
+                    "message": (
+                        f"Failed to create Vector DB index: {index_name}"
+                    ),
+                },
             )
 
         return IndexCreateSchema(
@@ -411,6 +422,7 @@ class RAGService:
             )
         except Exception as e:
             logger.error(f"Error processing folder {folder_path}: {e}")
+
             return ProcessingStatusSchema(
                 index_name=index_name,
                 namespace=namespace,
@@ -514,3 +526,8 @@ class RAGService:
             results=results,
             total=len(results),
         )
+
+
+if __name__ == "__main__":
+    rag_service = RAGService()
+    asyncio.run(rag_service.create_index("test-index"))
