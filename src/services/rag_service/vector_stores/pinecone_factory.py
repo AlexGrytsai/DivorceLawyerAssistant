@@ -1,9 +1,7 @@
 from langchain_core.embeddings import Embeddings
 from langchain_pinecone import PineconeVectorStore
 
-from src.services.rag_service.interfaces.vector_store_factory import (
-    VectorStoreFactory,
-)
+from src.services.rag_service.factory import VectorStoreFactory
 
 
 class PineconeVectorStoreFactory(VectorStoreFactory):
