@@ -6,7 +6,6 @@ from typing import Dict, List, Optional, Any
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import (
     PyMuPDFLoader,
-    DirectoryLoader,
 )
 from langchain_core.embeddings import Embeddings
 from langchain_core.vectorstores import VectorStore
@@ -14,7 +13,6 @@ from langchain_openai import OpenAIEmbeddings
 from langchain_text_splitters import TextSplitter
 
 from src.core.config import settings
-from src.core.constants import ALLOWED_MIME_TYPES_FOR_RAG
 from src.services.rag_service import VectorDBInterface
 from src.services.rag_service.interfaces.vector_store_factory import (
     VectorStoreFactory,
@@ -27,7 +25,9 @@ from src.services.rag_service.schemas import (
 from src.services.rag_service.vector_stores.pinecone_factory import (
     PineconeVectorStoreFactory,
 )
-from src.utils.validators.validate_file_mime import get_real_mime_type
+from src.services.storage.interfaces.base_storage_interface import (
+    BaseStorageInterface,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -102,57 +102,75 @@ class LangChainManager:
         index_name: str,
         namespace: str,
         metadata: Optional[Dict[str, Any]] = None,
+        rag_storage: BaseStorageInterface = settings.RAG_STORAGE,
     ) -> List[DocumentSchema]:
         try:
             logger.info(
-                f"Processing directory: {directory_path} "
-                f"for index: {index_name}, namespace: {namespace}"
+                f"Processing of the directory: {directory_path} "
+                f"for the index: {index_name}, namespaces: {namespace}"
             )
 
-            # Load all PDF files from directory
-            loader = DirectoryLoader(
-                directory_path,
-                glob=self._get_glob_pattern_from_mime_types(
-                    ALLOWED_MIME_TYPES_FOR_RAG
-                ),
-                loader_cls=PyMuPDFLoader,
-            )
-
-            # Checking MIME-type for each file
-            valid_documents = []
-            for file_path in loader.file_paths:
-                try:
-                    with open(file_path, "rb") as file:
-                        file_bytes = file.read()
-                        mime_type = get_real_mime_type(file_bytes)
-                        if mime_type in ALLOWED_MIME_TYPES_FOR_RAG:
-                            valid_documents.extend(loader.load_file(file_path))
-                        else:
-                            logger.warning(
-                                f"Invalid MIME type {mime_type} for file {file_path}"
-                            )
-                except Exception as e:
-                    logger.error(f"Error processing file {file_path}: {e}")
-                    continue
-
-            if not valid_documents:
-                logger.warning(f"No valid documents found in {directory_path}")
-                return []
-
-            # Add directory path to metadata if not provided
+            # Add a directory path to metadata if not provided
             base_metadata = metadata or {}
             base_metadata["source_directory"] = directory_path
 
-            # Process and store documents
-            return await self._process_and_store_documents(
-                documents=valid_documents,
-                file_path=directory_path,
+            folder_contents = await rag_storage.get_folder_contents(
+                directory_path
+            )
+
+            documents_result = []
+
+            for item in folder_contents.items:
+                if item.type == "file":
+                    file_documents = await self._process_file_by_type(
+                        file_path=item.url,
+                        index_name=index_name,
+                        namespace=namespace,
+                        metadata=base_metadata,
+                    )
+                    documents_result.extend(file_documents)
+
+            return documents_result
+        except Exception as e:
+            logger.error(f"Directory processing error {directory_path}: {e}")
+            return []
+
+    async def _process_file_by_type(
+        self,
+        file_path: str,
+        index_name: str,
+        namespace: str,
+        metadata: Dict[str, Any],
+    ) -> List[DocumentSchema]:
+        file_ext = file_path.split(".")[-1].lower()
+        
+        if file_ext == "pdf":
+            return await self.process_pdf_file(
+                file_path=file_path,
                 index_name=index_name,
                 namespace=namespace,
-                metadata=base_metadata,
+                metadata=metadata,
             )
-        except Exception as e:
-            logger.error(f"Error processing directory {directory_path}: {e}")
+        elif file_ext in ["txt", "md", "rst"]:
+            # Future implementation for text files processing
+            logger.warning(
+                f"Support for text files is not yet implemented: {file_path}"
+            )
+            return []
+        elif file_ext in ["docx", "doc"]:
+            # Future implementation for Word documents processing
+            logger.warning(
+                f"Support for Word documents not implemented: {file_path}"
+            )
+            return []
+        elif file_ext in ["xlsx", "xls"]:
+            # Future implementation for Excel files processing
+            logger.warning(
+                f"Support for Excel files is not yet implemented: {file_path}"
+            )
+            return []
+        else:
+            logger.warning(f"Unsupported file type: {file_path}")
             return []
 
     async def search(
@@ -164,10 +182,8 @@ class LangChainManager:
         filters: Optional[Dict[str, Any]] = None,
     ) -> List[QueryResultSchema]:
         try:
-            # Get vector store
             vector_store = self.get_vector_store(index_name, namespace)
 
-            # Search for similar documents
             search_results = vector_store.similarity_search_with_score(
                 query=query,
                 k=top_k,
