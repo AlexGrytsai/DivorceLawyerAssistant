@@ -20,6 +20,7 @@ from src.services.rag_service.file_processors import DirectoryProcessor
 from src.services.rag_service.interfaces import (
     DocumentProcessorInterface,
     SearchServiceInterface,
+    RAGManagerInterface,
 )
 from src.services.rag_service.pinecone_client import PineconeClient
 from src.services.rag_service.schemas import DocumentSchema, QueryResultSchema
@@ -33,7 +34,7 @@ from src.services.rag_service.vector_stores.pinecone_factory import (
 logger = logging.getLogger(__name__)
 
 
-class LangChainRAGManager:
+class LangChainRAGManager(RAGManagerInterface):
     """
     Manager for Retrieval-Augmented Generation (RAG) operations using LangChain
 
