@@ -9,17 +9,23 @@ from langchain_community.document_loaders import (
     DirectoryLoader,
 )
 from langchain_core.embeddings import Embeddings
+from langchain_core.vectorstores import VectorStore
 from langchain_openai import OpenAIEmbeddings
-from langchain_pinecone import PineconeVectorStore
 from langchain_text_splitters import TextSplitter
 
 from src.core.config import settings
 from src.core.constants import ALLOWED_MIME_TYPES_FOR_RAG
 from src.services.rag_service import VectorDBInterface
+from src.services.rag_service.interfaces.vector_store_factory import (
+    VectorStoreFactory,
+)
 from src.services.rag_service.pinecone_client import PineconeClient
 from src.services.rag_service.schemas import (
     DocumentSchema,
     QueryResultSchema,
+)
+from src.services.rag_service.vector_stores.pinecone_factory import (
+    PineconeVectorStoreFactory,
 )
 from src.utils.validators.validate_file_mime import get_real_mime_type
 
@@ -43,16 +49,18 @@ class LangChainManager:
     ):
         self.vector_db_client = vector_db_client
         self.embeddings = embeddings
-
         self.text_splitter = text_splitter
 
     def get_vector_store(
-        self, index_name: str, namespace: str
-    ) -> PineconeVectorStore:
-        return PineconeVectorStore(
+        self,
+        index_name: str,
+        namespace: str,
+        vector_store: VectorStoreFactory = PineconeVectorStoreFactory(),
+    ) -> VectorStore:
+        return vector_store.create_vector_store(
             index_name=index_name,
-            embedding=self.embeddings,
             namespace=namespace,
+            embeddings=self.embeddings,
         )
 
     async def process_pdf_file(
