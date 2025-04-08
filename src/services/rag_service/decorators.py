@@ -1,21 +1,18 @@
 import functools
 import logging
-from typing import Callable, TypeVar, Any, Awaitable, cast
+from typing import Callable
 
+from fastapi import HTTPException, status
 from pinecone import PineconeException
 
 from src.services.rag_service.exceptions import (
     ErrorWithInitializationVectorDBClient,
 )
-from src.services.rag_service.schemas import PineconeIndexStatsSchema
 
 logger = logging.getLogger(__name__)
 
-T = TypeVar("T")
-R = TypeVar("R")
 
-
-def handle_pinecone_exceptions(return_value: T = None) -> Callable:
+def handle_pinecone_exceptions() -> Callable:
     """
     Generic decorator for handling Pinecone operations.
     Catches PineconeException and other exceptions, logs them,
@@ -30,7 +27,7 @@ def handle_pinecone_exceptions(return_value: T = None) -> Callable:
 
     def decorator(func: Callable) -> Callable:
         @functools.wraps(func)
-        def wrapper(*args, **kwargs) -> T:
+        def wrapper(*args, **kwargs) -> Callable:
             try:
                 return func(*args, **kwargs)
             except PineconeException as exc:
@@ -39,14 +36,28 @@ def handle_pinecone_exceptions(return_value: T = None) -> Callable:
                     f"Error in Pinecone operation {operation_name}: {exc}",
                     exc_info=True,
                 )
-                return return_value
+                raise HTTPException(
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    detail={
+                        "error": "Error with Pinecone operation",
+                        "message": f"Error in Pinecone operation "
+                        f"{operation_name}: {exc}",
+                    },
+                ) from exc
             except Exception as exc:
                 operation_name = func.__name__
                 logger.error(
                     f"Unexpected error in {operation_name}: {exc}",
                     exc_info=True,
                 )
-                return return_value
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail={
+                        "error": "Unexpected error in Pinecone operation",
+                        "message": f"Unexpected error in "
+                        f"{operation_name}: {exc}",
+                    },
+                ) from exc
 
         return wrapper
 
@@ -54,12 +65,11 @@ def handle_pinecone_exceptions(return_value: T = None) -> Callable:
 
 
 async def handle_async_exceptions(
-    func: Callable[..., Awaitable[R]],
+    func: Callable,
     args: tuple,
     kwargs: dict,
-    return_value: Any,
     operation_type: str,
-) -> R:
+) -> Callable:
     """
     Helper function for async exception handling
     """
@@ -71,33 +81,72 @@ async def handle_async_exceptions(
             f"Error in {operation_type} operation {operation_name}: {exc}",
             exc_info=True,
         )
-        return return_value
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={
+                "error": "Error in {operation_type}",
+                "message": f"Error in {operation_type} operation "
+                f"{operation_name}: {exc}",
+            },
+        ) from exc
 
 
-def handle_async_document_exceptions(return_value: R = None) -> Callable:
+async def handle_async_document_exceptions(
+    func: Callable,
+    args: tuple,
+    kwargs: dict,
+    operation_type: str,
+) -> None:
     """
-    Decorator for handling exceptions in async operations that process 
-    documents. Catches exceptions, logs them, and returns specified value.
+    Helper function for document processing exception handling
+    Raises HTTPException.
+    """
+    try:
+        return await func(*args, **kwargs)
+    except Exception as exc:
+        operation_name = func.__name__
+        file_path = kwargs.get("file_path", "") or (
+            args[1] if len(args) > 1 else ""
+        )
 
-    Args:
-        return_value: Value to return if exception occurs (default: empty list)
+        logger.error(
+            f"Error in {operation_type} operation {operation_name}: {exc}",
+            exc_info=True,
+        )
+
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail={
+                "error": "Error processing document",
+                "message": f"Error in {operation_type} "
+                f"operation {operation_name}: {exc}",
+                "file_path": file_path,
+            },
+        ) from exc
+
+
+def handle_document_processing(
+    func: Callable,
+) -> Callable:
+    """
+    Decorator for handling exceptions in document processing operations.
+    Catches exceptions, logs them, and raises DocumentProcessingError
+    for proper HTTP error handling in FastAPI.
 
     Returns:
         Decorated async function
     """
-    def decorator(
-        func: Callable[..., Awaitable[R]]
-    ) -> Callable[..., Awaitable[R]]:
-        @functools.wraps(func)
-        async def wrapper(*args, **kwargs) -> R:
-            return await handle_async_exceptions(
-                func, args, kwargs, return_value or [], "document processing"
-            )
-        return wrapper
-    return decorator
+
+    @functools.wraps(func)
+    async def wrapper(*args, **kwargs) -> None:
+        return await handle_async_document_exceptions(
+            func, args, kwargs, "document processing"
+        )
+
+    return wrapper
 
 
-def handle_async_search_exceptions(return_value: R = None) -> Callable:
+def handle_async_search_exceptions() -> Callable:
     """
     Decorator for handling exceptions in async search operations.
     Catches exceptions, logs them, and returns specified value.
@@ -108,15 +157,16 @@ def handle_async_search_exceptions(return_value: R = None) -> Callable:
     Returns:
         Decorated async function
     """
+
     def decorator(
-        func: Callable[..., Awaitable[R]]
-    ) -> Callable[..., Awaitable[R]]:
+        func: Callable,
+    ) -> Callable:
         @functools.wraps(func)
-        async def wrapper(*args, **kwargs) -> R:
-            return await handle_async_exceptions(
-                func, args, kwargs, return_value or [], "search"
-            )
+        async def wrapper(*args, **kwargs) -> Callable:
+            return await handle_async_exceptions(func, args, kwargs, "search")
+
         return wrapper
+
     return decorator
 
 
@@ -159,7 +209,7 @@ def handle_index_stats_exceptions(func: Callable) -> Callable:
     Returns:
         Decorated function that returns PineconeIndexStatsSchema
     """
-    return handle_pinecone_exceptions(PineconeIndexStatsSchema())(func)
+    return handle_pinecone_exceptions()(func)
 
 
 def handle_list_operation_exceptions(func: Callable) -> Callable:
@@ -173,7 +223,7 @@ def handle_list_operation_exceptions(func: Callable) -> Callable:
     Returns:
         Decorated function that returns a list
     """
-    return handle_pinecone_exceptions([])(func)
+    return handle_pinecone_exceptions()(func)
 
 
 def handle_dict_operation_exceptions(func: Callable) -> Callable:
@@ -187,7 +237,7 @@ def handle_dict_operation_exceptions(func: Callable) -> Callable:
     Returns:
         Decorated function that returns a dictionary
     """
-    return handle_pinecone_exceptions({})(func)
+    return handle_pinecone_exceptions()(func)
 
 
 def handle_boolean_operation_exceptions(func: Callable) -> Callable:
@@ -201,4 +251,4 @@ def handle_boolean_operation_exceptions(func: Callable) -> Callable:
     Returns:
         Decorated function that returns a boolean
     """
-    return handle_pinecone_exceptions(False)(func)
+    return handle_pinecone_exceptions()(func)
