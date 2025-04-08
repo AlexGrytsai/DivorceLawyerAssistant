@@ -76,7 +76,11 @@ class BaseStorageInterface(ABC):
 
     @abstractmethod
     async def upload(
-        self, file: UploadFile, request: Optional[Request] = None, *args, **kwargs
+        self,
+        file: UploadFile,
+        request: Optional[Request] = None,
+        *args,
+        **kwargs,
     ) -> FileSchema:
         """
         Upload a single file to storage
@@ -94,7 +98,11 @@ class BaseStorageInterface(ABC):
 
     @abstractmethod
     async def multi_upload(
-        self, files: List[UploadFile], request: Optional[Request] = None, *args, **kwargs
+        self,
+        files: List[UploadFile],
+        request: Optional[Request] = None,
+        *args,
+        **kwargs,
     ) -> List[FileSchema]:
         """
         Upload multiple files to storage
@@ -112,7 +120,11 @@ class BaseStorageInterface(ABC):
 
     @abstractmethod
     async def delete_file(
-        self, file_path: str, request: Optional[Request] = None, *args, **kwargs
+        self,
+        file_path: str,
+        request: Optional[Request] = None,
+        *args,
+        **kwargs,
     ) -> FileDeleteSchema:
         """
         Delete a file from storage
@@ -130,7 +142,11 @@ class BaseStorageInterface(ABC):
 
     @abstractmethod
     async def create_folder(
-        self, folder_path: str, request: Optional[Request] = None, *args, **kwargs
+        self,
+        folder_path: str,
+        request: Optional[Request] = None,
+        *args,
+        **kwargs,
     ) -> FolderDataSchema:
         """
         Create a new folder in storage
@@ -172,7 +188,11 @@ class BaseStorageInterface(ABC):
 
     @abstractmethod
     async def delete_folder(
-        self, folder_path: str, request: Optional[Request] = None, *args, **kwargs
+        self,
+        folder_path: str,
+        request: Optional[Request] = None,
+        *args,
+        **kwargs,
     ) -> FolderDeleteSchema:
         """
         Delete folder and all its contents
