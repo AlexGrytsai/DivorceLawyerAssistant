@@ -5,10 +5,6 @@ from typing import Callable
 from fastapi import HTTPException, status
 from pinecone import PineconeException
 
-from src.services.rag_service.exceptions import (
-    ErrorWithInitializationVectorDBClient,
-)
-
 logger = logging.getLogger(__name__)
 
 
@@ -193,8 +189,8 @@ def handle_async_search_exceptions(func: Callable) -> Callable:
 def handle_pinecone_init_exceptions(func: Callable) -> Callable:
     """
     Decorator for handling exceptions during Pinecone client initialization.
-    Catches exceptions, logs them, and raises
-    ErrorWithInitializationVectorDBClient.
+    Catches exceptions, logs them, and raises an HTTP exception with
+    appropriate status code and error details.
 
     Args:
         func: Function to decorate
@@ -211,8 +207,12 @@ def handle_pinecone_init_exceptions(func: Callable) -> Callable:
             logger.error(
                 f"Error initializing Pinecone client: {exc}", exc_info=True
             )
-            raise ErrorWithInitializationVectorDBClient(
-                f"Error initializing Pinecone client: {exc}"
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail={
+                    "error": "Error with Pinecone client initialization",
+                    "message": f"Error initializing Pinecone client: {exc}",
+                },
             ) from exc
 
     return wrapper
