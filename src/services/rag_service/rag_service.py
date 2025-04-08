@@ -43,7 +43,7 @@ class RAGService:
     async def create_index(
         self,
         index_name: str,
-        request: Request,
+        request: Optional[Request] = None,
         dimension: int = settings.DIMENSIONS_EMBEDDING,
         metric: str = "cosine",
     ) -> IndexCreateSchema:
@@ -122,7 +122,9 @@ class RAGService:
         return indexes
 
     async def delete_index(
-        self, index_name: str, request: Request
+        self,
+        index_name: str,
+        request: Optional[Request] = None,
     ) -> FolderDeleteSchema:
         """
         Deletes an index from Vector DB and corresponding folder from storage.
@@ -160,7 +162,10 @@ class RAGService:
         return await self.storage.delete_folder(index_name, request)
 
     async def create_namespace(
-        self, index_name: str, namespace: str, request: Request
+        self,
+        index_name: str,
+        namespace: str,
+        request: Optional[Request] = None,
     ) -> NamespaceCreateSchema:
         """
         Creates a namespace folder within an index.
@@ -222,7 +227,10 @@ class RAGService:
         return namespaces
 
     async def delete_namespace(
-        self, index_name: str, namespace: str, request: Request
+        self,
+        index_name: str,
+        namespace: str,
+        request: Optional[Request] = None,
     ) -> FolderDeleteSchema:
         """
         Deletes a namespace from an index and its folder from storage.
@@ -272,7 +280,7 @@ class RAGService:
         index_name: str,
         namespace: str,
         file: UploadFile,
-        request: Request,
+        request: Optional[Request] = None,
         metadata: Optional[Dict[str, Any]] = None,
     ) -> FileSchema:
         """
@@ -318,7 +326,7 @@ class RAGService:
         index_name: str,
         namespace: str,
         files: List[UploadFile],
-        request: Request,
+        request: Optional[Request] = None,
         metadata: Optional[Dict[str, Any]] = None,
     ) -> List[FileSchema]:
         """
@@ -366,7 +374,6 @@ class RAGService:
         index_name: str,
         namespace: str,
         folder_path: str,
-        request: Request,
         metadata: Optional[Dict[str, Any]] = None,
     ) -> ProcessingStatusSchema:
         """
@@ -376,7 +383,6 @@ class RAGService:
             index_name: Target index name
             namespace: Target namespace
             folder_path: Path to folder with PDF files
-            request: FastAPI request object
             metadata: Optional metadata to attach to document chunks
 
         Returns:
@@ -419,7 +425,7 @@ class RAGService:
         index_name: str,
         namespace: str,
         document_path: str,
-        request: Request,
+        request: Optional[Request] = None,
     ) -> FileDeleteSchema:
         """
         Deletes a document from storage and its vectors from Vector DB.
