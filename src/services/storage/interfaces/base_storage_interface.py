@@ -32,7 +32,7 @@ class BaseStorageInterface(ABC):
 
     async def __call__(
         self,
-        request: Request,
+        request: Optional[Request] = None,
         file: Optional[UploadFile] = None,
         files: Optional[List[UploadFile]] = None,
     ) -> Union[FileSchema, List[FileSchema]]:
@@ -76,7 +76,7 @@ class BaseStorageInterface(ABC):
 
     @abstractmethod
     async def upload(
-        self, file: UploadFile, request: Request, *args, **kwargs
+        self, file: UploadFile, request: Optional[Request] = None, *args, **kwargs
     ) -> FileSchema:
         """
         Upload a single file to storage
@@ -94,7 +94,7 @@ class BaseStorageInterface(ABC):
 
     @abstractmethod
     async def multi_upload(
-        self, files: List[UploadFile], request: Request, *args, **kwargs
+        self, files: List[UploadFile], request: Optional[Request] = None, *args, **kwargs
     ) -> List[FileSchema]:
         """
         Upload multiple files to storage
@@ -112,7 +112,7 @@ class BaseStorageInterface(ABC):
 
     @abstractmethod
     async def delete_file(
-        self, file_path: str, request: Request, *args, **kwargs
+        self, file_path: str, request: Optional[Request] = None, *args, **kwargs
     ) -> FileDeleteSchema:
         """
         Delete a file from storage
@@ -130,7 +130,7 @@ class BaseStorageInterface(ABC):
 
     @abstractmethod
     async def create_folder(
-        self, folder_path: str, request: Request, *args, **kwargs
+        self, folder_path: str, request: Optional[Request] = None, *args, **kwargs
     ) -> FolderDataSchema:
         """
         Create a new folder in storage
@@ -148,7 +148,12 @@ class BaseStorageInterface(ABC):
 
     @abstractmethod
     async def rename_folder(
-        self, old_path: str, new_path: str, request: Request, *args, **kwargs
+        self,
+        old_path: str,
+        new_path: str,
+        request: Optional[Request] = None,
+        *args,
+        **kwargs,
     ) -> FolderDataSchema:
         """
         Rename existing folder
@@ -167,7 +172,7 @@ class BaseStorageInterface(ABC):
 
     @abstractmethod
     async def delete_folder(
-        self, folder_path: str, request: Request, *args, **kwargs
+        self, folder_path: str, request: Optional[Request] = None, *args, **kwargs
     ) -> FolderDeleteSchema:
         """
         Delete folder and all its contents
@@ -188,7 +193,7 @@ class BaseStorageInterface(ABC):
         self,
         old_path: str,
         new_file_name: str,
-        request: Request,
+        request: Optional[Request] = None,
         *args,
         **kwargs,
     ) -> FileSchema:
