@@ -35,5 +35,6 @@ class NullProcessor(FileProcessorInterface):
             detail={
                 "error": "Unsupported file type",
                 "message": f"Unsupported file type: {file_path}",
+                "file_path": file_path,
             },
         )
