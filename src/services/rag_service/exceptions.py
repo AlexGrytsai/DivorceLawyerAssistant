@@ -1,2 +1,0 @@
-class ErrorWithInitializationVectorDBClient(Exception):
-    pass
