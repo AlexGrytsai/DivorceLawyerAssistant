@@ -35,20 +35,24 @@ logger = logging.getLogger(__name__)
 
 class LangChainRAGManager:
     """
-    Manager for Retrieval-Augmented Generation (RAG) operations using LangChain.
+    Manager for Retrieval-Augmented Generation (RAG) operations using LangChain
 
-    This class provides a unified interface for document processing, vector storage,
-    and semantic search operations. It handles PDF file processing, directory processing,
-    and vector search capabilities through various specialized components.
+    This class provides a unified interface for document processing,
+    vector storage, and semantic search operations.
+    It handles PDF file processing, directory processing, and vector search
+    capabilities through various specialized components.
 
     Attributes:
-        vector_db_client: Client for interacting with vector database (Pinecone by default)
+        vector_db_client: Client for interacting with vector database
+                          (Pinecone by default)
         embeddings: Model for creating text embeddings (OpenAI by default)
-        document_processor: Processor for handling document chunking and embedding
+        document_processor: Processor for handling document chunking
+                            splitting and embedding
         file_processor: Factory for creating file-specific processors
         directory_processor: Processor for handling directory of files
         search_service: Service for performing semantic searches
     """
+
     def __init__(
         self,
         vector_db_client: Optional[VectorDBInterface] = None,
