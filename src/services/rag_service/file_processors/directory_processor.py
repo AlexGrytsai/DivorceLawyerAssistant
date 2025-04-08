@@ -6,7 +6,6 @@ from src.core.config import settings
 from src.services.rag_service.decorators import (
     handle_document_processing,
 )
-from src.services.rag_service.factory import FileProcessorFactory
 from src.services.rag_service.schemas import DocumentSchema
 from src.services.storage.interfaces import BaseStorageInterface
 from src.services.storage.shemas import FileSchemaForFolder, FolderItem
@@ -30,12 +29,10 @@ class DirectoryProcessor:
 
     def __init__(
         self,
-        file_processor_factory: Optional[FileProcessorFactory] = None,
+        file_processor_factory: "FileProcessorFactory",
         rag_storage: Optional[BaseStorageInterface] = None,
     ):
-        self.file_processor_factory = (
-            file_processor_factory or FileProcessorFactory()
-        )
+        self.file_processor_factory = file_processor_factory
         self.rag_storage = rag_storage or settings.RAG_STORAGE
 
     @handle_document_processing
