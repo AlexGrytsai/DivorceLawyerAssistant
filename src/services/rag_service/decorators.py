@@ -170,25 +170,24 @@ def handle_document_processing(
     return wrapper
 
 
-def handle_async_search_exceptions() -> Callable:
+def handle_async_search_exceptions(func: Callable) -> Callable:
     """
     Decorator for handling exceptions in async search operations.
-    Catches exceptions, logs them, and raises appropriate HTTP exceptions.
+    Catches exceptions, logs them, and raises appropriate HTTP exceptions
+    with search operation details.
+
+    Args:
+        func: Function to decorate
 
     Returns:
         Decorated async function
     """
 
-    def decorator(
-        func: Callable,
-    ) -> Callable:
-        @functools.wraps(func)
-        async def wrapper(*args, **kwargs) -> Callable:
-            return await handle_async_exceptions(func, args, kwargs, "search")
+    @functools.wraps(func)
+    async def wrapper(*args, **kwargs) -> Callable:
+        return await handle_async_exceptions(func, args, kwargs, "search")
 
-        return wrapper
-
-    return decorator
+    return wrapper
 
 
 def handle_pinecone_init_exceptions(func: Callable) -> Callable:
