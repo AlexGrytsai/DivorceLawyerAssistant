@@ -12,14 +12,14 @@ from google.cloud.storage_control_v2 import (
     ListFoldersRequest,
 )  # type: ignore
 
-from src.core.storage.decorators import (
+from src.services.storage.decorators import (
     handle_cloud_storage_exceptions,
     async_handle_cloud_storage_exceptions,
 )
-from src.core.storage.interfaces.cloud_storage_interface import (
+from src.services.storage.interfaces.cloud_storage_interface import (
     CloudStorageInterface,
 )
-from src.core.storage.shemas import (
+from src.services.storage.shemas import (
     FolderBaseSchema,
     FolderDeleteSchema,
     FolderDataSchema,

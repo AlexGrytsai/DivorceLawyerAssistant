@@ -5,8 +5,8 @@ from unittest.mock import Mock, AsyncMock
 from fastapi import UploadFile, Request
 
 from src.core.exceptions.storage import ErrorSavingFile
-from src.core.storage.cloud_storage import CloudStorage
-from src.core.storage.shemas import (
+from src.services.storage import CloudStorage
+from src.services.storage.shemas import (
     FileSchema,
     FileDeleteSchema,
     FolderBaseSchema,

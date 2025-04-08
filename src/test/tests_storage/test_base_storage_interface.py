@@ -6,10 +6,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from fastapi import UploadFile, Request, HTTPException
 
 from src.core.exceptions.storage import ErrorSavingFile
-from src.core.storage.interfaces.base_storage_interface import (
+from src.services.storage.interfaces.base_storage_interface import (
     BaseStorageInterface,
 )
-from src.core.storage.shemas import (
+from src.services.storage.shemas import (
     FileDeleteSchema,
     FolderDeleteSchema,
     FolderContentsSchema,

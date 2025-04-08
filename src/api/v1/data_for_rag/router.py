@@ -9,7 +9,7 @@ from src.api.v1.data_for_rag.schemas import (
 )
 from src.core.config import settings
 from src.core.constants import ALLOWED_MIME_TYPES_FOR_RAG
-from src.core.storage.shemas import (
+from src.services.storage.shemas import (
     FileSchema,
     FileDeleteSchema,
     FolderDataSchema,

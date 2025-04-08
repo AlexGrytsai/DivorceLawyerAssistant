@@ -4,7 +4,7 @@ import os
 import unittest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from src.core.storage.shemas import FileSchema
+from src.services.storage.shemas import FileSchema
 from src.services.ai_service.ai_text_validator import OpenAITextAnalyzer
 from src.services.check_pdf_fields import (
     scrap_pdf_fields,

@@ -5,8 +5,8 @@ from typing import List, Optional, Union
 
 from fastapi import UploadFile, status, HTTPException, Request
 
-from src.core.exceptions.storage import ErrorSavingFile
-from src.core.storage.shemas import (
+from src.services.storage.exceptions import ErrorSavingFile
+from src.services.storage.shemas import (
     FileDeleteSchema,
     FolderBaseSchema,
     FolderDeleteSchema,
@@ -21,12 +21,6 @@ logger = logging.getLogger(__name__)
 def current_timestamp() -> str:
     """Generate current timestamp in consistent format"""
     return datetime.datetime.now().strftime("%H:%M:%S %m-%d-%Y")
-
-
-def log_operation(message: str, level: str = "info") -> None:
-    """Log operation with specified level"""
-    log_func = getattr(logger, level)
-    log_func(message)
 
 
 class BaseStorageInterface(ABC):

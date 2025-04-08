@@ -7,11 +7,11 @@ from unittest.mock import AsyncMock, patch
 from fastapi import HTTPException, status
 
 from src.core.exceptions.storage import ErrorUploadingFile, ErrorDeletingFile
-from src.core.storage.decorators import (
+from src.services.storage.decorators import (
     handle_upload_file_exceptions,
     handle_delete_file_exceptions,
 )
-from src.core.storage.shemas import FileSchema, FileDeleteSchema
+from src.services.storage.shemas import FileSchema, FileDeleteSchema
 
 
 class TestUploadFileExceptionsDecorator(unittest.TestCase):

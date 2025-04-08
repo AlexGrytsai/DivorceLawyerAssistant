@@ -5,7 +5,7 @@ from fastapi.params import Body
 
 from src.core.config import settings
 from src.core.constants import ALLOWED_MIME_TYPES_FOR_FORMS
-from src.core.storage.shemas import FileSchema, FileDeleteSchema
+from src.services.storage.shemas import FileSchema, FileDeleteSchema
 from src.services.ai_service.ai_text_validator import OpenAITextAnalyzer
 from src.services.check_pdf_fields import main_check_pdf_fields
 from src.utils.validators.validate_file_mime import validate_file_mime

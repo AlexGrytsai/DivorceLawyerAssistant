@@ -15,11 +15,9 @@ from src.core.constants import (
     RAG_BUCKET_NAME,
     MAIN_BUCKET_NAME,
 )
-from src.core.storage.cloud_storage import CloudStorage
-from src.core.storage.interfaces.base_storage_interface import (
-    BaseStorageInterface,
-)
 from src.core.types import TokenLimitsMapping
+from src.services.storage import CloudStorage
+from src.services.storage.interfaces import BaseStorageInterface
 
 load_dotenv()
 

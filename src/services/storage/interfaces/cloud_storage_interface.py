@@ -5,7 +5,7 @@ from google.cloud import storage  # type: ignore
 from google.cloud.storage import Blob, Bucket  # type: ignore
 from google.cloud.storage_control_v2 import RenameFolderRequest
 
-from src.core.storage.shemas import (
+from src.services.storage.shemas import (
     FolderBaseSchema,
     FolderDeleteSchema,
     FileSchema,

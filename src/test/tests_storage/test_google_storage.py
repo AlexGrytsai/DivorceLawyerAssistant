@@ -3,8 +3,8 @@ import unittest
 from datetime import datetime, timezone
 from unittest.mock import MagicMock, patch
 
-from src.core.storage.implementations.google_storage import GoogleCloudStorage
-from src.core.storage.shemas import (
+from src.services.storage import GoogleCloudStorage
+from src.services.storage.shemas import (
     FileSchema,
     FileDeleteSchema,
     FolderDataSchema,

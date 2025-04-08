@@ -8,7 +8,7 @@ from fastapi import UploadFile, Request, HTTPException, status
 from starlette.datastructures import Headers
 
 from src.core.config import settings
-from src.core.storage.shemas import FileSchema
+from src.services.storage.shemas import FileSchema
 
 logger = logging.getLogger(__name__)
 

@@ -8,8 +8,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from fastapi import UploadFile, Request, HTTPException, status
 
 from src.core.exceptions.storage import ErrorSavingFile
-from src.core.storage.local_storage import LocalStorage
-from src.core.storage.shemas import (
+from src.services.storage.local_storage import LocalStorage
+from src.services.storage.shemas import (
     FileSchema,
     FileDeleteSchema,
     FolderDataSchema,

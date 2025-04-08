@@ -8,16 +8,12 @@ from typing import List, Optional
 
 from fastapi import UploadFile, Request, status, HTTPException
 
-from src.core.exceptions.storage import ErrorSavingFile
-from src.core.storage.decorators import (
+from src.services.storage.decorators import (
     handle_upload_file_exceptions,
     handle_delete_file_exceptions,
 )
-from src.core.storage.interfaces.base_storage_interface import (
-    BaseStorageInterface,
-    log_operation,
-)
-from src.core.storage.shemas import (
+from src.services.storage.interfaces import BaseStorageInterface
+from src.services.storage.shemas import (
     FileSchema,
     FileDeleteSchema,
     FolderDeleteSchema,
@@ -35,7 +31,7 @@ def _validate_path_exists(
 ) -> None:
     """Validate that path exists"""
     if not path.exists():
-        log_operation(f"{entity} {path} not found", "warning")
+        logger.warning(f"{entity} {path} not found")
         raise HTTPException(
             status_code=error_code,
             detail={
@@ -52,7 +48,7 @@ def _validate_path_not_exists(
 ) -> None:
     """Validate that path does not exist"""
     if path.exists():
-        log_operation(f"{entity} {path} already exists", "warning")
+        logger.warning(f"{entity} {path} already exists")
         raise HTTPException(
             status_code=error_code,
             detail={
@@ -146,7 +142,7 @@ class LocalStorage(BaseStorageInterface):
                 os.rmdir(os.path.join(root, name))
         os.rmdir(folder)
 
-        log_operation(f"{folder_path} deleted successfully")
+        logger.info(f"{folder_path} deleted successfully")
         return FolderDeleteSchema(
             folder_name=folder_path,
         )
@@ -160,7 +156,7 @@ class LocalStorage(BaseStorageInterface):
         _validate_path_not_exists(folder, "Folder")
 
         folder.mkdir(parents=True, exist_ok=True)
-        log_operation(f"Folder {folder_path} created successfully")
+        logger.info(f"Folder {folder_path} created successfully")
 
         return FolderDataSchema(
             folder_path=str(folder),
@@ -181,7 +177,7 @@ class LocalStorage(BaseStorageInterface):
         _validate_path_not_exists(new_folder, "Target folder")
 
         old_folder.rename(new_folder)
-        log_operation(f"Folder renamed from {old_path} to {new_path}")
+        logger.info(f"Folder renamed from {old_path} to {new_path}")
 
         return FolderRenameSchema(
             folder_name=new_folder.name,

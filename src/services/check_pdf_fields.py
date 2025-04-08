@@ -3,7 +3,7 @@ import io
 import logging
 from typing import List, Dict, Type, Tuple
 
-from src.core.storage.shemas import FileSchema
+from src.services.storage.shemas import FileSchema
 from src.services.ai_service.ai_text_validator import OpenAITextAnalyzer
 from src.services.pdf_tools.annotator import add_comments_to_widgets
 from src.services.pdf_tools.parser_pdf import ParserPDFBase, ParserPDFWidget

@@ -6,19 +6,16 @@ from fastapi import UploadFile, Request, status, HTTPException
 from google.cloud.storage import Blob  # type: ignore
 from google.cloud.storage_control_v2 import RenameFolderRequest  # type: ignore
 
-from src.core.storage.decorators import (
+from src.services.storage.decorators import (
     handle_upload_file_exceptions,
     handle_delete_file_exceptions,
 )
-from src.core.storage.implementations.google_storage import GoogleCloudStorage
-from src.core.storage.interfaces.base_storage_interface import (
-    BaseStorageInterface,
-    log_operation,
-)
-from src.core.storage.interfaces.cloud_storage_interface import (
+from src.services.storage.implementations import GoogleCloudStorage
+from src.services.storage.interfaces import (
     CloudStorageInterface,
+    BaseStorageInterface,
 )
-from src.core.storage.shemas import (
+from src.services.storage.shemas import (
     FileSchema,
     FileDeleteSchema,
     FolderBaseSchema,
@@ -40,7 +37,7 @@ def _validate_blob_exists(
 ) -> None:
     """Validate that blob exists in cloud storage"""
     if not cloud_storage.bucket.blob(blob_name).exists():
-        log_operation(f"Blob {blob_name} not found", "warning")
+        logger.warning(f"Blob {blob_name} not found")
         raise HTTPException(
             status_code=error_code,
             detail={
@@ -57,7 +54,7 @@ def _validate_blob_not_exists(
 ) -> None:
     """Validate that blob does not exist in cloud storage"""
     if cloud_storage.bucket.blob(blob_name).exists():
-        log_operation(f"Blob {blob_name} already exists", "warning")
+        logger.warning(f"Blob {blob_name} already exists")
         raise HTTPException(
             status_code=error_code,
             detail={

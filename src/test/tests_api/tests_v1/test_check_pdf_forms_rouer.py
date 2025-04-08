@@ -9,7 +9,7 @@ from src.api.v1.check_pdf_forms.router import (
     simple_check_pdf_forms,
     delete_file,
 )
-from src.core.storage.shemas import FileSchema, FileDeleteSchema
+from src.services.storage.shemas import FileSchema, FileDeleteSchema
 from src.services.ai_service.ai_text_validator import OpenAITextAnalyzer
 
 

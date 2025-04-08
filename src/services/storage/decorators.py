@@ -6,7 +6,7 @@ from fastapi import HTTPException, status
 from google.api_core.exceptions import ClientError, NotFound
 from google.auth.exceptions import GoogleAuthError
 
-from src.core.exceptions.storage import (
+from src.services.storage.exceptions import (
     ErrorUploadingFile,
     ErrorDeletingFile,
     ErrorWithAuthenticationInGCP,
