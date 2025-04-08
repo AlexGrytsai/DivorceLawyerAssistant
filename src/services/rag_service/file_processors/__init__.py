@@ -1,3 +1,3 @@
-from .null_processor import NullProcessorInterface
+from .null_processor import NullProcessor
 
-__all__ = ["NullProcessorInterface"]
+__all__ = ["NullProcessor"]
