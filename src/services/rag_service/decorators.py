@@ -1,6 +1,6 @@
 import functools
 import logging
-from typing import Callable, TypeVar
+from typing import Callable, TypeVar, Any, Awaitable, cast
 
 from pinecone import PineconeException
 
@@ -12,6 +12,7 @@ from src.services.rag_service.schemas import PineconeIndexStatsSchema
 logger = logging.getLogger(__name__)
 
 T = TypeVar("T")
+R = TypeVar("R")
 
 
 def handle_pinecone_exceptions(return_value: T = None) -> Callable:
@@ -49,6 +50,73 @@ def handle_pinecone_exceptions(return_value: T = None) -> Callable:
 
         return wrapper
 
+    return decorator
+
+
+async def handle_async_exceptions(
+    func: Callable[..., Awaitable[R]],
+    args: tuple,
+    kwargs: dict,
+    return_value: Any,
+    operation_type: str,
+) -> R:
+    """
+    Helper function for async exception handling
+    """
+    try:
+        return await func(*args, **kwargs)
+    except Exception as exc:
+        operation_name = func.__name__
+        logger.error(
+            f"Error in {operation_type} operation {operation_name}: {exc}",
+            exc_info=True,
+        )
+        return return_value
+
+
+def handle_async_document_exceptions(return_value: R = None) -> Callable:
+    """
+    Decorator for handling exceptions in async operations that process 
+    documents. Catches exceptions, logs them, and returns specified value.
+
+    Args:
+        return_value: Value to return if exception occurs (default: empty list)
+
+    Returns:
+        Decorated async function
+    """
+    def decorator(
+        func: Callable[..., Awaitable[R]]
+    ) -> Callable[..., Awaitable[R]]:
+        @functools.wraps(func)
+        async def wrapper(*args, **kwargs) -> R:
+            return await handle_async_exceptions(
+                func, args, kwargs, return_value or [], "document processing"
+            )
+        return wrapper
+    return decorator
+
+
+def handle_async_search_exceptions(return_value: R = None) -> Callable:
+    """
+    Decorator for handling exceptions in async search operations.
+    Catches exceptions, logs them, and returns specified value.
+
+    Args:
+        return_value: Value to return if exception occurs (default: empty list)
+
+    Returns:
+        Decorated async function
+    """
+    def decorator(
+        func: Callable[..., Awaitable[R]]
+    ) -> Callable[..., Awaitable[R]]:
+        @functools.wraps(func)
+        async def wrapper(*args, **kwargs) -> R:
+            return await handle_async_exceptions(
+                func, args, kwargs, return_value or [], "search"
+            )
+        return wrapper
     return decorator
 
 
