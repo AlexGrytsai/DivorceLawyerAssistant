@@ -76,16 +76,6 @@ class LangChainManager:
                 f"for index: {index_name}, namespace: {namespace}"
             )
 
-            # Checking the MIME-type file
-            with open(file_path, "rb") as file:
-                file_bytes = file.read()
-                mime_type = get_real_mime_type(file_bytes)
-                if mime_type not in ALLOWED_MIME_TYPES_FOR_RAG:
-                    logger.error(
-                        f"Invalid MIME type {mime_type} for file {file_path}"
-                    )
-                    return []
-
             # Load and split the document
             loader = PyMuPDFLoader(file_path)
             documents = loader.load()
