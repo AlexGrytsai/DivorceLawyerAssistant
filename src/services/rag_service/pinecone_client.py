@@ -1,6 +1,7 @@
 import logging
 from typing import Dict, List, Optional, Any
 
+from fastapi import HTTPException, status
 from pinecone import Pinecone, ServerlessSpec
 
 from src.core.config import settings
@@ -42,7 +43,14 @@ class PineconeClient(VectorDBInterface):
     ) -> bool:
         if name in set(self.list_indexes()):
             logger.warning(f"Index {name} already exists")
-            return False
+
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail={
+                    "error": "Index already exists",
+                    "message": f"Index '{name}' already exists",
+                },
+            )
 
         spec = ServerlessSpec(cloud=cloud, region=region)
         self.client.create_index(
@@ -58,11 +66,18 @@ class PineconeClient(VectorDBInterface):
         is_ready = False
         while not is_ready:
             try:
-                status = self.client.describe_index(name).status
-                is_ready = status.get("ready", False)
-            except Exception as e:
-                logger.warning(f"Error checking index status: {e}")
-                break
+                status_ = self.client.describe_index(name).status
+                is_ready = status_.get("ready", False)
+            except Exception as exc:
+                logger.warning(f"Error checking index status: {exc}")
+
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail={
+                        "error": "Unexpected error",
+                        "message": f"Error checking index status: {exc}",
+                    },
+                ) from exc
 
         return True
 
@@ -70,7 +85,14 @@ class PineconeClient(VectorDBInterface):
     def delete_index(self, name: str) -> bool:
         if name not in set(self.list_indexes()):
             logger.warning(f"Index {name} does not exist")
-            return False
+
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail={
+                    "error": "Index does not exist",
+                    "message": f"Index {name} does not exist",
+                },
+            )
 
         self.client.delete_index(name)
         return True
@@ -124,7 +146,11 @@ class PineconeClient(VectorDBInterface):
             index.delete(filter=filter_, namespace=namespace)
         else:
             logger.warning("No deletion criteria provided")
-            return False
+
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No deletion criteria provided",
+            )
 
         return True
 
