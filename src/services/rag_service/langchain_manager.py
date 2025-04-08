@@ -155,6 +155,48 @@ class LangChainManager:
             logger.error(f"Error processing directory {directory_path}: {e}")
             return []
 
+    async def search(
+        self,
+        query: str,
+        index_name: str,
+        namespace: str,
+        top_k: int = 5,
+        filters: Optional[Dict[str, Any]] = None,
+    ) -> List[QueryResultSchema]:
+        try:
+            # Get vector store
+            vector_store = self.get_vector_store(index_name, namespace)
+
+            # Search for similar documents
+            search_results = vector_store.similarity_search_with_score(
+                query=query,
+                k=top_k,
+                filter=filters,
+            )
+
+            # Format results
+            results = []
+            results.extend(
+                QueryResultSchema(
+                    id=doc.metadata.get("chunk_id", ""),
+                    text=doc.page_content,
+                    metadata=doc.metadata,
+                    score=float(score),
+                    file_path=doc.metadata.get("source", ""),
+                )
+                for doc, score in search_results
+            )
+            return results
+        except Exception as e:
+            logger.error(f"Error searching in {index_name}/{namespace}: {e}")
+            return []
+
+    @staticmethod
+    def _get_glob_pattern_from_mime_types(mime_types: Dict[str, str]) -> str:
+        """Converts MIME-type to Glob Pattern for searching files."""
+        extensions = list(mime_types.values())
+        return f"**/*.{{{','.join(extensions)}}}"
+
     async def _process_and_store_documents(
         self,
         documents: List[Any],
@@ -203,48 +245,6 @@ class LangChainManager:
         vector_store.add_documents([doc for _, doc in documents_with_ids])
 
         return doc_records
-
-    async def search(
-        self,
-        query: str,
-        index_name: str,
-        namespace: str,
-        top_k: int = 5,
-        filters: Optional[Dict[str, Any]] = None,
-    ) -> List[QueryResultSchema]:
-        try:
-            # Get vector store
-            vector_store = self.get_vector_store(index_name, namespace)
-
-            # Search for similar documents
-            search_results = vector_store.similarity_search_with_score(
-                query=query,
-                k=top_k,
-                filter=filters,
-            )
-
-            # Format results
-            results = []
-            results.extend(
-                QueryResultSchema(
-                    id=doc.metadata.get("chunk_id", ""),
-                    text=doc.page_content,
-                    metadata=doc.metadata,
-                    score=float(score),
-                    file_path=doc.metadata.get("source", ""),
-                )
-                for doc, score in search_results
-            )
-            return results
-        except Exception as e:
-            logger.error(f"Error searching in {index_name}/{namespace}: {e}")
-            return []
-
-    @staticmethod
-    def _get_glob_pattern_from_mime_types(mime_types: Dict[str, str]) -> str:
-        """Converts MIME-type to Glob Pattern for searching files."""
-        extensions = list(mime_types.values())
-        return f"**/*.{{{','.join(extensions)}}}"
 
 
 if __name__ == "__main__":
