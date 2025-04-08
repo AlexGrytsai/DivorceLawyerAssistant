@@ -108,11 +108,17 @@ def async_handle_cloud_storage_exceptions(func: Callable) -> Callable:
             )
         except ClientError as exc:
             logger.error("Failed to perform GCS operation", exc_info=True)
-            raise ProblemWithRequestToGCP(
-                f"Failed to perform GCS operation: {exc}"
+
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail={
+                    "error": str(exc),
+                    "message": "Failed to perform GCS operation",
+                },
             )
         except Exception as exc:
             logger.exception("Unexpected error", exc_info=True)
+
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail={
