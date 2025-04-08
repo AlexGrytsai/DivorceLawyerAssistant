@@ -188,8 +188,8 @@ class LangChainManager:
         )
 
         # Format results
-        results = []
-        results.extend(
+        search_results_format: List[QueryResultSchema] = []
+        search_results_format.extend(
             QueryResultSchema(
                 id=doc.metadata.get("chunk_id", ""),
                 text=doc.page_content,
@@ -199,7 +199,7 @@ class LangChainManager:
             )
             for doc, score in search_results
         )
-        return results
+        return search_results_format
 
     @handle_async_document_exceptions([])
     async def _process_and_store_documents(
