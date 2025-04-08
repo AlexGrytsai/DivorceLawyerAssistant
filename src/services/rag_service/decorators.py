@@ -16,13 +16,10 @@ def handle_pinecone_exceptions() -> Callable:
     """
     Generic decorator for handling Pinecone operations.
     Catches PineconeException and other exceptions, logs them,
-    and returns a default value on failure.
-
-    Args:
-        return_value: Value to return if an exception occurs
+    and raises appropriate HTTP exceptions.
 
     Returns:
-        Decorated function that handles exceptions and returns specified type
+        Decorated function that handles exceptions
     """
 
     def decorator(func: Callable) -> Callable:
@@ -71,7 +68,21 @@ async def handle_async_exceptions(
     operation_type: str,
 ) -> Callable:
     """
-    Helper function for async exception handling
+    Helper function for async exception handling.
+    Executes an async function and catches exceptions, raising HTTP exceptions
+    with appropriate error details.
+
+    Args:
+        func: Async function to execute
+        args: Positional arguments for the function
+        kwargs: Keyword arguments for the function
+        operation_type: Type of operation for error messages
+
+    Returns:
+        Result from the executed function
+
+    Raises:
+        HTTPException: With details of the operation failure
     """
     try:
         return await func(*args, **kwargs)
@@ -84,7 +95,7 @@ async def handle_async_exceptions(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={
-                "error": "Error in {operation_type}",
+                "error": f"Error in {operation_type}",
                 "message": f"Error in {operation_type} operation "
                 f"{operation_name}: {exc}",
             },
@@ -98,8 +109,21 @@ async def handle_async_document_exceptions(
     operation_type: str,
 ) -> None:
     """
-    Helper function for document processing exception handling
-    Raises HTTPException.
+    Helper function for document processing exception handling.
+    Executes an async function and catches exceptions, extracting file path
+    information from arguments if available.
+
+    Args:
+        func: Async function to execute
+        args: Positional arguments for the function
+        kwargs: Keyword arguments for the function
+        operation_type: Type of operation for error messages
+
+    Returns:
+        Result from the executed function
+
+    Raises:
+        HTTPException: With details of the document processing failure
     """
     try:
         return await func(*args, **kwargs)
@@ -130,8 +154,8 @@ def handle_document_processing(
 ) -> Callable:
     """
     Decorator for handling exceptions in document processing operations.
-    Catches exceptions, logs them, and raises DocumentProcessingError
-    for proper HTTP error handling in FastAPI.
+    Catches exceptions, logs them, and raises appropriate HTTP exceptions
+    with document processing details.
 
     Returns:
         Decorated async function
@@ -149,10 +173,7 @@ def handle_document_processing(
 def handle_async_search_exceptions() -> Callable:
     """
     Decorator for handling exceptions in async search operations.
-    Catches exceptions, logs them, and returns specified value.
-
-    Args:
-        return_value: Value to return if exception occurs (default: empty list)
+    Catches exceptions, logs them, and raises appropriate HTTP exceptions.
 
     Returns:
         Decorated async function
@@ -201,13 +222,13 @@ def handle_pinecone_init_exceptions(func: Callable) -> Callable:
 def handle_index_stats_exceptions(func: Callable) -> Callable:
     """
     Decorator for handling exceptions when retrieving index statistics.
-    Catches exceptions, logs them, and returns empty PineconeIndexStatsSchema.
+    Uses handle_pinecone_exceptions to handle errors appropriately.
 
     Args:
         func: Function to decorate
 
     Returns:
-        Decorated function that returns PineconeIndexStatsSchema
+        Decorated function with Pinecone exception handling
     """
     return handle_pinecone_exceptions()(func)
 
@@ -215,13 +236,13 @@ def handle_index_stats_exceptions(func: Callable) -> Callable:
 def handle_list_operation_exceptions(func: Callable) -> Callable:
     """
     Decorator for handling exceptions in operations that return lists.
-    Catches exceptions, logs them, and returns an empty list.
+    Uses handle_pinecone_exceptions to handle errors appropriately.
 
     Args:
         func: Function to decorate
 
     Returns:
-        Decorated function that returns a list
+        Decorated function with Pinecone exception handling
     """
     return handle_pinecone_exceptions()(func)
 
@@ -229,13 +250,13 @@ def handle_list_operation_exceptions(func: Callable) -> Callable:
 def handle_dict_operation_exceptions(func: Callable) -> Callable:
     """
     Decorator for handling exceptions in operations that return dictionaries.
-    Catches exceptions, logs them, and returns an empty dictionary.
+    Uses handle_pinecone_exceptions to handle errors appropriately.
 
     Args:
         func: Function to decorate
 
     Returns:
-        Decorated function that returns a dictionary
+        Decorated function with Pinecone exception handling
     """
     return handle_pinecone_exceptions()(func)
 
@@ -243,12 +264,12 @@ def handle_dict_operation_exceptions(func: Callable) -> Callable:
 def handle_boolean_operation_exceptions(func: Callable) -> Callable:
     """
     Decorator for handling exceptions in operations that return boolean values.
-    Catches exceptions, logs them, and returns False.
+    Uses handle_pinecone_exceptions to handle errors appropriately.
 
     Args:
         func: Function to decorate
 
     Returns:
-        Decorated function that returns a boolean
+        Decorated function with Pinecone exception handling
     """
     return handle_pinecone_exceptions()(func)
