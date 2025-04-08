@@ -115,9 +115,7 @@ class LangChainManager:
         base_metadata = metadata or {}
         base_metadata["source_directory"] = directory_path
 
-        folder_contents = await rag_storage.get_folder_contents(
-            directory_path
-        )
+        folder_contents = await rag_storage.get_folder_contents(directory_path)
 
         documents_result = []
 
@@ -142,7 +140,7 @@ class LangChainManager:
         metadata: Dict[str, Any],
     ) -> List[DocumentSchema]:
         file_ext = file_path.split(".")[-1].lower()
-        
+
         if file_ext == "pdf":
             return await self.process_pdf_file(
                 file_path=file_path,
@@ -202,12 +200,6 @@ class LangChainManager:
             for doc, score in search_results
         )
         return results
-
-    @staticmethod
-    def _get_glob_pattern_from_mime_types(mime_types: Dict[str, str]) -> str:
-        """Converts MIME-type to Glob Pattern for searching files."""
-        extensions = list(mime_types.values())
-        return f"**/*.{{{','.join(extensions)}}}"
 
     @handle_async_document_exceptions([])
     async def _process_and_store_documents(
