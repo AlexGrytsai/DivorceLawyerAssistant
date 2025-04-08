@@ -14,8 +14,8 @@ class NullProcessor(FileProcessorInterface):
     A fallback processor for unsupported file types.
 
     This processor implements the FileProcessorInterface but raises
-    UnsupportedFileTypeError when processing is attempted. It logs a warning message
-    indicating that the file type is unsupported.
+    UnsupportedFileTypeError when processing is attempted. It logs a warning
+    message indicating that the file type is unsupported.
 
     Used by the FileProcessorFactory when no suitable processor is found for
     a given file extension.

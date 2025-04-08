@@ -12,6 +12,7 @@ from src.services.storage.decorators import (
     handle_upload_file_exceptions,
     handle_delete_file_exceptions,
 )
+from src.services.storage.exceptions import ErrorSavingFile
 from src.services.storage.interfaces import BaseStorageInterface
 from src.services.storage.shemas import (
     FileSchema,
@@ -215,7 +216,9 @@ class LocalStorage(BaseStorageInterface):
                     status_code=status.HTTP_409_CONFLICT,
                     detail={
                         "error": "Target file exists",
-                        "message": f"Target file {new_file_name} already exists",
+                        "message": (
+                            f"Target file {new_file_name} already exists"
+                        ),
                     },
                 )
         else:

@@ -167,12 +167,9 @@ class GoogleCloudStorage(CloudStorageInterface):
             self._normalize_file_path(source_blob_path)
         )
 
+        folder_ = self._normalize_file_path(source_blob_path).split("/")[:-1]
         new_blob = self.bucket.rename_blob(
-            source_blob,
-            (
-                f"{self._normalize_file_path(source_blob_path).split('/')[:-1]}"
-                f"/{new_name}"
-            ),
+            source_blob, f"{folder_}/{new_name}"
         )
 
         return FileSchema(

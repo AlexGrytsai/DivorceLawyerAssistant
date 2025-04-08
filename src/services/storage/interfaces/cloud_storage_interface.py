@@ -24,7 +24,8 @@ class CloudStorageInterface(ABC):
     copy, rename, and list, as well as folder management operations.
 
     Implementations of this interface should handle the specifics
-    of connecting to and authenticating with the particular cloud storage provider.
+    of connecting to and authenticating with the particular cloud storage
+    provider.
     """
 
     @property
@@ -66,7 +67,8 @@ class CloudStorageInterface(ABC):
         Args:
             file_path: Path where the file should be stored in the bucket
             content: The content to upload (either string or bytes)
-            content_type: Optional MIME type of the content (e.g., 'application/pdf')
+            content_type: Optional MIME type of the content
+                          (e.g., 'application/pdf')
 
         Returns:
             FileSchema: Information about the uploaded file including its URL
@@ -154,10 +156,12 @@ class CloudStorageInterface(ABC):
         Args:
             prefix: Optional prefix to filter results (default: empty string)
             search_query: Optional search term to filter results
-            case_sensitive: Whether the search should be case-sensitive (default: False)
+            case_sensitive: Whether the search should be case-sensitive
+                            (default: False)
 
         Returns:
-            List[FileSchema]: List of file schemas representing the matching files
+            List[FileSchema]: List of file schemas representing
+                              the matching files
         """
         pass
 

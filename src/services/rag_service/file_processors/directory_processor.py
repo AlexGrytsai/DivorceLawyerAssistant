@@ -18,11 +18,13 @@ class DirectoryProcessor:
     """
     Processes directories containing files for RAG indexing.
 
-    This class handles the recursive processing of directories, filtering files,
-    and delegating file processing to appropriate file processors based on file type.
+    This class handles the recursive processing of directories,
+    filtering files, and delegating file processing to appropriate file
+    processors based on a file type.
 
     Attributes:
-        file_processor_factory: Factory for creating file processors based on file type
+        file_processor_factory: Factory for creating file processors based
+                                on file type
         rag_storage: Storage interface for accessing directory contents
     """
 

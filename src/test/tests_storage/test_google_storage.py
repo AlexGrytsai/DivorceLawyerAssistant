@@ -338,7 +338,7 @@ class TestGoogleCloudStorage(unittest.TestCase):
         folder2.create_time = MockDateTime()
         folder2.update_time = MockDateTime()
 
-        mock_list_request = MagicMock()
+        mock_list_request = MagicMock()  # noqa: F841
         self.mock_storage_control.list_folders.return_value = [
             folder1,
             folder2,
