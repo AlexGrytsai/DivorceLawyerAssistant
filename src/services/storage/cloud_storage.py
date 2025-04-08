@@ -84,7 +84,7 @@ class CloudStorage(BaseStorageInterface):
     async def upload(
         self,
         file: UploadFile,
-        request: Request,
+        request: Optional[Request] = None,
         *args,
         **kwargs,
     ) -> FileSchema:
@@ -100,7 +100,7 @@ class CloudStorage(BaseStorageInterface):
     async def multi_upload(
         self,
         files: List[UploadFile],
-        request: Request,
+        request: Optional[Request] = None,
         *args,
         **kwargs,
     ) -> List[FileSchema]:
@@ -122,7 +122,7 @@ class CloudStorage(BaseStorageInterface):
         self,
         old_path: str,
         new_file_name: str,
-        request: Request,
+        request: Optional[Request] = None,
         *args,
         **kwargs,
     ) -> FileSchema:
@@ -132,7 +132,7 @@ class CloudStorage(BaseStorageInterface):
     async def delete_all_files(
         self,
         prefix: str,
-        request: Request,
+        request: Optional[Request] = None,
         *args,
         **kwargs,
     ) -> List[FileDeleteSchema]:
@@ -146,7 +146,7 @@ class CloudStorage(BaseStorageInterface):
     async def create_folder(
         self,
         folder_path: str,
-        request: Request,
+        request: Optional[Request] = None,
         *args,
         **kwargs,
     ) -> FolderBaseSchema:
@@ -161,7 +161,7 @@ class CloudStorage(BaseStorageInterface):
         self,
         old_path: str,
         new_path: str,
-        request: Request,
+        request: Optional[Request] = None,
         *args,
         **kwargs,
     ) -> RenameFolderRequest:
@@ -175,7 +175,7 @@ class CloudStorage(BaseStorageInterface):
     async def delete_folder(
         self,
         folder_path: str,
-        request: Request,
+        request: Optional[Request] = None,
         *args,
         **kwargs,
     ) -> FolderDeleteSchema:
