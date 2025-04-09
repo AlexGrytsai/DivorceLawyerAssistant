@@ -218,6 +218,9 @@ class CloudStorage(BaseStorageInterface):
         """List managed folders"""
         return await self._cloud_storage.list_folders(prefix=prefix)
 
+    async def get_folder(self, folder_path: str) -> FolderDataSchema:
+        return await self._cloud_storage.get_folder(folder_path)
+
     async def get_folder_contents(
         self, folder_path: str
     ) -> FolderContentsSchema:
