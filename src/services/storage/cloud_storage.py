@@ -176,11 +176,14 @@ class CloudStorage(BaseStorageInterface):
         self,
         folder_path: str,
         request: Optional[Request] = None,
+        is_delete_all: bool = False,
         *args,
         **kwargs,
     ) -> FolderDeleteSchema:
         """Delete folder and all its contents"""
-        return await self._cloud_storage.delete_folder(folder_path)
+        return await self._cloud_storage.delete_folder(
+            folder_path, is_delete_all=is_delete_all
+        )
 
     @handle_upload_file_exceptions
     async def upload_file(
