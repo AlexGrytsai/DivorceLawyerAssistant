@@ -10,6 +10,7 @@ from google.cloud.storage_control_v2 import (
     DeleteFolderRequest,
     RenameFolderRequest,
     ListFoldersRequest,
+    GetFolderRequest,
 )  # type: ignore
 
 from src.services.storage.decorators import (
@@ -254,6 +255,24 @@ class GoogleCloudStorage(CloudStorageInterface):
         )
 
     @async_handle_cloud_storage_exceptions
+    async def get_folder(self, folder_path: str) -> FolderDataSchema:
+        """
+        Get information about a managed folder in the storage.
+
+        This method gets folder information from Google Cloud Storage
+        """
+        folder = self.storage_control.get_folder(
+            request=GetFolderRequest(name=self._get_folder_path(folder_path))
+        )
+
+        return FolderDataSchema(
+            folder_name=folder.name.split("/")[-2],
+            folder_path=self._get_common_folder_path(folder.name),
+            create_time=folder.create_time.replace(microsecond=0),
+            update_time=folder.update_time.replace(microsecond=0),
+        )
+
+    @async_handle_cloud_storage_exceptions
     async def delete_folder(
         self,
         folder_path: str,
@@ -393,7 +412,7 @@ class GoogleCloudStorage(CloudStorageInterface):
     def _get_blob_name(blob_path: str) -> str:
         return blob_path.split("/")[-1]
 
-    def _get_folder_path(self, folder_name: str) -> str:
+    def _get_folder_path(self, folder_path: str) -> str:
         """
         Get the full path to a folder in Google Cloud Storage.
 
@@ -402,14 +421,15 @@ class GoogleCloudStorage(CloudStorageInterface):
         that require the full folder path, such as folder deletion or renaming.
 
         Args:
-            folder_name: Name of the folder to get the path for
+            folder_path: Folder path (format: "folders/{folder_id}/")
 
         Returns:
             str: The full path to the folder in the format required by the
                  Storage Control API
         """
+        folder_path = folder_path.removeprefix("/")
         return self.storage_control.folder_path(
-            project="_", bucket=self.bucket_name, folder=folder_name
+            project="_", bucket=self.bucket_name, folder=folder_path
         )
 
     def _get_common_folder_path(self, folder_name: str) -> str:
