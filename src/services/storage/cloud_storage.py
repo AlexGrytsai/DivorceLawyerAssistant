@@ -257,13 +257,11 @@ class CloudStorage(BaseStorageInterface):
             self._process_folder_item(folder_path)
             for folder_path in sorted(folders)
         ]
-        print(folder_items)
 
         all_items: List[Union[FileSchemaForFolder, FolderItem]] = [
             *folder_items,
             *files,
         ]
-        print(all_items)
 
         return FolderContentsSchema(
             current_path=folder_path.rstrip("/") if folder_path else "",
