@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from typing import List, Optional, Union, Type
 
@@ -188,9 +189,9 @@ class GoogleCloudStorage(CloudStorageInterface):
         search_query: Optional[str] = None,
         case_sensitive: Optional[bool] = False,
     ) -> List[FileSchema]:
-        blobs = list(
+        blobs: List[Blob] = list(
             self.bucket.list_blobs(
-                prefix=prefix,
+                prefix=self._normalize_file_path(prefix),
             )
         )
 
@@ -208,7 +209,7 @@ class GoogleCloudStorage(CloudStorageInterface):
                 content_type=blob.content_type,
             )
             for blob in blobs
-            if blob.content_type != "Folder"
+            if not blob.name.endswith("/")
         ]
 
     @async_handle_cloud_storage_exceptions
@@ -248,7 +249,7 @@ class GoogleCloudStorage(CloudStorageInterface):
         )
 
         return FolderDataSchema(
-            folder_name=folder_name.split("/")[-1],
+            folder_name=self._get_folder_name(response.name),
             folder_path=self._get_common_folder_path(folder_name),
             create_time=response.create_time.replace(microsecond=0),
             update_time=response.update_time.replace(microsecond=0),
@@ -266,7 +267,7 @@ class GoogleCloudStorage(CloudStorageInterface):
         )
 
         return FolderDataSchema(
-            folder_name=folder.name.split("/")[-2],
+            folder_name=self._get_folder_name(folder.name),
             folder_path=self._get_common_folder_path(folder.name),
             create_time=folder.create_time.replace(microsecond=0),
             update_time=folder.update_time.replace(microsecond=0),
@@ -277,6 +278,7 @@ class GoogleCloudStorage(CloudStorageInterface):
         self,
         folder_path: str,
         delete_request: Type[DeleteFolderRequest] = DeleteFolderRequest,
+        is_delete_all: bool = False,
     ) -> FolderDeleteSchema:
         """
         Delete a managed folder from the storage.
@@ -289,19 +291,18 @@ class GoogleCloudStorage(CloudStorageInterface):
             folder_path: Path of the folder to delete
             delete_request: Type of DeleteFolderRequest to use
                             (for testing/mocking)
+            is_delete_all: If True, deletes all nested files and folders
 
         Returns:
             FolderDeleteSchema: Information about the deleted folder
-
-        Raises:
-            Exception: If folder deletion fails (handled by decorator)
         """
+        folder_path = self._normalize_file_path(folder_path)
+        if is_delete_all:
+            await self._delete_all_files_in_folder(folder_path)
 
-        self.storage_control.delete_folder(
-            request=delete_request(
-                name=self._get_folder_path(folder_path),
-            )
-        )
+            await self._delete_subfolders(folder_path)
+        else:
+            await self._delete_folder(folder_path)
 
         return FolderDeleteSchema(folder_name=folder_path)
 
@@ -369,7 +370,7 @@ class GoogleCloudStorage(CloudStorageInterface):
         """
         list_folders_request = ListFoldersRequest(
             parent=self._get_bucket_path(),
-            prefix=prefix if prefix else "",
+            prefix=self._normalize_file_path(prefix) if prefix else "",
         )
         folders_raw = self.storage_control.list_folders(
             request=list_folders_request
@@ -379,7 +380,7 @@ class GoogleCloudStorage(CloudStorageInterface):
 
         folders.extend(
             FolderDataSchema(
-                folder_name=folder.name.split("/")[-2],
+                folder_name=self._get_folder_name(folder.name),
                 folder_path=self._get_common_folder_path(folder.name),
                 create_time=folder.create_time.replace(microsecond=0),
                 update_time=folder.update_time.replace(microsecond=0),
@@ -411,6 +412,10 @@ class GoogleCloudStorage(CloudStorageInterface):
     @staticmethod
     def _get_blob_name(blob_path: str) -> str:
         return blob_path.split("/")[-1]
+
+    @staticmethod
+    def _get_folder_name(folder_path: str) -> str:
+        return folder_path.split("/")[-2]
 
     def _get_folder_path(self, folder_path: str) -> str:
         """
@@ -457,6 +462,37 @@ class GoogleCloudStorage(CloudStorageInterface):
     @staticmethod
     def _normalize_file_path(file_path: str) -> str:
         return file_path[1:] if file_path.startswith("/") else file_path
+
+    async def _delete_subfolders(self, folder_path: str) -> bool:
+        subfolders: List[FolderDataSchema] = await self.list_folders(
+            prefix=folder_path
+        )
+        if subfolders:
+            subfolders.reverse()
+            for subfolder in subfolders:
+                await self._delete_folder(subfolder.folder_path)
+
+        return True
+
+    async def _delete_all_files_in_folder(self, folder_path: str) -> bool:
+        files: List[FileSchema] = await self.list_blobs(prefix=folder_path)
+        delete_tasks = [self.delete_blob(file.path) for file in files]
+
+        await asyncio.gather(*delete_tasks)
+
+        return True
+
+    async def _delete_folder(
+        self,
+        folder_path: str,
+        delete_request: Type[DeleteFolderRequest] = DeleteFolderRequest,
+    ) -> bool:
+        self.storage_control.delete_folder(
+            request=delete_request(
+                name=self._get_folder_path(folder_path),
+            )
+        )
+        return True
 
     def _search_blobs(
         self,
