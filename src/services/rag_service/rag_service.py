@@ -1,11 +1,18 @@
 import logging
 from typing import Dict, List, Optional, Any
 
-from fastapi import UploadFile, Request, HTTPException, status
+from fastapi import UploadFile, Request
 
 from src.core.config import settings
 from src.core.constants import ALLOWED_MIME_TYPES_FOR_RAG
 from src.services.rag_service import VectorDBInterface
+from src.services.rag_service.decorators import (
+    handle_index_operation_exceptions,
+    handle_namespace_operation_exceptions,
+    handle_folder_operation_exceptions,
+    handle_document_processing,
+    handle_async_search_exceptions,
+)
 from src.services.rag_service.interfaces import (
     RAGServiceInterface,
     RAGManagerInterface,
@@ -45,6 +52,7 @@ class RAGService(RAGServiceInterface):
         self.vector_db_client = vector_db_client or PineconeClient()
         self.rag_manager = rag_manager or LangChainRAGManager()
 
+    @handle_index_operation_exceptions
     async def create_index(
         self,
         index_name: str,
@@ -55,7 +63,6 @@ class RAGService(RAGServiceInterface):
         logger.info(f"Creating index: {index_name}")
 
         folder = await self.storage.create_folder(index_name, request)
-
         success = self.vector_db_client.create_index(
             name=index_name,
             dimension=dimension,
@@ -64,16 +71,7 @@ class RAGService(RAGServiceInterface):
 
         if not success:
             await self.storage.delete_folder(index_name, request)
-            logger.warning(f"Failed to create Vector DB index: {index_name}.")
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail={
-                    "error": "Error creating index in Vector DB",
-                    "message": (
-                        f"Failed to create Vector DB index: {index_name}",
-                    ),
-                },
-            )
+            raise ValueError(f"Failed to create Vector DB index: {index_name}")
 
         return IndexCreateSchema(
             name=index_name,
@@ -82,6 +80,7 @@ class RAGService(RAGServiceInterface):
             created_at=folder.create_time,
         )
 
+    @handle_index_operation_exceptions
     async def list_indexes(self) -> List[IndexSchema]:
         logger.info("Listing indexes")
 
@@ -106,6 +105,7 @@ class RAGService(RAGServiceInterface):
 
         return indexes
 
+    @handle_index_operation_exceptions
     async def delete_index(
         self,
         index_name: str,
@@ -114,22 +114,8 @@ class RAGService(RAGServiceInterface):
         logger.info(f"Deleting index: {index_name}")
 
         success = self.vector_db_client.delete_index(index_name)
-
         if not success:
-            logger.warning(
-                f"Failed to delete Vector DB index: {index_name}, "
-                f"proceeding with folder deletion"
-            )
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail={
-                    "error": "Error deleting index from Vector DB",
-                    "message": (
-                        f"Failed to delete Vector DB index: {index_name}, "
-                        f"proceeding with folder deletion"
-                    ),
-                },
-            )
+            raise ValueError(f"Failed to delete Vector DB index: {index_name}")
 
         return await self.storage.delete_folder(
             folder_path=f"{index_name}/",
@@ -137,6 +123,7 @@ class RAGService(RAGServiceInterface):
             is_delete_all=True,
         )
 
+    @handle_namespace_operation_exceptions
     async def create_namespace(
         self,
         index_name: str,
@@ -154,6 +141,7 @@ class RAGService(RAGServiceInterface):
             created_at=folder.create_time,
         )
 
+    @handle_namespace_operation_exceptions
     async def list_namespaces(self, index_name: str) -> List[NamespaceSchema]:
         logger.info(f"Listing namespaces for index: {index_name}")
 
@@ -177,6 +165,7 @@ class RAGService(RAGServiceInterface):
 
         return namespaces
 
+    @handle_namespace_operation_exceptions
     async def delete_namespace(
         self,
         index_name: str,
@@ -192,22 +181,10 @@ class RAGService(RAGServiceInterface):
             namespace=namespace,
             is_delete_all=True,
         )
-
         if not success:
-            logger.warning(
-                f"Failed to delete namespace {namespace} from Vector DB index "
-                f"{index_name}, proceeding with folder deletion"
-            )
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail={
-                    "error": "Error deleting namespace from Vector DB",
-                    "message": (
-                        f"Failed to delete namespace {namespace} from "
-                        f"Vector DB index {index_name}, "
-                        f"proceeding with folder deletion"
-                    ),
-                },
+            raise ValueError(
+                f"Failed to delete namespace {namespace} from Vector DB "
+                f"index {index_name}"
             )
 
         namespace_path = f"{index_name}/{namespace}/"
@@ -215,6 +192,7 @@ class RAGService(RAGServiceInterface):
             folder_path=namespace_path, request=request, is_delete_all=True
         )
 
+    @handle_document_processing
     async def upload_file(
         self,
         index_name: str,
@@ -228,12 +206,10 @@ class RAGService(RAGServiceInterface):
         )
 
         await validate_file_mime([file], ALLOWED_MIME_TYPES_FOR_RAG)
-
         original_filename = file.filename
         file.filename = f"{index_name}/{namespace}/{original_filename}"
 
         file_info = await self.storage.upload(file, request)
-
         await self.rag_manager.process_pdf_file(
             file_path=file_info.url,
             index_name=index_name,
@@ -243,6 +219,7 @@ class RAGService(RAGServiceInterface):
 
         return file_info
 
+    @handle_document_processing
     async def upload_files(
         self,
         index_name: str,
@@ -256,13 +233,11 @@ class RAGService(RAGServiceInterface):
         )
 
         await validate_file_mime(files, ALLOWED_MIME_TYPES_FOR_RAG)
-
         for file in files:
             original_filename = file.filename
             file.filename = f"{index_name}/{namespace}/{original_filename}"
 
         files_info = await self.storage.multi_upload(files, request)
-
         for file_info in files_info:
             await self.rag_manager.process_pdf_file(
                 file_path=file_info.url,
@@ -273,6 +248,7 @@ class RAGService(RAGServiceInterface):
 
         return files_info
 
+    @handle_folder_operation_exceptions
     async def upload_folder(
         self,
         index_name: str,
@@ -284,33 +260,22 @@ class RAGService(RAGServiceInterface):
             f"Processing folder: {folder_path} for {index_name}/{namespace}"
         )
 
-        try:
-            documents = await self.rag_manager.process_directory(
-                directory_path=folder_path,
-                index_name=index_name,
-                namespace=namespace,
-                metadata=metadata,
-            )
+        documents = await self.rag_manager.process_directory(
+            directory_path=folder_path,
+            index_name=index_name,
+            namespace=namespace,
+            metadata=metadata,
+        )
 
-            return ProcessingStatusSchema(
-                index_name=index_name,
-                namespace=namespace,
-                status="completed",
-                total_files=len(documents),
-                processed_files=len(documents),
-            )
-        except Exception as e:
-            logger.error(f"Error processing folder {folder_path}: {e}")
+        return ProcessingStatusSchema(
+            index_name=index_name,
+            namespace=namespace,
+            status="completed",
+            total_files=len(documents),
+            processed_files=len(documents),
+        )
 
-            return ProcessingStatusSchema(
-                index_name=index_name,
-                namespace=namespace,
-                status="failed",
-                total_files=0,
-                processed_files=0,
-                error_message=str(e),
-            )
-
+    @handle_document_processing
     async def delete_document(
         self,
         index_name: str,
@@ -323,31 +288,19 @@ class RAGService(RAGServiceInterface):
         )
 
         file_info = await self.storage.get_file(document_path)
-
         success = self.vector_db_client.delete_from_namespace(
             index_name=index_name,
             namespace=namespace,
             filter={"source": file_info.url},
         )
-
         if not success:
-            logger.warning(
-                f"Failed to delete vectors for {document_path} "
-                f"from Pinecone, proceeding with file deletion"
-            )
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail={
-                    "error": "Error deleting namespace from Vector DB",
-                    "message": (
-                        f"Failed to delete vectors for {document_path} "
-                        f"from Pinecone, proceeding with file deletion"
-                    ),
-                },
+            raise ValueError(
+                f"Failed to delete vectors for {document_path} from Pinecone"
             )
 
         return await self.storage.delete_file(document_path, request)
 
+    @handle_async_search_exceptions
     async def search(
         self,
         query: str,
@@ -357,7 +310,8 @@ class RAGService(RAGServiceInterface):
         filters: Optional[Dict[str, Any]] = None,
     ) -> SearchResponseSchema:
         logger.info(
-            f"Searching for '{query}' in {index_name}/{namespace}, top_k={top_k}"
+            f"Searching for '{query}' in {index_name}/{namespace}, "
+            f"top_k={top_k}"
         )
 
         results = await self.rag_manager.search(
