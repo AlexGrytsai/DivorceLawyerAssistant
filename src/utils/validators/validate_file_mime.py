@@ -34,7 +34,7 @@ async def validate_file_mime(
         if not is_valid:
             logger.warning(f"File {file.filename} has wrong MIME type.")
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
+                status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
                 detail=(
                     f"File {file.filename} has wrong MIME type. "
                     f"Allowed MIME types: "
