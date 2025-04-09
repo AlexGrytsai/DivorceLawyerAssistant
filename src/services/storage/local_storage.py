@@ -296,6 +296,23 @@ class LocalStorage(BaseStorageInterface):
         return folders
 
     @handle_upload_file_exceptions
+    async def get_folder(self, folder_path: str) -> FolderDataSchema:
+        """Get folder information by path"""
+        folder = Path(folder_path)
+        _validate_path_exists(folder, "Folder")
+
+        stat_info = folder.stat()
+        create_time = datetime.datetime.fromtimestamp(stat_info.st_birthtime)
+        update_time = datetime.datetime.fromtimestamp(stat_info.st_birthtime)
+
+        return FolderDataSchema(
+            folder_path=str(folder),
+            folder_name=folder.name,
+            create_time=create_time,
+            update_time=update_time,
+        )
+
+    @handle_upload_file_exceptions
     async def get_folder_contents(self, folder_path: str) -> dict:
         """Get contents of a specific folder"""
         folder = Path(folder_path)
