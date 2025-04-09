@@ -225,7 +225,6 @@ class CloudStorage(BaseStorageInterface):
         self, folder_path: str
     ) -> FolderContentsSchema:
         """Get contents of a folder with files and subfolders"""
-
         normalized_path = self._normalize_folder_path(folder_path)
         blobs = await self._cloud_storage.list_blobs(prefix=normalized_path)
 
@@ -273,7 +272,7 @@ class CloudStorage(BaseStorageInterface):
             else:
                 current_folder = parts[0]
                 current_path = (
-                    f"{folder_path}/{current_folder}"
+                    f"{folder_path}{current_folder}"
                     if folder_path
                     else current_folder
                 )
@@ -302,6 +301,8 @@ class CloudStorage(BaseStorageInterface):
 
     @staticmethod
     def _normalize_folder_path(folder_path: str) -> str:
+        if folder_path and folder_path.startswith("/"):
+            folder_path = folder_path.removeprefix("/")
         if folder_path and not folder_path.endswith("/"):
             folder_path += "/"
         return folder_path
