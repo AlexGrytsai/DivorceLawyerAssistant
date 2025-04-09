@@ -209,6 +209,19 @@ class BaseStorageInterface(ABC):
         pass
 
     @abstractmethod
+    async def get_folder(self, folder_path: str) -> FolderDataSchema:
+        """
+        Get folder information by path
+
+        Args:
+            folder_path: Path to folder
+
+        Returns:
+            FolderDataSchema: Folder information
+        """
+        pass
+
+    @abstractmethod
     async def rename_file(
         self,
         old_path: str,
