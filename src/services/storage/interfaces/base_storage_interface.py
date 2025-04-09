@@ -191,6 +191,7 @@ class BaseStorageInterface(ABC):
         self,
         folder_path: str,
         request: Optional[Request] = None,
+        is_delete_all: bool = False,
         *args,
         **kwargs,
     ) -> FolderDeleteSchema:
@@ -200,6 +201,7 @@ class BaseStorageInterface(ABC):
         Args:
             folder_path: Path to folder to delete
             request: FastAPI request object
+            is_delete_all: Flag to indicate if all contents should be deleted
             *args: Additional positional arguments
             **kwargs: Additional keyword arguments
 
