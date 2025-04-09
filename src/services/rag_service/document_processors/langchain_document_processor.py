@@ -32,7 +32,7 @@ class LangChainDocumentProcessor(DocumentProcessorInterface):
         vector_store: Optional[VectorStoreFactory] = None,
     ):
         self.embeddings = embeddings or OpenAIEmbeddings(
-            client=settings.OPENAI_API_KEY,
+            api_key=settings.OPENAI_API_KEY,
             model=settings.EMBEDDING_MODEL,
             dimensions=settings.DIMENSIONS_EMBEDDING,
         )
