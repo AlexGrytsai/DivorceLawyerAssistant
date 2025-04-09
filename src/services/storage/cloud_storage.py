@@ -218,6 +218,58 @@ class CloudStorage(BaseStorageInterface):
         """List managed folders"""
         return await self._cloud_storage.list_folders(prefix=prefix)
 
+    async def get_folder_contents(
+        self, folder_path: str
+    ) -> FolderContentsSchema:
+        folder_path = self._normalize_folder_path(folder_path)
+        blobs: List[FileSchema] = await self._cloud_storage.list_blobs(
+            prefix=folder_path
+        )
+        files: List[FileSchemaForFolder] = []
+        folders: Set[str] = set()
+
+        for blob in blobs:
+            relative_path = self._get_relative_path(blob.path, folder_path)
+            if not relative_path:
+                continue
+
+            if relative_path.startswith("/"):
+                relative_path = relative_path[1:]
+
+            parts = relative_path.split("/")
+            if len(parts) == 1:
+                files.append(
+                    self._process_file_item(
+                        filename=blob.filename,
+                        path=blob.path,
+                        url=blob.url,
+                        size=blob.size,
+                        content_type=blob.content_type,
+                    )
+                )
+            else:
+                current_folder_path = (
+                    f"{folder_path}/{parts[0]}" if folder_path else parts[0]
+                )
+                if current_folder_path not in folders:
+                    folders.add(current_folder_path)
+        folder_items = [
+            self._process_folder_item(folder_path)
+            for folder_path in sorted(folders)
+        ]
+        print(folder_items)
+
+        all_items: List[Union[FileSchemaForFolder, FolderItem]] = [
+            *folder_items,
+            *files,
+        ]
+        print(all_items)
+
+        return FolderContentsSchema(
+            current_path=folder_path.rstrip("/") if folder_path else "",
+            items=self._sort_folder_items(all_items),
+        )
+
     @staticmethod
     def _normalize_folder_path(folder_path: str) -> str:
         if folder_path and not folder_path.endswith("/"):
@@ -231,12 +283,14 @@ class CloudStorage(BaseStorageInterface):
     @staticmethod
     def _process_file_item(
         filename: str,
+        path: str,
         url: str,
         size: int,
         content_type: Optional[str] = None,
     ) -> FileSchemaForFolder:
         return FileSchemaForFolder(
             filename=filename,
+            path=path,
             url=url,
             type="file",
             size=size,
@@ -263,53 +317,6 @@ class CloudStorage(BaseStorageInterface):
                 return False, item.folder_name
 
         return sorted(items, key=sort_key)
-
-    async def get_folder_contents(
-        self, folder_path: str
-    ) -> FolderContentsSchema:
-        folder_path = self._normalize_folder_path(folder_path)
-        blobs: List[FileSchema] = await self._cloud_storage.list_blobs(
-            prefix=folder_path
-        )
-        files: List[FileSchemaForFolder] = []
-        folders: Set[str] = set()
-
-        for blob in blobs:
-            relative_path = self._get_relative_path(blob.filename, folder_path)
-            if not relative_path:
-                continue
-
-            parts = relative_path.split("/")
-            if len(parts) == 1:
-                files.append(
-                    self._process_file_item(
-                        filename=parts[0],
-                        url=blob.url,
-                        size=blob.size,
-                        content_type=blob.content_type,
-                    )
-                )
-            else:
-                current_folder_path = (
-                    f"{folder_path}/{parts[0]}" if folder_path else parts[0]
-                )
-                if current_folder_path not in folders:
-                    folders.add(current_folder_path)
-
-        folder_items = [
-            self._process_folder_item(folder_path)
-            for folder_path in sorted(folders)
-        ]
-
-        all_items: List[Union[FileSchemaForFolder, FolderItem]] = [
-            *folder_items,
-            *files,
-        ]
-
-        return FolderContentsSchema(
-            current_path=folder_path.rstrip("/") if folder_path else "",
-            items=self._sort_folder_items(all_items),
-        )
 
     @staticmethod
     def _get_user_identifier(request: Request) -> str:
