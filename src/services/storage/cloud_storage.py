@@ -224,10 +224,30 @@ class CloudStorage(BaseStorageInterface):
     async def get_folder_contents(
         self, folder_path: str
     ) -> FolderContentsSchema:
-        folder_path = self._normalize_folder_path(folder_path)
-        blobs: List[FileSchema] = await self._cloud_storage.list_blobs(
-            prefix=folder_path
+        """Get contents of a folder with files and subfolders"""
+
+        normalized_path = self._normalize_folder_path(folder_path)
+        blobs = await self._cloud_storage.list_blobs(prefix=normalized_path)
+
+        files, folder_paths = self._separate_files_and_folders(
+            blobs, normalized_path
         )
+
+        folder_items = await self._get_folder_items(folder_paths)
+
+        all_items = self._combine_items(files, folder_items)
+
+        return FolderContentsSchema(
+            current_path=(
+                normalized_path.rstrip("/") if normalized_path else ""
+            ),
+            items=all_items,
+        )
+
+    def _separate_files_and_folders(
+        self, blobs: List[FileSchema], folder_path: str
+    ) -> Tuple[List[FileSchemaForFolder], Set[str]]:
+        """Separate blobs into files and folders"""
         files: List[FileSchemaForFolder] = []
         folders: Set[str] = set()
 
@@ -251,25 +271,34 @@ class CloudStorage(BaseStorageInterface):
                     )
                 )
             else:
-                current_folder_path = (
-                    f"{folder_path}/{parts[0]}" if folder_path else parts[0]
+                current_folder = parts[0]
+                current_path = (
+                    f"{folder_path}/{current_folder}"
+                    if folder_path
+                    else current_folder
                 )
-                if current_folder_path not in folders:
-                    folders.add(current_folder_path)
-        folder_items = [
-            self._process_folder_item(folder_path)
-            for folder_path in sorted(folders)
-        ]
+                if current_path not in folders:
+                    folders.add(current_path)
 
+        return files, folders
+
+    async def _get_folder_items(
+        self, folder_paths: Set[str]
+    ) -> List[FolderItem]:
+        """Process folder paths into folder items"""
+        sorted_paths = sorted(folder_paths)
+        tasks = [self._process_folder_item(path) for path in sorted_paths]
+        return await asyncio.gather(*tasks)
+
+    def _combine_items(
+        self, files: List[FileSchemaForFolder], folder_items: List[FolderItem]
+    ) -> List[Union[FileSchemaForFolder, FolderItem]]:
+        """Combine and sort files and folders"""
         all_items: List[Union[FileSchemaForFolder, FolderItem]] = [
             *folder_items,
             *files,
         ]
-
-        return FolderContentsSchema(
-            current_path=folder_path.rstrip("/") if folder_path else "",
-            items=self._sort_folder_items(all_items),
-        )
+        return self._sort_folder_items(all_items)
 
     @staticmethod
     def _normalize_folder_path(folder_path: str) -> str:
@@ -298,10 +327,12 @@ class CloudStorage(BaseStorageInterface):
             content_type=content_type,
         )
 
-    def _process_folder_item(self, folder_path: str) -> FolderItem:
+    async def _process_folder_item(self, folder_path: str) -> FolderItem:
+        folder: FolderDataSchema = await self.get_folder(folder_path)
         return FolderItem(
-            folder_name=self._path_handler.get_basename(folder_path),
-            folder_path=folder_path,
+            folder_name=folder.folder_name,
+            folder_path=folder.folder_path,
+            create_time=folder.create_time,
             type="folder",
         )
 
