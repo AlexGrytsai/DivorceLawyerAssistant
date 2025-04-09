@@ -25,6 +25,7 @@ from src.services.storage.shemas import (
     FileSchema,
     FileDeleteSchema,
     FolderDeleteSchema,
+    FolderContentsSchema,
 )
 from src.utils.validators.validate_file_mime import validate_file_mime
 
@@ -170,7 +171,11 @@ class RAGService:
             )
 
         # Delete folder from storage
-        return await self.storage.delete_folder(index_name, request)
+        return await self.storage.delete_folder(
+            folder_path=f"{index_name}/",
+            request=request,
+            is_delete_all=True,
+        )
 
     async def create_namespace(
         self,
@@ -191,8 +196,8 @@ class RAGService:
         """
         logger.info(f"Creating namespace: {namespace} in index: {index_name}")
 
-        # Create namespace folder path
-        namespace_path = f"{index_name}/{namespace}"
+        # Create a namespace folder path
+        namespace_path = f"{index_name}/{namespace}/"
 
         # Create folder in storage
         folder = await self.storage.create_folder(namespace_path, request)
@@ -219,7 +224,9 @@ class RAGService:
         pinecone_namespaces = self.vector_db_client.list_namespaces(index_name)
 
         # Get folders from storage
-        folder_contents = await self.storage.get_folder_contents(index_name)
+        folder_contents: FolderContentsSchema = (
+            await self.storage.get_folder_contents(index_name)
+        )
 
         # Extract namespace folders
         namespaces = []
@@ -262,12 +269,12 @@ class RAGService:
         success = self.vector_db_client.delete_from_namespace(
             index_name=index_name,
             namespace=namespace,
-            delete_all=True,
+            is_delete_all=True,
         )
 
         if not success:
             logger.warning(
-                f"Failed to delete namespace {namespace} from Pinecone index "
+                f"Failed to delete namespace {namespace} from Vector DB index "
                 f"{index_name}, proceeding with folder deletion"
             )
 
@@ -276,15 +283,18 @@ class RAGService:
                 detail={
                     "error": "Error deleting namespace from Vector DB",
                     "message": (
-                        f"Failed to delete namespace {namespace} from Pinecone"
-                        f" index {index_name}, proceeding with folder deletion"
+                        f"Failed to delete namespace {namespace} from "
+                        f"Vector DB index {index_name}, "
+                        f"proceeding with folder deletion"
                     ),
                 },
             )
 
         # Delete folder from storage
-        namespace_path = f"{index_name}/{namespace}"
-        return await self.storage.delete_folder(namespace_path, request)
+        namespace_path = f"{index_name}/{namespace}/"
+        return await self.storage.delete_folder(
+            folder_path=namespace_path, request=request, is_delete_all=True
+        )
 
     async def upload_file(
         self,
@@ -529,5 +539,16 @@ class RAGService:
 
 
 if __name__ == "__main__":
-    rag_service = RAGService()
-    asyncio.run(rag_service.create_index("test-index"))
+    rag = RAGService()
+
+    # asyncio.run(rag_service.create_index("test-index"))
+    # asyncio.run(rag_service.create_namespace("test-index", "test-namespace"))
+    # asyncio.run(rag_service.delete_index("test-index"))
+    # print(asyncio.run(rag.list_indexes()))
+    print(
+        asyncio.run(
+            rag.delete_namespace(
+                index_name="test-index", namespace="test-namespace"
+            )
+        )
+    )
