@@ -1,4 +1,3 @@
-import asyncio
 import logging
 from typing import Dict, List, Optional, Any
 
@@ -501,7 +500,7 @@ class RAGService:
         query: str,
         index_name: str,
         namespace: str,
-        top_k: int = 5,
+        top_k: int = 3,
         filters: Optional[Dict[str, Any]] = None,
     ) -> SearchResponseSchema:
         """
@@ -536,19 +535,3 @@ class RAGService:
             results=results,
             total=len(results),
         )
-
-
-if __name__ == "__main__":
-    rag = RAGService()
-
-    # asyncio.run(rag_service.create_index("test-index"))
-    # asyncio.run(rag_service.create_namespace("test-index", "test-namespace"))
-    # asyncio.run(rag_service.delete_index("test-index"))
-    # print(asyncio.run(rag.list_indexes()))
-    print(
-        asyncio.run(
-            rag.delete_namespace(
-                index_name="test-index", namespace="test-namespace"
-            )
-        )
-    )
