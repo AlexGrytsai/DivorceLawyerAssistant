@@ -6,6 +6,8 @@ import os
 from types import MappingProxyType
 
 from dotenv import load_dotenv
+from langchain_core.embeddings import Embeddings
+from langchain_openai import OpenAIEmbeddings
 
 from src.core.constants import (
     MODEL_TOKEN_LIMITS,
@@ -44,8 +46,13 @@ class Settings:
     )
 
     # Model AI settings
-    EMBEDDING_MODEL: str = "text-embedding-3-large"
     DIMENSIONS_EMBEDDING: int = 3072
+
+    BASE_EMBEDDING: Embeddings = OpenAIEmbeddings(
+        openai_api_key=OPENAI_API_KEY,
+        model="text-embedding-3-large",
+        dimensions=3072,
+    )
 
     MODEL_TOKEN_LIMITS: TokenLimitsMapping = MappingProxyType(
         MODEL_TOKEN_LIMITS
