@@ -93,7 +93,7 @@ class LocalStorage(BaseStorageInterface):
     async def multi_upload(
         self,
         files: List[UploadFile],
-        request: Request,
+        request: Optional[Request] = None,
         *args,
         **kwargs,
     ) -> List[FileSchema]:
