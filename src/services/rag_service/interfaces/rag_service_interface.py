@@ -89,6 +89,7 @@ class RAGServiceInterface(ABC):
         """
         pass
 
+    @abstractmethod
     async def list_namespaces(self, index_name: str) -> List[NamespaceSchema]:
         """
         Lists all namespaces in an index.
