@@ -23,11 +23,11 @@ from src.services.rag_service.schemas import (
 logger = logging.getLogger(__name__)
 
 
-class PineconeClient(VectorDBInterface):
+class PineconeVectorDataBase(VectorDBInterface):
     @handle_pinecone_init_exceptions
     def __init__(self, vector_db_client: Optional[Pinecone] = None):
-        self.client = vector_db_client or Pinecone(
-            api_key=settings.PINECONE_API_KEY
+        self.client = (
+            vector_db_client or settings.VECTOR_DATABASE_DEFAULT_CLIENT
         )
 
     @handle_boolean_operation_exceptions
