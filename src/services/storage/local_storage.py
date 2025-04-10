@@ -85,6 +85,7 @@ class LocalStorage(BaseStorageInterface):
 
         return FileSchema(
             filename=file.filename or "Unknown",
+            path=file_path,
             url=self._create_url_path(file_path, request),
             content_type=file.content_type,
             size=file.size,
@@ -206,6 +207,7 @@ class LocalStorage(BaseStorageInterface):
 
                 return FileSchema(
                     filename=new_file.name,
+                    path=str(new_file),
                     url=self._create_url_path(str(new_file), request),
                     content_type=None,
                     size=None,
@@ -244,6 +246,7 @@ class LocalStorage(BaseStorageInterface):
 
         return FileSchema(
             filename=file.name,
+            path=str(file),
             url=self._create_url_path(str(file), request),
             content_type=None,
             size=file.stat().st_size,
@@ -265,6 +268,7 @@ class LocalStorage(BaseStorageInterface):
             if file_path.is_file():
                 file_data = FileSchema(
                     filename=file_path.name,
+                    path=str(file_path),
                     url=self._create_url_path(str(file_path), request),
                     content_type=None,
                     size=file_path.stat().st_size,
@@ -369,6 +373,7 @@ class LocalStorage(BaseStorageInterface):
                 if search_query in filename:
                     file_data = FileSchema(
                         filename=file_path.name,
+                        path=str(file_path),
                         url=self._create_url_path(str(file_path), request),
                         content_type=None,
                         size=file_path.stat().st_size,
