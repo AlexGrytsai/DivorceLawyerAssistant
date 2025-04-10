@@ -5,7 +5,6 @@ from typing import Dict, List, Any, Optional
 from fastapi import HTTPException, status
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_core.embeddings import Embeddings
-from langchain_openai import OpenAIEmbeddings
 from langchain_text_splitters import TextSplitter
 
 from src.core.config import settings
@@ -31,11 +30,7 @@ class LangChainDocumentProcessor(DocumentProcessorInterface):
         text_splitter: Optional[TextSplitter] = None,
         vector_store: Optional[VectorStoreFactory] = None,
     ):
-        self.embeddings = embeddings or OpenAIEmbeddings(
-            api_key=settings.OPENAI_API_KEY,
-            model=settings.EMBEDDING_MODEL,
-            dimensions=settings.DIMENSIONS_EMBEDDING,
-        )
+        self.embeddings = embeddings or settings.BASE_EMBEDDING
         self.text_splitter = text_splitter or RecursiveCharacterTextSplitter(
             chunk_size=1000,
             chunk_overlap=200,

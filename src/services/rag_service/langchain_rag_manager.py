@@ -2,7 +2,6 @@ import logging
 from typing import Dict, List, Optional, Any
 
 from langchain_core.embeddings import Embeddings
-from langchain_openai import OpenAIEmbeddings
 
 from src.core.config import settings
 from src.services.rag_service.decorators import handle_document_processing
@@ -60,11 +59,7 @@ class LangChainRAGManager(RAGManagerInterface):
         search_service: Optional[SearchServiceInterface] = None,
         directory_processor: Optional[DirectoryProcessor] = None,
     ) -> None:
-        self.embeddings = embeddings or OpenAIEmbeddings(
-            api_key=settings.OPENAI_API_KEY,
-            model=settings.EMBEDDING_MODEL,
-            dimensions=settings.DIMENSIONS_EMBEDDING,
-        )
+        self.embeddings = embeddings or settings.BASE_EMBEDDING
         self.document_processor = (
             document_processor
             or LangChainDocumentProcessor(embeddings=self.embeddings)
