@@ -17,6 +17,13 @@ class IndexCreateSchema(IndexSchema):
     created_at: datetime = Field(default_factory=datetime.now)
 
 
+class IndexStatsSchema(BaseModel):
+    dimension: int
+    metric: str = "cosine"
+    vector_count: int = 0
+    index_fullness: float = 0.0
+
+
 class NamespaceSchema(BaseModel):
     name: str
     index_name: str
@@ -25,6 +32,15 @@ class NamespaceSchema(BaseModel):
 
 class NamespaceCreateSchema(NamespaceSchema):
     created_at: datetime = Field(default_factory=datetime.now)
+
+
+class Document(BaseModel):
+    id: str
+    text: str
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+    file_path: str
+    index_name: str
+    namespace: str
 
 
 class DocumentSchema(BaseModel):
