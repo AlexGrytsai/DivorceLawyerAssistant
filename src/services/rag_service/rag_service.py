@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, Set
 
 from fastapi import UploadFile, Request
 
@@ -26,6 +26,8 @@ from src.services.rag_service.schemas import (
     NamespaceSchema,
     SearchResponseSchema,
     ProcessingStatusSchema,
+    IndexStatsSchema,
+    Document,
 )
 from src.services.storage.interfaces.base_storage_interface import (
     BaseStorageInterface,
@@ -35,6 +37,8 @@ from src.services.storage.shemas import (
     FileDeleteSchema,
     FolderDeleteSchema,
     FolderContentsSchema,
+    FolderDataSchema,
+    FolderItem,
 )
 from src.utils.validators.validate_file_mime import validate_file_mime
 
@@ -84,26 +88,19 @@ class RAGService(RAGServiceInterface):
     async def list_indexes(self) -> List[IndexSchema]:
         logger.info("Listing indexes")
 
-        vector_db_indexes = set(self.vector_db_client.list_indexes())
-        storage_folders = await self.storage.list_folders()
+        vector_db_indexes = await self._get_vector_db_indexes()
+        storage_folders = await self._get_storage_folders()
 
-        indexes = []
-        for folder in storage_folders:
-            folder_name = folder.folder_name
-            if folder_name in vector_db_indexes:
-                stats = self.vector_db_client.get_index_stats_schema(
-                    folder_name
-                )
-                indexes.append(
-                    IndexSchema(
-                        name=folder_name,
-                        dimension=stats.dimension,
-                        metric="cosine",
-                        created_at=folder.create_time,
-                    )
-                )
-
-        return indexes
+        return [
+            self._map_index_to_schema(
+                folder,
+                self.vector_db_client.get_index_stats_schema(
+                    folder.folder_name
+                ),
+            )
+            for folder in storage_folders
+            if folder.folder_name in vector_db_indexes
+        ]
 
     @handle_index_operation_exceptions
     async def delete_index(
@@ -145,25 +142,15 @@ class RAGService(RAGServiceInterface):
     async def list_namespaces(self, index_name: str) -> List[NamespaceSchema]:
         logger.info(f"Listing namespaces for index: {index_name}")
 
-        pinecone_namespaces = self.vector_db_client.list_namespaces(index_name)
-        folder_contents: FolderContentsSchema = (
-            await self.storage.get_folder_contents(index_name)
-        )
+        pinecone_namespaces = self._get_pinecone_namespaces(index_name)
+        folder_contents = await self._get_folder_contents(index_name)
 
-        namespaces = []
-        for item in folder_contents.items:
-            if item.type == "folder":
-                folder_name = item.folder_name
-                if folder_name in pinecone_namespaces:
-                    namespaces.append(
-                        NamespaceSchema(
-                            name=folder_name,
-                            index_name=index_name,
-                            created_at=item.create_time,
-                        )
-                    )
-
-        return namespaces
+        return [
+            self._map_namespace_to_schema(item, index_name)
+            for item in folder_contents.items
+            if item.type == "folder"
+            and item.folder_name in pinecone_namespaces
+        ]
 
     @handle_namespace_operation_exceptions
     async def delete_namespace(
@@ -232,19 +219,12 @@ class RAGService(RAGServiceInterface):
             f"Uploading {len(files)} files to {index_name}/{namespace}"
         )
 
-        await validate_file_mime(files, ALLOWED_MIME_TYPES_FOR_RAG)
-        for file in files:
-            original_filename = file.filename
-            file.filename = f"{index_name}/{namespace}/{original_filename}"
-
+        await self._validate_files(files)
+        self._prepare_files_for_upload(files, index_name, namespace)
         files_info = await self.storage.multi_upload(files, request)
-        for file_info in files_info:
-            await self.rag_manager.process_pdf_file(
-                file_path=file_info.url,
-                index_name=index_name,
-                namespace=namespace,
-                metadata=metadata,
-            )
+        await self._process_uploaded_files(
+            files_info, index_name, namespace, metadata
+        )
 
         return files_info
 
@@ -260,20 +240,10 @@ class RAGService(RAGServiceInterface):
             f"Processing folder: {folder_path} for {index_name}/{namespace}"
         )
 
-        documents = await self.rag_manager.process_directory(
-            directory_path=folder_path,
-            index_name=index_name,
-            namespace=namespace,
-            metadata=metadata,
+        documents = await self._process_directory(
+            folder_path, index_name, namespace, metadata
         )
-
-        return ProcessingStatusSchema(
-            index_name=index_name,
-            namespace=namespace,
-            status="completed",
-            total_files=len(documents),
-            processed_files=len(documents),
-        )
+        return self._create_processing_status(index_name, namespace, documents)
 
     @handle_document_processing
     async def delete_document(
@@ -287,18 +257,17 @@ class RAGService(RAGServiceInterface):
             f"Deleting document: {document_path} from {index_name}/{namespace}"
         )
 
-        file_info = await self.storage.get_file(document_path)
-        success = self.vector_db_client.delete_from_namespace(
-            index_name=index_name,
-            namespace=namespace,
-            filter={"source": file_info.url},
+        file_info = await self._get_document_info(document_path)
+        success = self._delete_document_from_db(
+            index_name, namespace, file_info
         )
+
         if not success:
             raise ValueError(
                 f"Failed to delete vectors for {document_path} from Pinecone"
             )
 
-        return await self.storage.delete_file(document_path, request)
+        return await self._delete_document_from_storage(document_path, request)
 
     @handle_async_search_exceptions
     async def search(
@@ -327,3 +296,116 @@ class RAGService(RAGServiceInterface):
             results=results,
             total=len(results),
         )
+
+    # Private methods
+    async def _get_vector_db_indexes(self) -> Set[str]:
+        return set(self.vector_db_client.list_indexes())
+
+    async def _get_storage_folders(self) -> List[FolderDataSchema]:
+        return await self.storage.list_folders()
+
+    @staticmethod
+    def _map_index_to_schema(
+        folder: FolderDataSchema, stats: IndexStatsSchema
+    ) -> IndexSchema:
+        return IndexSchema(
+            name=folder.folder_name,
+            dimension=stats.dimension,
+            metric="cosine",
+            created_at=folder.create_time,
+        )
+
+    def _get_pinecone_namespaces(self, index_name: str) -> List[str]:
+        return self.vector_db_client.list_namespaces(index_name)
+
+    async def _get_folder_contents(
+        self, index_name: str
+    ) -> FolderContentsSchema:
+        return await self.storage.get_folder_contents(index_name)
+
+    @staticmethod
+    def _map_namespace_to_schema(
+        item: FolderItem, index_name: str
+    ) -> NamespaceSchema:
+        return NamespaceSchema(
+            name=item.folder_name,
+            index_name=index_name,
+            created_at=item.create_time,
+        )
+
+    @staticmethod
+    async def _validate_files(files: List[UploadFile]) -> None:
+        await validate_file_mime(files, ALLOWED_MIME_TYPES_FOR_RAG)
+
+    @staticmethod
+    def _prepare_files_for_upload(
+        files: List[UploadFile], index_name: str, namespace: str
+    ) -> None:
+        for file in files:
+            original_filename = file.filename
+            file.filename = f"{index_name}/{namespace}/{original_filename}"
+
+    async def _process_uploaded_files(
+        self,
+        files_info: List[FileSchema],
+        index_name: str,
+        namespace: str,
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> None:
+        for file_info in files_info:
+            await self.rag_manager.process_pdf_file(
+                file_path=file_info.url,
+                index_name=index_name,
+                namespace=namespace,
+                metadata=metadata,
+            )
+
+    async def _process_directory(
+        self,
+        folder_path: str,
+        index_name: str,
+        namespace: str,
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> List[Document]:
+        return await self.rag_manager.process_directory(
+            directory_path=folder_path,
+            index_name=index_name,
+            namespace=namespace,
+            metadata=metadata,
+        )
+
+    @staticmethod
+    def _create_processing_status(
+        index_name: str,
+        namespace: str,
+        documents: List[Document],
+    ) -> ProcessingStatusSchema:
+        return ProcessingStatusSchema(
+            index_name=index_name,
+            namespace=namespace,
+            status="completed",
+            total_files=len(documents),
+            processed_files=len(documents),
+        )
+
+    async def _get_document_info(self, document_path: str) -> FileSchema:
+        return await self.storage.get_file(document_path)
+
+    def _delete_document_from_db(
+        self,
+        index_name: str,
+        namespace: str,
+        file_info: FileSchema,
+    ) -> bool:
+        return self.vector_db_client.delete_from_namespace(
+            index_name=index_name,
+            namespace=namespace,
+            filter={"source": file_info.url},
+        )
+
+    async def _delete_document_from_storage(
+        self,
+        document_path: str,
+        request: Optional[Request] = None,
+    ) -> FileDeleteSchema:
+        return await self.storage.delete_file(document_path, request)
