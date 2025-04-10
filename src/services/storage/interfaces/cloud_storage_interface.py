@@ -182,12 +182,15 @@ class CloudStorageInterface(ABC):
         pass
 
     @abstractmethod
-    async def delete_folder(self, folder_name: str) -> FolderDeleteSchema:
+    async def delete_folder(
+        self, folder_name: str, is_delete_all: bool
+    ) -> FolderDeleteSchema:
         """
         Delete a managed folder from the storage.
 
         Args:
             folder_name: Name of the folder to delete
+            is_delete_all: If True, deletes all nested files and folders
 
         Returns:
             FolderDeleteSchema: Information about the deleted folder
