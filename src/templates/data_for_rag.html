@@ -109,8 +109,8 @@
                             class="cursor-pointer hover:text-blue-600"
                         >{{ item.name }}</span>
                         <a 
-                            v-else 
-                            :href="`/cloud-storage/files/${encodeURIComponent(item.path)}`"
+                            v-else
+                            :href="item.url"
                             target="_blank"
                             class="text-blue-600 hover:text-blue-800 hover:underline"
                         >{{ item.name }}</a>
@@ -287,25 +287,24 @@
                     this.filesTo始Upload.push(...files)
                 },
                 async uploadFiles() {
-                    if (this.filesToUpload.length === 0) return
-                    
                     const formData = new FormData()
-                    this.filesToUpload.forEach(file => {
+                  for (const file of this.$refs.fileInput.files) {
                         formData.append('files', file)
-                    })
+                  }
+                  if (this.currentPath) {
                     formData.append('folder_path', this.currentPath)
-                    
+                  }
                     try {
-                        const response = await fetch('/cloud-storage/upload/multiple', {
+                      const response = await fetch('/api/v1/data-for-rag/upload/multiple', {
                             method: 'POST',
                             body: formData
                         })
                         this.result = await response.json()
-                        this.filesToUpload = []
                         await this.loadFolderContents(this.currentPath)
                     } catch (error) {
                         this.result = { error: error.message }
                     }
+                  this.$refs.fileInput.value = ''
                 },
                 async createFolder() {
                     if (!this.newFolderName) return
@@ -315,7 +314,7 @@
                         : this.newFolderName
                     formData.append('folder_path', folderPath)
                     try {
-                        const response = await fetch('/cloud-storage/folders', {
+                      const response = await fetch('/api/v1/data-for-rag/folders', {
                             method: 'POST',
                             body: formData
                         })
@@ -329,7 +328,7 @@
                 async deleteFolder(path) {
                     if (!confirm(`Вы уверены, что хотите удалить папку ${path}?`)) return
                     try {
-                        const response = await fetch(`/cloud-storage/folders/${encodeURIComponent(path)}`, {
+                      const response = await fetch(`/api/v1/data-for-rag/folders/${encodeURIComponent(path)}`, {
                             method: 'DELETE'
                         })
                         this.result = await response.json()
@@ -341,7 +340,7 @@
                 async deleteFile(path) {
                     if (!confirm(`Вы уверены, что хотите удалить файл ${path}?`)) return
                     try {
-                        const response = await fetch(`/cloud-storage/files/${encodeURIComponent(path)}`, {
+                      const response = await fetch(`/api/v1/data-for-rag/files/${encodeURIComponent(path)}`, {
                             method: 'DELETE'
                         })
                         this.result = await response.json()
