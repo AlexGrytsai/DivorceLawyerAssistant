@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import asyncio
 import logging
-from typing import Dict, List, Any, Optional, Union
+from typing import Dict, List, Any, Optional, Union, TYPE_CHECKING
 
 from src.core.config import settings
 from src.services.rag_service.decorators import (
@@ -9,6 +11,11 @@ from src.services.rag_service.decorators import (
 from src.services.rag_service.schemas import DocumentSchema
 from src.services.storage.interfaces import BaseStorageInterface
 from src.services.storage.shemas import FileSchemaForFolder, FolderItem
+
+if TYPE_CHECKING:
+    from src.services.rag_service.factory.file_processor_factory import (
+        FileProcessorFactory,
+    )
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +36,7 @@ class DirectoryProcessor:
 
     def __init__(
         self,
-        file_processor_factory: "FileProcessorFactory",
+        file_processor_factory: FileProcessorFactory,
         rag_storage: Optional[BaseStorageInterface] = None,
     ):
         self.file_processor_factory = file_processor_factory
