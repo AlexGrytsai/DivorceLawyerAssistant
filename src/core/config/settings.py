@@ -8,6 +8,7 @@ from types import MappingProxyType
 from dotenv import load_dotenv
 from langchain_core.embeddings import Embeddings
 from langchain_openai import OpenAIEmbeddings
+from pinecone import Pinecone
 
 from src.core.constants import (
     MODEL_TOKEN_LIMITS,
@@ -48,11 +49,13 @@ class Settings:
     # Model AI settings
     DIMENSIONS_EMBEDDING: int = 3072
 
-    BASE_EMBEDDING: Embeddings = OpenAIEmbeddings(
+    EMBEDDING_DEFAULT: Embeddings = OpenAIEmbeddings(
         openai_api_key=OPENAI_API_KEY,
         model="text-embedding-3-large",
         dimensions=3072,
     )
+
+    VECTOR_DATABASE_DEFAULT_CLIENT: Pinecone(api_key=PINECONE_API_KEY)
 
     MODEL_TOKEN_LIMITS: TokenLimitsMapping = MappingProxyType(
         MODEL_TOKEN_LIMITS
