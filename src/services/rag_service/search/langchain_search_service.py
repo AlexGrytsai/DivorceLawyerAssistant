@@ -23,7 +23,7 @@ class LangChainSearchService(SearchServiceInterface):
         embeddings: Optional[Embeddings] = None,
         vector_store_factory: Optional[VectorStoreFactory] = None,
     ):
-        self.embeddings = embeddings or settings.BASE_EMBEDDING
+        self.embeddings = embeddings or settings.EMBEDDING_DEFAULT
         self.vector_store = (
             vector_store_factory or PineconeVectorStoreFactory()
         )

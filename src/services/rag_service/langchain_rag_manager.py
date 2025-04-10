@@ -59,7 +59,7 @@ class LangChainRAGManager(RAGManagerInterface):
         search_service: Optional[SearchServiceInterface] = None,
         directory_processor: Optional[DirectoryProcessor] = None,
     ) -> None:
-        self.embeddings = embeddings or settings.BASE_EMBEDDING
+        self.embeddings = embeddings or settings.EMBEDDING_DEFAULT
         self.document_processor = (
             document_processor
             or LangChainDocumentProcessor(embeddings=self.embeddings)

@@ -30,7 +30,7 @@ class LangChainDocumentProcessor(DocumentProcessorInterface):
         text_splitter: Optional[TextSplitter] = None,
         vector_store: Optional[VectorStoreFactory] = None,
     ):
-        self.embeddings = embeddings or settings.BASE_EMBEDDING
+        self.embeddings = embeddings or settings.EMBEDDING_DEFAULT
         self.text_splitter = text_splitter or RecursiveCharacterTextSplitter(
             chunk_size=1000,
             chunk_overlap=200,
