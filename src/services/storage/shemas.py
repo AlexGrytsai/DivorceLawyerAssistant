@@ -7,7 +7,7 @@ from pydantic import HttpUrl, BaseModel, Field
 
 class FileSchema(BaseModel):
     filename: str
-    path: Optional[str] = None
+    path: str
     url: HttpUrl | str
     size: Optional[int] = None
     content_type: Optional[str] = None
