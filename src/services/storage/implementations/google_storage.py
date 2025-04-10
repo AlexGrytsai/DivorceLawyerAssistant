@@ -460,8 +460,11 @@ class GoogleCloudStorage(CloudStorageInterface):
         return folder_path if folder_path.endswith("/") else f"{folder_path}/"
 
     @staticmethod
-    def _normalize_file_path(file_path: str) -> str:
-        return file_path[1:] if file_path.startswith("/") else file_path
+    def _normalize_file_path(file_path: Optional[str] = None) -> str:
+        if file_path:
+            return file_path[1:] if file_path.startswith("/") else file_path
+
+        return ""
 
     async def _delete_subfolders(self, folder_path: str) -> bool:
         subfolders: List[FolderDataSchema] = await self.list_folders(
