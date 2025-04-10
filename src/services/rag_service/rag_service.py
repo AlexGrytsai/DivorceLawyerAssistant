@@ -299,15 +299,18 @@ class RAGService(RAGServiceInterface):
 
     # Private methods
     async def _get_vector_db_indexes(self) -> Set[str]:
+        """Retrieves list of all indexes from vector database."""
         return set(self.vector_db_client.list_indexes())
 
     async def _get_storage_folders(self) -> List[FolderDataSchema]:
+        """Retrieves list of all folders from storage service."""
         return await self.storage.list_folders()
 
     @staticmethod
     def _map_index_to_schema(
         folder: FolderDataSchema, stats: IndexStatsSchema
     ) -> IndexSchema:
+        """Converts folder data and index stats into IndexSchema object."""
         return IndexSchema(
             name=folder.folder_name,
             dimension=stats.dimension,
@@ -316,17 +319,20 @@ class RAGService(RAGServiceInterface):
         )
 
     def _get_pinecone_namespaces(self, index_name: str) -> List[str]:
+        """Retrieves list of namespaces for given index from vector database."""
         return self.vector_db_client.list_namespaces(index_name)
 
     async def _get_folder_contents(
         self, index_name: str
     ) -> FolderContentsSchema:
+        """Retrieves contents of specified folder from storage service."""
         return await self.storage.get_folder_contents(index_name)
 
     @staticmethod
     def _map_namespace_to_schema(
         item: FolderItem, index_name: str
     ) -> NamespaceSchema:
+        """Converts folder item into NamespaceSchema object."""
         return NamespaceSchema(
             name=item.folder_name,
             index_name=index_name,
@@ -335,12 +341,14 @@ class RAGService(RAGServiceInterface):
 
     @staticmethod
     async def _validate_files(files: List[UploadFile]) -> None:
+        """Validates MIME types of uploaded files against allowed types."""
         await validate_file_mime(files, ALLOWED_MIME_TYPES_FOR_RAG)
 
     @staticmethod
     def _prepare_files_for_upload(
         files: List[UploadFile], index_name: str, namespace: str
     ) -> None:
+        """Prepares file paths for upload by adding index and namespace prefix."""
         for file in files:
             original_filename = file.filename
             file.filename = f"{index_name}/{namespace}/{original_filename}"
@@ -352,6 +360,7 @@ class RAGService(RAGServiceInterface):
         namespace: str,
         metadata: Optional[Dict[str, Any]] = None,
     ) -> None:
+        """Processes uploaded files through RAG manager for vectorization."""
         for file_info in files_info:
             await self.rag_manager.process_pdf_file(
                 file_path=file_info.url,
@@ -367,6 +376,7 @@ class RAGService(RAGServiceInterface):
         namespace: str,
         metadata: Optional[Dict[str, Any]] = None,
     ) -> List[Document]:
+        """Processes all files in directory through RAG manager for vectorization."""
         return await self.rag_manager.process_directory(
             directory_path=folder_path,
             index_name=index_name,
@@ -380,6 +390,7 @@ class RAGService(RAGServiceInterface):
         namespace: str,
         documents: List[Document],
     ) -> ProcessingStatusSchema:
+        """Creates processing status schema for completed document processing."""
         return ProcessingStatusSchema(
             index_name=index_name,
             namespace=namespace,
@@ -389,6 +400,7 @@ class RAGService(RAGServiceInterface):
         )
 
     async def _get_document_info(self, document_path: str) -> FileSchema:
+        """Retrieves file information from storage service."""
         return await self.storage.get_file(document_path)
 
     def _delete_document_from_db(
@@ -397,6 +409,7 @@ class RAGService(RAGServiceInterface):
         namespace: str,
         file_info: FileSchema,
     ) -> bool:
+        """Deletes document vectors from vector database."""
         return self.vector_db_client.delete_from_namespace(
             index_name=index_name,
             namespace=namespace,
@@ -408,4 +421,5 @@ class RAGService(RAGServiceInterface):
         document_path: str,
         request: Optional[Request] = None,
     ) -> FileDeleteSchema:
+        """Deletes document from storage service."""
         return await self.storage.delete_file(document_path, request)
