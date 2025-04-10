@@ -5,6 +5,7 @@ from typing import List, Optional, Union, Set, Tuple
 from fastapi import UploadFile, Request, status, HTTPException
 from google.cloud.storage import Blob  # type: ignore
 from google.cloud.storage_control_v2 import RenameFolderRequest  # type: ignore
+from pydantic import HttpUrl
 
 from src.services.storage.decorators import (
     handle_upload_file_exceptions,
@@ -318,7 +319,7 @@ class CloudStorage(BaseStorageInterface):
     def _process_file_item(
         filename: str,
         path: str,
-        url: str,
+        url: Union[HttpUrl, str],
         size: int,
         content_type: Optional[str] = None,
     ) -> FileSchemaForFolder:
