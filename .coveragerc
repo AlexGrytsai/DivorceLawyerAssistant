@@ -2,6 +2,6 @@
 source = src
 omit =
     */__init__.py
-    src/test/*
+    src/tests/*
     src/utils/performance_monitoring/*
     src/core/config.py
