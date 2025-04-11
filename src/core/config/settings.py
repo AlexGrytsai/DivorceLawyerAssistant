@@ -8,7 +8,7 @@ from types import MappingProxyType
 from dotenv import load_dotenv
 from langchain_core.embeddings import Embeddings
 from langchain_openai import OpenAIEmbeddings
-from pinecone import Pinecone
+from pinecone.control import Pinecone
 
 from src.core.constants import (
     MODEL_TOKEN_LIMITS,
