@@ -485,9 +485,42 @@ class TestGoogleCloudStorage:
         assert result == "file.txt"
 
     def test_get_folder_name(self, cloud_storage):
+        # Base case
         result = cloud_storage._get_folder_name(
             "projects/_/buckets/test-bucket/folders/test_folder"
         )
+        assert result == "test_folder"
+
+        # Case when 'folders' is the last element
+        result = cloud_storage._get_folder_name(
+            "projects/_/buckets/test-bucket/folders"
+        )
+        assert result == "folders"
+
+        # Case when 'folders' is the second to last element
+        result = cloud_storage._get_folder_name(
+            "projects/_/buckets/test-bucket/folders/test_folder/subfolder"
+        )
+        assert result == "subfolder"
+
+        # Case when 'folders' is not present
+        result = cloud_storage._get_folder_name(
+            "projects/_/buckets/test-bucket/test_folder"
+        )
+        assert result == "test_folder"
+
+        # Case with empty string
+        result = cloud_storage._get_folder_name("")
+        assert result == ""
+
+        # Case with consecutive slashes
+        result = cloud_storage._get_folder_name(
+            "projects/_/buckets/test-bucket//folders//test_folder"
+        )
+        assert result == "test_folder"
+
+        # Case with a relative path
+        result = cloud_storage._get_folder_name("test_folder")
         assert result == "test_folder"
 
     def test_get_folder_path(self, cloud_storage, mock_storage_control_client):
