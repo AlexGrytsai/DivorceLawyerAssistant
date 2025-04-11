@@ -35,8 +35,7 @@ def mock_request():
 
 @pytest.fixture
 def mock_storage_interface():
-    mock = AsyncMock(spec=BaseStorageInterface)
-    return mock
+    return AsyncMock(spec=BaseStorageInterface)
 
 
 @pytest.fixture
