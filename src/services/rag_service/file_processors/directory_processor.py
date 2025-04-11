@@ -73,9 +73,7 @@ class DirectoryProcessor:
     def _filter_files(
         folder_contents_items: List[Union[FileSchemaForFolder, FolderItem]],
     ) -> List[FileSchemaForFolder]:
-        return [
-            item for item in folder_contents_items if item["type"] == "file"
-        ]
+        return [item for item in folder_contents_items if item.type == "file"]
 
     async def _process_single_file(
         self,
