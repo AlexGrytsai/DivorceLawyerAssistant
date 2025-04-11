@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Dict, List, Optional, Any
 
+from src.services.rag_service.schemas import IndexStatsSchema
+
 
 class VectorDBInterface(ABC):
     """
@@ -102,5 +104,18 @@ class VectorDBInterface(ABC):
 
         Returns:
             List[str]: List of namespace names
+        """
+        pass
+
+    @abstractmethod
+    def get_index_stats_schema(self, index_name: str) -> IndexStatsSchema:
+        """
+        Returns schema for the specified index.
+
+        Args:
+            index_name: Index name
+
+        Returns:
+            IndexStatsSchema: Schema for the index statistics
         """
         pass
