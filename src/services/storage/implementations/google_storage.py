@@ -419,7 +419,7 @@ class GoogleCloudStorage(CloudStorageInterface):
         if "folders" in parts:
             folders_index = parts.index("folders")
             if folders_index + 1 < len(parts):
-                return parts[folders_index + 1]
+                return parts[-1] if parts[-1] else parts[-2]
         return parts[-1] if parts[-1] else parts[-2] if len(parts) > 1 else ""
 
     def _get_folder_path(self, folder_path: str) -> str:
