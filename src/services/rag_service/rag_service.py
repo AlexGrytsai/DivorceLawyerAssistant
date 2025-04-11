@@ -48,11 +48,11 @@ logger = logging.getLogger(__name__)
 class RAGService(RAGServiceInterface):
     def __init__(
         self,
-        storage_interface: BaseStorageInterface = settings.RAG_STORAGE,
+        storage_interface: Optional[BaseStorageInterface] = None,
         vector_db_client: Optional[VectorDBInterface] = None,
         rag_manager: Optional[RAGManagerInterface] = None,
     ):
-        self.storage = storage_interface
+        self.storage = storage_interface or settings.RAG_STORAGE
         self.vector_db_client = vector_db_client or PineconeVectorDataBase()
         self.rag_manager = rag_manager or LangChainRAGManager()
 
