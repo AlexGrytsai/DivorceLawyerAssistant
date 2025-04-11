@@ -50,7 +50,7 @@ class Settings:
     DIMENSIONS_EMBEDDING: int = 3072
 
     EMBEDDING_DEFAULT: Embeddings = OpenAIEmbeddings(
-        openai_api_key=OPENAI_API_KEY,
+        openai_api_key=OPENAI_API_KEY,  # type: ignore[call-arg]
         model="text-embedding-3-large",
         dimensions=3072,
     )
