@@ -2359,28 +2359,6 @@ asyncio = ["aiohttp (>=3.9.0)"]
 grpc = ["googleapis-common-protos (>=1.66.0)", "grpcio (>=1.44.0)", "grpcio (>=1.59.0)", "grpcio (>=1.68.0)", "lz4 (>=3.1.3)", "protobuf (>=5.29,<6.0)", "protoc-gen-openapiv2 (>=0.0.1,<0.0.2)"]
 
 [[package]]
-name = "pinecone-client"
-version = "6.0.0"
-description = "Pinecone client (DEPRECATED)"
-optional = false
-python-versions = "<4.0,>=3.9"
-files = [
-    {file = "pinecone_client-6.0.0-py3-none-any.whl", hash = "sha256:d81a9e73cae441e4ab6dfc9c1d8b51c9895dae2488cda64f3e21b9dfc10c8d94"},
-    {file = "pinecone_client-6.0.0.tar.gz", hash = "sha256:f224fc999205e4858c4737c40922bdf42d178b361c8859bc486ec00d45b359a9"},
-]
-
-[package.dependencies]
-certifi = ">=2019.11.17"
-pinecone-plugin-interface = ">=0.0.7,<0.0.8"
-python-dateutil = ">=2.5.3"
-typing-extensions = ">=3.7.4"
-urllib3 = {version = ">=1.26.5", markers = "python_version >= \"3.12\" and python_version < \"4.0\""}
-
-[package.extras]
-asyncio = ["aiohttp (>=3.9.0)"]
-grpc = ["googleapis-common-protos (>=1.66.0)", "grpcio (>=1.44.0)", "grpcio (>=1.59.0)", "grpcio (>=1.68.0)", "lz4 (>=3.1.3)", "protobuf (>=5.29,<6.0)", "protoc-gen-openapiv2 (>=0.0.1,<0.0.2)"]
-
-[[package]]
 name = "pinecone-plugin-interface"
 version = "0.0.7"
 description = "Plugin interface for the Pinecone python client"
@@ -3780,4 +3758,4 @@ cffi = ["cffi (>=1.11)"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.12,<3.13"
-content-hash = "9896e53af6f38ee8864d895d2ce07b1ed69914ee35ccd89795351be3ec2bb34b"
+content-hash = "07f5effba31a3e6f0f0ac4931f5607f57f6105ea2bfef068e18187c57ce27212"
