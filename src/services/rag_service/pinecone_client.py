@@ -16,8 +16,8 @@ from src.services.rag_service.interfaces import (
     VectorDBInterface,
 )
 from src.services.rag_service.schemas import (
-    PineconeIndexStatsSchema,
-    PineconeNamespaceStatsSchema,
+    IndexStatsSchema,
+    NamespaceStatsSchema,
 )
 
 logger = logging.getLogger(__name__)
@@ -108,19 +108,17 @@ class PineconeVectorDataBase(VectorDBInterface):
         return index.describe_index_stats()
 
     @handle_index_stats_exceptions
-    def get_index_stats_schema(
-        self, index_name: str
-    ) -> PineconeIndexStatsSchema:
+    def get_index_stats_schema(self, index_name: str) -> IndexStatsSchema:
         stats = self.get_index_stats(index_name)
 
         namespaces = {}
         if "namespaces" in stats:
             for ns_name, ns_data in stats["namespaces"].items():
-                namespaces[ns_name] = PineconeNamespaceStatsSchema(
+                namespaces[ns_name] = NamespaceStatsSchema(
                     vector_count=ns_data.get("vector_count", 0)
                 )
 
-        return PineconeIndexStatsSchema(
+        return IndexStatsSchema(
             namespaces=namespaces,
             dimension=stats.get("dimension", settings.DIMENSIONS_EMBEDDING),
             index_fullness=stats.get("index_fullness", 0.0),
