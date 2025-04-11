@@ -2,13 +2,13 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional, Literal, List, Union
 
-from pydantic import HttpUrl, BaseModel, Field
+from pydantic import BaseModel, Field
 
 
 class FileSchema(BaseModel):
     filename: str
     path: str
-    url: HttpUrl | str
+    url: str
     size: Optional[int] = None
     content_type: Optional[str] = None
 
