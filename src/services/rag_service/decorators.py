@@ -279,6 +279,7 @@ def handle_index_operation_exceptions(func: Callable) -> Callable:
     Decorator for handling exceptions in index operations (create, delete).
     Uses handle_pinecone_exceptions to handle errors appropriately.
     """
+
     @functools.wraps(func)
     async def wrapper(*args, **kwargs):
         try:
@@ -293,9 +294,12 @@ def handle_index_operation_exceptions(func: Callable) -> Callable:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail={
                     "error": "Error in index operation",
-                    "message": f"Error in index operation {operation_name}: {exc}",
+                    "message": (
+                        f"Error in index operation {operation_name}: {exc}"
+                    ),
                 },
             ) from exc
+
     return wrapper
 
 
@@ -304,6 +308,7 @@ def handle_namespace_operation_exceptions(func: Callable) -> Callable:
     Decorator for handling exceptions in namespace operations (create, delete).
     Uses handle_pinecone_exceptions to handle errors appropriately.
     """
+
     @functools.wraps(func)
     async def wrapper(*args, **kwargs):
         try:
@@ -318,9 +323,12 @@ def handle_namespace_operation_exceptions(func: Callable) -> Callable:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail={
                     "error": "Error in namespace operation",
-                    "message": f"Error in namespace operation {operation_name}: {exc}",
+                    "message": (
+                        f"Error in namespace operation {operation_name}: {exc}"
+                    ),
                 },
             ) from exc
+
     return wrapper
 
 
@@ -329,6 +337,7 @@ def handle_folder_operation_exceptions(func: Callable) -> Callable:
     Decorator for handling exceptions in folder operations (upload, delete).
     Uses handle_pinecone_exceptions to handle errors appropriately.
     """
+
     @functools.wraps(func)
     async def wrapper(*args, **kwargs):
         try:
@@ -343,7 +352,10 @@ def handle_folder_operation_exceptions(func: Callable) -> Callable:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail={
                     "error": "Error in folder operation",
-                    "message": f"Error in folder operation {operation_name}: {exc}",
+                    "message": (
+                        f"Error in folder operation {operation_name}: {exc}"
+                    ),
                 },
             ) from exc
+
     return wrapper
