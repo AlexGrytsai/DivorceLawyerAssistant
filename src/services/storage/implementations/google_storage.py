@@ -415,7 +415,12 @@ class GoogleCloudStorage(CloudStorageInterface):
 
     @staticmethod
     def _get_folder_name(folder_path: str) -> str:
-        return folder_path.split("/")[-2]
+        parts = folder_path.split("/")
+        if "folders" in parts:
+            folders_index = parts.index("folders")
+            if folders_index + 1 < len(parts):
+                return parts[-1] or parts[-2]
+        return parts[-1] or (parts[-2] if len(parts) > 1 else "")
 
     def _get_folder_path(self, folder_path: str) -> str:
         """
@@ -526,19 +531,21 @@ class GoogleCloudStorage(CloudStorageInterface):
         matching_files: List[FileSchema] = []
         for blob in blobs:
             if blob.content_type != "Folder":
-                blob_name = blob.name.split("/")[-1]
-                if not case_sensitive:
-                    blob_name = blob_name.lower()
+                original_name = blob.name.split("/")[-1]
 
-                if search_query in blob_name:
+                if (
+                    case_sensitive
+                    and search_query in original_name
+                    or not case_sensitive
+                    and search_query in original_name.lower()
+                ):
                     matching_files.append(
                         FileSchema(
-                            filename=blob_name,
+                            filename=original_name,
                             path=self._get_blob_path(blob.name),
                             url=blob.public_url,
                             content_type=blob.content_type,
                             size=blob.size,
                         )
                     )
-
         return matching_files

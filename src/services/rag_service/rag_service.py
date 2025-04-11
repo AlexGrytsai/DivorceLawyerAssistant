@@ -319,7 +319,9 @@ class RAGService(RAGServiceInterface):
         )
 
     def _get_pinecone_namespaces(self, index_name: str) -> List[str]:
-        """Retrieves list of namespaces for given index from vector database."""
+        """
+        Retrieves list of namespaces for given index from a vector database.
+        """
         return self.vector_db_client.list_namespaces(index_name)
 
     async def _get_folder_contents(
@@ -348,7 +350,9 @@ class RAGService(RAGServiceInterface):
     def _prepare_files_for_upload(
         files: List[UploadFile], index_name: str, namespace: str
     ) -> None:
-        """Prepares file paths for upload by adding index and namespace prefix."""
+        """
+        Prepares file paths for upload by adding index and namespace prefix.
+        """
         for file in files:
             original_filename = file.filename
             file.filename = f"{index_name}/{namespace}/{original_filename}"
@@ -376,7 +380,9 @@ class RAGService(RAGServiceInterface):
         namespace: str,
         metadata: Optional[Dict[str, Any]] = None,
     ) -> List[Document]:
-        """Processes all files in directory through RAG manager for vectorization."""
+        """
+        Processes all files in directory through RAG manager for vectorization.
+        """
         return await self.rag_manager.process_directory(
             directory_path=folder_path,
             index_name=index_name,
@@ -390,7 +396,9 @@ class RAGService(RAGServiceInterface):
         namespace: str,
         documents: List[Document],
     ) -> ProcessingStatusSchema:
-        """Creates processing status schema for completed document processing."""
+        """
+        Creates processing status schema for completed document processing.
+        """
         return ProcessingStatusSchema(
             index_name=index_name,
             namespace=namespace,
