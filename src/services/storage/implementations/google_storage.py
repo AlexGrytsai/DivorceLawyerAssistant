@@ -532,30 +532,20 @@ class GoogleCloudStorage(CloudStorageInterface):
         for blob in blobs:
             if blob.content_type != "Folder":
                 original_name = blob.name.split("/")[-1]
-                
-                if case_sensitive:
-                    if search_query in original_name:
-                        matching_files.append(
-                            FileSchema(
-                                filename=original_name,
-                                path=self._get_blob_path(blob.name),
-                                url=blob.public_url,
-                                content_type=blob.content_type,
-                                size=blob.size,
-                            )
-                        )
-                else:
-                    # Поиск без учета регистра, но сохраняем оригинальный регистр
-                    # в результатах
-                    if search_query in original_name.lower():
-                        matching_files.append(
-                            FileSchema(
-                                filename=original_name,
-                                path=self._get_blob_path(blob.name),
-                                url=blob.public_url,
-                                content_type=blob.content_type,
-                                size=blob.size,
-                            )
-                        )
 
+                if (
+                    case_sensitive
+                    and search_query in original_name
+                    or not case_sensitive
+                    and search_query in original_name.lower()
+                ):
+                    matching_files.append(
+                        FileSchema(
+                            filename=original_name,
+                            path=self._get_blob_path(blob.name),
+                            url=blob.public_url,
+                            content_type=blob.content_type,
+                            size=blob.size,
+                        )
+                    )
         return matching_files
