@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from datetime import datetime
 from typing import Dict, List, Optional, Any
 
@@ -18,9 +20,11 @@ class IndexCreateSchema(IndexSchema):
 
 
 class IndexStatsSchema(BaseModel):
-    dimension: int
+    namespaces: Dict[str, NamespaceStatsSchema] = Field(default_factory=dict)
+    dimension: int = settings.DIMENSIONS_EMBEDDING
     metric: str = "cosine"
     vector_count: int = 0
+    total_vector_count: int = 0
     index_fullness: float = 0.0
 
 
@@ -31,7 +35,7 @@ class NamespaceSchema(BaseModel):
 
 
 class NamespaceCreateSchema(NamespaceSchema):
-    created_at: datetime = Field(default_factory=datetime.now)
+    created_at: Optional[datetime] = Field(default_factory=datetime.now)
 
 
 class Document(BaseModel):
@@ -84,14 +88,5 @@ class ProcessingStatusSchema(BaseModel):
     created_at: datetime = Field(default_factory=datetime.now)
 
 
-class PineconeNamespaceStatsSchema(BaseModel):
+class NamespaceStatsSchema(BaseModel):
     vector_count: int
-
-
-class PineconeIndexStatsSchema(BaseModel):
-    namespaces: Dict[str, PineconeNamespaceStatsSchema] = Field(
-        default_factory=dict
-    )
-    dimension: int = settings.DIMENSIONS_EMBEDDING
-    index_fullness: float = 0.0
-    total_vector_count: int = 0
