@@ -6,6 +6,9 @@ import os
 from types import MappingProxyType
 
 from dotenv import load_dotenv
+from langchain_core.embeddings import Embeddings
+from langchain_openai import OpenAIEmbeddings
+from pinecone.control import Pinecone
 
 from src.core.constants import (
     MODEL_TOKEN_LIMITS,
@@ -15,11 +18,9 @@ from src.core.constants import (
     RAG_BUCKET_NAME,
     MAIN_BUCKET_NAME,
 )
-from src.core.storage.cloud_storage import CloudStorage
-from src.core.storage.interfaces.base_storage_interface import (
-    BaseStorageInterface,
-)
 from src.core.types import TokenLimitsMapping
+from src.services.storage import CloudStorage
+from src.services.storage.interfaces import BaseStorageInterface
 
 load_dotenv()
 
@@ -31,6 +32,7 @@ class Settings:
     # Required environment variables
     BASE_AI_MODEL: str = os.getenv("BASE_AI_MODEL", "Not Found")
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "Not Found")
+    PINECONE_API_KEY: str = os.getenv("PINECONE_API_KEY", "Not Found")
 
     # Directory settings
     STATIC_DIR: str = STATIC_DIR
@@ -44,7 +46,17 @@ class Settings:
         project_id=PROJECT_ID, bucket_name=RAG_BUCKET_NAME
     )
 
-    # Model settings
+    # Model AI settings
+    DIMENSIONS_EMBEDDING: int = 3072
+
+    EMBEDDING_DEFAULT: Embeddings = OpenAIEmbeddings(
+        openai_api_key=OPENAI_API_KEY,  # type: ignore[call-arg]
+        model="text-embedding-3-large",
+        dimensions=3072,
+    )
+
+    VECTOR_DATABASE_DEFAULT_CLIENT = Pinecone(api_key=PINECONE_API_KEY)
+
     MODEL_TOKEN_LIMITS: TokenLimitsMapping = MappingProxyType(
         MODEL_TOKEN_LIMITS
     )
