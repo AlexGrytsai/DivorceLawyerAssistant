@@ -31,7 +31,7 @@ class FileProcessorFactory:
         documents = await processor.process_file(...)
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._processors: Dict[str, Type[FileProcessorInterface]] = {}
         self._register_default_processors()
 

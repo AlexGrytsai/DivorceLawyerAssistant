@@ -319,7 +319,7 @@ class CloudStorage(BaseStorageInterface):
         filename: str,
         path: str,
         url: str,
-        size: int,
+        size: Optional[int] = None,
         content_type: Optional[str] = None,
     ) -> FileSchemaForFolder:
         return FileSchemaForFolder(

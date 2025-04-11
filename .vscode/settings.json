@@ -1,3 +1,4 @@
 {
-    "cursor.cmdk.useThemedDiffBackground": false
+    "cursor.cmdk.useThemedDiffBackground": false,
+    "python.analysis.typeCheckingMode": "basic"
 }

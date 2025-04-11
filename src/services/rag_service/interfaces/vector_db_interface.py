@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Dict, List, Optional, Any
 
+from src.services.rag_service.schemas import IndexStatsSchema
+
 
 class VectorDBInterface(ABC):
     """
@@ -74,8 +76,8 @@ class VectorDBInterface(ABC):
         index_name: str,
         namespace: str,
         ids: Optional[List[str]] = None,
-        delete_all: bool = False,
-        filter: Optional[Dict[str, Any]] = None,
+        is_delete_all: bool = False,
+        filter_: Optional[Dict[str, Any]] = None,
     ) -> bool:
         """
         Deletes vectors from the specified namespace.
@@ -84,8 +86,8 @@ class VectorDBInterface(ABC):
             index_name: Index name
             namespace: Namespace name
             ids: List of vector IDs to delete
-            delete_all: Flag to delete all vectors in the namespace
-            filter: Filter for selective deletion of vectors
+            is_delete_all: Flag to delete all vectors in the namespace
+            filter_: Filter for selective deletion of vectors
 
         Returns:
             bool: True if the operation is successful, False otherwise
@@ -102,5 +104,18 @@ class VectorDBInterface(ABC):
 
         Returns:
             List[str]: List of namespace names
+        """
+        pass
+
+    @abstractmethod
+    def get_index_stats_schema(self, index_name: str) -> IndexStatsSchema:
+        """
+        Returns schema for the specified index.
+
+        Args:
+            index_name: Index name
+
+        Returns:
+            IndexStatsSchema: Schema for the index statistics
         """
         pass

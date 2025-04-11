@@ -2,7 +2,6 @@ import logging
 from typing import Dict, List, Any, Optional
 
 from langchain_core.embeddings import Embeddings
-from langchain_openai import OpenAIEmbeddings
 
 from src.core.config import settings
 from src.services.rag_service.decorators import handle_async_search_exceptions
@@ -24,11 +23,7 @@ class LangChainSearchService(SearchServiceInterface):
         embeddings: Optional[Embeddings] = None,
         vector_store_factory: Optional[VectorStoreFactory] = None,
     ):
-        self.embeddings = embeddings or OpenAIEmbeddings(
-            api_key=settings.OPENAI_API_KEY,
-            model=settings.EMBEDDING_MODEL,
-            dimensions=settings.DIMENSIONS_EMBEDDING,
-        )
+        self.embeddings = embeddings or settings.EMBEDDING_DEFAULT
         self.vector_store = (
             vector_store_factory or PineconeVectorStoreFactory()
         )

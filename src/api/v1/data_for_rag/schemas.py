@@ -1,3 +1,6 @@
+from datetime import datetime
+from typing import Optional
+
 from fastapi import HTTPException, status
 from pydantic import BaseModel, field_validator
 
@@ -29,7 +32,7 @@ class KnowledgeBaseSchema(BaseModel):
 
 
 class KnowledgeBaseCreateSchema(KnowledgeBaseSchema):
-    create_time: str
+    create_time: Optional[datetime] = None
 
 
 class KnowledgeBaseGetSchema(KnowledgeBaseCreateSchema):

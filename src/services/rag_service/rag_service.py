@@ -18,7 +18,7 @@ from src.services.rag_service.interfaces import (
     RAGManagerInterface,
 )
 from src.services.rag_service.langchain_rag_manager import LangChainRAGManager
-from src.services.rag_service.pinecone_client import PineconeClient
+from src.services.rag_service.pinecone_client import PineconeVectorDataBase
 from src.services.rag_service.schemas import (
     IndexCreateSchema,
     IndexSchema,
@@ -53,7 +53,7 @@ class RAGService(RAGServiceInterface):
         rag_manager: Optional[RAGManagerInterface] = None,
     ):
         self.storage = storage_interface
-        self.vector_db_client = vector_db_client or PineconeClient()
+        self.vector_db_client = vector_db_client or PineconeVectorDataBase()
         self.rag_manager = rag_manager or LangChainRAGManager()
 
     @handle_index_operation_exceptions
@@ -413,7 +413,7 @@ class RAGService(RAGServiceInterface):
         return self.vector_db_client.delete_from_namespace(
             index_name=index_name,
             namespace=namespace,
-            filter={"source": file_info.url},
+            filter_={"source": file_info.url},
         )
 
     async def _delete_document_from_storage(
