@@ -14,7 +14,7 @@ class IndexSchema(BaseModel):
 
 
 class IndexCreateSchema(IndexSchema):
-    created_at: datetime = Field(default_factory=datetime.now)
+    created_at: Optional[datetime] = Field(default_factory=datetime.now)
 
 
 class IndexStatsSchema(BaseModel):
