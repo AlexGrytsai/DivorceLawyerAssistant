@@ -55,7 +55,7 @@ class Settings:
         dimensions=3072,
     )
 
-    VECTOR_DATABASE_DEFAULT_CLIENT: Pinecone(api_key=PINECONE_API_KEY)
+    VECTOR_DATABASE_DEFAULT_CLIENT = Pinecone(api_key=PINECONE_API_KEY)
 
     MODEL_TOKEN_LIMITS: TokenLimitsMapping = MappingProxyType(
         MODEL_TOKEN_LIMITS
