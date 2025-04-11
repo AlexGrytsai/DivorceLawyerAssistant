@@ -413,7 +413,7 @@ class RAGService(RAGServiceInterface):
         return self.vector_db_client.delete_from_namespace(
             index_name=index_name,
             namespace=namespace,
-            filter={"source": file_info.url},
+            filter_={"source": file_info.url},
         )
 
     async def _delete_document_from_storage(

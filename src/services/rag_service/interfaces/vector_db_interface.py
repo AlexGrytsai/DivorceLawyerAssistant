@@ -76,8 +76,8 @@ class VectorDBInterface(ABC):
         index_name: str,
         namespace: str,
         ids: Optional[List[str]] = None,
-        delete_all: bool = False,
-        filter: Optional[Dict[str, Any]] = None,
+        is_delete_all: bool = False,
+        filter_: Optional[Dict[str, Any]] = None,
     ) -> bool:
         """
         Deletes vectors from the specified namespace.
@@ -86,8 +86,8 @@ class VectorDBInterface(ABC):
             index_name: Index name
             namespace: Namespace name
             ids: List of vector IDs to delete
-            delete_all: Flag to delete all vectors in the namespace
-            filter: Filter for selective deletion of vectors
+            is_delete_all: Flag to delete all vectors in the namespace
+            filter_: Filter for selective deletion of vectors
 
         Returns:
             bool: True if the operation is successful, False otherwise
