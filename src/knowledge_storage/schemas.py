@@ -73,5 +73,9 @@ class ItemCreateSchema(ItemSchema):
     knowledge_storage: str
 
 
+class ItemRenameSchema(ItemSchema):
+    old_name: str
+
+
 class ItemDeleteSchema(DeleteSchema):
     pass
