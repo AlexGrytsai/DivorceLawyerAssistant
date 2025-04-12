@@ -25,6 +25,8 @@ class KnowledgeSchema(CreateSchema):
 
 class KnowledgeDetailSchema(KnowledgeSchema):
     list_category: Optional[CategorySchema]
+    list_subcategory: Optional[SubCategorySchema]
+    list_item: Optional[ItemDetailSchema]
 
 
 class KnowledgeRenameSchema(KnowledgeSchema):
