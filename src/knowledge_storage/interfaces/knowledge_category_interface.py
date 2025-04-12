@@ -15,6 +15,7 @@ from src.knowledge_storage.schemas import (
     ItemDeleteSchema,
     ItemRenameSchema,
     ItemDetailSchema,
+    CategoryDetailSchema,
 )
 
 
@@ -39,8 +40,8 @@ class KnowledgeCategoryInterface(ABC):
 
     @abstractmethod
     async def get_category(
-        self, storage_name: str, name: str
-    ) -> CategorySchema:
+        self, storage_name: str, name: str, is_detail: bool = False
+    ) -> Union[CategorySchema, CategoryDetailSchema]:
         pass
 
     @abstractmethod
