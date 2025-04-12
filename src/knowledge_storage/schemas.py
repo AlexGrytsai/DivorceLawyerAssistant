@@ -43,3 +43,7 @@ class CategoryRenameSchema(CategorySchema):
 class CategoryDeleteSchema(BaseModel):
     name: str
     delete_time: datetime = Field(default_factory=datetime.now)
+
+
+class SubCategorySchema(CategorySchema):
+    category: str
