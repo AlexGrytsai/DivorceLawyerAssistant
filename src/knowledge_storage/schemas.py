@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 
 from pydantic import BaseModel, Field
 
@@ -24,9 +24,9 @@ class KnowledgeSchema(CreateSchema):
 
 
 class KnowledgeDetailSchema(KnowledgeSchema):
-    list_category: Optional[CategorySchema]
-    list_subcategory: Optional[SubCategorySchema]
-    list_item: Optional[ItemDetailSchema]
+    list_category: Optional[List[CategorySchema]]
+    list_subcategory: Optional[List[SubCategorySchema]]
+    list_item: Optional[List[ItemDetailSchema]]
 
 
 class KnowledgeRenameSchema(KnowledgeSchema):
@@ -39,6 +39,11 @@ class KnowledgeDeleteSchema(DeleteSchema):
 
 class CategorySchema(CreateSchema):
     knowledge_storage: str
+
+
+class CategoryDetailSchema(CategorySchema):
+    list_subcategory: Optional[List[SubCategorySchema]]
+    list_item: Optional[List[ItemSchema]]
 
 
 class CategoryRenameSchema(CategorySchema):
