@@ -28,3 +28,7 @@ class CategorySchema(BaseModel):
 
     create_time: Optional[datetime] = None
     update_time: Optional[datetime] = None
+
+
+class CategoryRenameSchema(CategorySchema):
+    old_name: str
