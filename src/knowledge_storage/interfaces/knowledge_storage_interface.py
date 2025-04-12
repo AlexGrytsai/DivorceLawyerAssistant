@@ -60,3 +60,7 @@ class KnowledgeStorageInterface(ABC):
         self, storage_name: str, name: str
     ) -> CategorySchema:
         pass
+
+    @abstractmethod
+    async def list_categories(self, storage_name: str) -> List[CategorySchema]:
+        pass
