@@ -10,3 +10,7 @@ class KnowledgeSchema(BaseModel):
 
     create_time: Optional[datetime] = None
     update_time: Optional[datetime] = None
+
+
+class KnowledgeRenameSchema(KnowledgeSchema):
+    old_name: str
