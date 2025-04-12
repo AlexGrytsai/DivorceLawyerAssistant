@@ -19,3 +19,12 @@ class KnowledgeRenameSchema(KnowledgeSchema):
 class KnowledgeDeleteSchema(BaseModel):
     name: str
     delete_time: datetime = Field(default_factory=datetime.now)
+
+
+class CategorySchema(BaseModel):
+    name: str
+    knowledge_storage: str
+    description: Optional[str] = None
+
+    create_time: Optional[datetime] = None
+    update_time: Optional[datetime] = None
