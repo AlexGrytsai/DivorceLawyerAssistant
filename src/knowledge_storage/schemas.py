@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from datetime import datetime
 from typing import Optional
 
@@ -10,6 +12,10 @@ class KnowledgeSchema(BaseModel):
 
     create_time: Optional[datetime] = None
     update_time: Optional[datetime] = None
+
+
+class KnowledgeDetailSchema(KnowledgeSchema):
+    list_category: Optional[CategorySchema]
 
 
 class KnowledgeRenameSchema(KnowledgeSchema):
