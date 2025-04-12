@@ -73,6 +73,10 @@ class ItemCreateSchema(ItemSchema):
     knowledge_storage: str
 
 
+class ItemDetailSchema(ItemCreateSchema):
+    pass
+
+
 class ItemRenameSchema(ItemSchema):
     old_name: str
 
