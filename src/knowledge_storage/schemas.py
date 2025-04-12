@@ -55,3 +55,17 @@ class SubCategoryRenameSchema(CategoryRenameSchema):
 
 class SubCategoryDeleteSchema(CategoryDeleteSchema):
     pass
+
+
+class ItemSchema(BaseModel):
+    name: str
+    url: str
+
+    create_time: Optional[datetime] = None
+    update_time: Optional[datetime] = None
+
+
+class ItemCreateSchema(ItemSchema):
+    subcategory: Optional[str] = None
+    category: str
+    knowledge_storage: str
