@@ -47,3 +47,7 @@ class CategoryDeleteSchema(BaseModel):
 
 class SubCategorySchema(CategorySchema):
     category: str
+
+
+class SubCategoryDeleteSchema(CategoryDeleteSchema):
+    pass
