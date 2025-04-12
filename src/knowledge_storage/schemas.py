@@ -6,17 +6,21 @@ from typing import Optional
 from pydantic import BaseModel, Field
 
 
-class DeleteSchema(BaseModel):
-    name: str
-    delete_time: datetime = Field(default_factory=datetime.now)
-
-
-class KnowledgeSchema(BaseModel):
+class CreateSchema(BaseModel):
     name: str
     description: Optional[str] = None
 
     create_time: Optional[datetime] = None
     update_time: Optional[datetime] = None
+
+
+class DeleteSchema(BaseModel):
+    name: str
+    delete_time: datetime = Field(default_factory=datetime.now)
+
+
+class KnowledgeSchema(CreateSchema):
+    pass
 
 
 class KnowledgeDetailSchema(KnowledgeSchema):
@@ -31,13 +35,8 @@ class KnowledgeDeleteSchema(DeleteSchema):
     pass
 
 
-class CategorySchema(BaseModel):
-    name: str
+class CategorySchema(CreateSchema):
     knowledge_storage: str
-    description: Optional[str] = None
-
-    create_time: Optional[datetime] = None
-    update_time: Optional[datetime] = None
 
 
 class CategoryRenameSchema(CategorySchema):
