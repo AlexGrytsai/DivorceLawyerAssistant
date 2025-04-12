@@ -31,5 +31,7 @@ class KnowledgeStorageInterface(ABC):
         pass
 
     @abstractmethod
-    async def list_storages(self) -> List[KnowledgeSchema]:
+    async def list_storages(
+        self, is_detail: bool = False
+    ) -> List[Union[KnowledgeSchema, KnowledgeDetailSchema]]:
         pass
