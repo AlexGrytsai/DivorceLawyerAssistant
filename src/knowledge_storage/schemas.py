@@ -49,5 +49,9 @@ class SubCategorySchema(CategorySchema):
     category: str
 
 
+class SubCategoryRenameSchema(CategoryRenameSchema):
+    pass
+
+
 class SubCategoryDeleteSchema(CategoryDeleteSchema):
     pass
