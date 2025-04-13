@@ -139,3 +139,13 @@ class KnowledgeCategoryInterface(ABC):
         subcategory_name: Optional[str] = None,
     ) -> List[ItemDetailSchema]:
         pass
+
+    @abstractmethod
+    async def search_items(
+        self,
+        storage_name: str,
+        category_name: str,
+        query: str,
+        subcategory_name: Optional[str] = None,
+    ) -> List[ItemDetailSchema]:
+        pass
