@@ -12,7 +12,6 @@ from src.knowledge_storage.interfaces import (
     SearchableInterface,
 )
 from src.knowledge_storage.schemas import (
-    CategorySchema,
     ItemCreateSchema,
     ItemDeleteSchema,
     ItemRenameSchema,
@@ -37,8 +36,9 @@ class KnowledgeItemInterface(
     ABC,
 ):
     """
-    Interface for managing knowledge items (documents, URLs) in a storage system.
-    
+    Interface for managing knowledge items (documents, URLs) in a storage
+    system.
+
     This interface provides methods for:
     - Creating, renaming, and deleting items
     - Managing item descriptions and metadata
@@ -47,7 +47,7 @@ class KnowledgeItemInterface(
     - Adding and removing tags
     - Version control for items
     - Searching and retrieving item information
-    
+
     Items are organized in a hierarchical structure:
     Storage -> Category -> Subcategory -> Item
     """

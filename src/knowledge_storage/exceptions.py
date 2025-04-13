@@ -62,7 +62,8 @@ class ItemNotFoundError(KnowledgeStorageError):
             else f"category '{category_name}'"
         )
         super().__init__(
-            f"Item '{item_name}' not found in {location} of storage '{storage_name}'"
+            f"Item '{item_name}' not found in {location} "
+            f"of storage '{storage_name}'"
         )
 
 
