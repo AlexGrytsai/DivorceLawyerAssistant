@@ -147,6 +147,7 @@ class KnowledgeCategoryInterface(ABC):
         storage_name: str,
         category_name: str,
         query: str,
+        case_sensitive: Optional[bool] = False,
         subcategory_name: Optional[str] = None,
     ) -> List[ItemDetailSchema]:
         pass
