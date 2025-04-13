@@ -7,10 +7,7 @@ from typing import Callable, List, Tuple, Optional, Dict
 import psutil
 from redis import Redis
 
-from src.core import settings
-from src.utils.performance_monitoring import (
-    redis_client_for_performance_monitoring,
-)
+from src.core.config import settings, redis_client_monitoring
 
 running = False
 cpu_usage_data = []
@@ -18,13 +15,10 @@ cpu_usage_results: Dict[str, List[Tuple[List[float], float]]] = {}
 
 
 def monitor_cpu_usage(interval: float = 0.1):
-    global running, cpu_usage_data
     local_cpu_usage = []
-
     psutil.cpu_percent(interval=None)
     while running:
         local_cpu_usage.append(psutil.cpu_percent(interval=interval))
-
     cpu_usage_data.extend(local_cpu_usage)
 
 
@@ -37,7 +31,10 @@ def save_data_to_usage_results(
         try:
             r_client.rpush(f"cpu_usage_{func_name}", json.dumps(cpu_data))
         except Exception as exc:
-            raise Exception(f"Failed to save CPU usage data to Redis: {exc}")
+            # sourcery skip: raise-specific-error
+            raise Exception(
+                f"Failed to save CPU usage data to Redis: {exc}"
+            ) from exc
     else:
         if func_name not in cpu_usage_results:
             cpu_usage_results[func_name] = []
@@ -47,7 +44,7 @@ def save_data_to_usage_results(
 def cpu_monitor_decorator(
     save_data: bool = True,
     is_enabled: bool = settings.DEBUG,
-    r_client: Optional[Redis] = redis_client_for_performance_monitoring,
+    r_client: Optional[Redis] = redis_client_monitoring,
 ) -> Callable:
     def decorator(func: Callable) -> Callable:
         @functools.wraps(func)

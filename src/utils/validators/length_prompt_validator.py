@@ -1,6 +1,6 @@
 import tiktoken
 
-from src.core import settings
+from src.core.config import settings
 
 
 def is_length_prompt_valid(prompt: str) -> bool:

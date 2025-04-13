@@ -1,6 +1,6 @@
 async function uploadFiles() {
     const input = document.getElementById("fileInput");
-    const files = input.files;
+    const {files} = input;
     if (files.length === 0) {
         alert("Select the PDF form");
         return;
@@ -34,7 +34,7 @@ function displayResults(files) {
 
     files.forEach(file => {
         const fileInfo = document.createElement("p");
-        fileInfo.innerHTML = `<strong>${file.filename}</strong> - <a href="${file.url}" target="_blank">Download</a>`;
+        fileInfo.innerText = `<strong>${file.filename}</strong> - <a href="${file.url}" target="_blank">Download</a>`;
         resultsDiv.appendChild(fileInfo);
     });
 }

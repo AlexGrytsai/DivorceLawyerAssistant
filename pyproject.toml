@@ -2,7 +2,7 @@
 line-length = 79
 
 [tool.poetry]
-name = "Check PDF Form with AI"
+name = "Divorce Lawyer AI Assistant"
 version = "0.1.0"
 description = ""
 authors = ["Alex Grytsai <grytsai.alex@gmail.com>"]
@@ -11,7 +11,6 @@ package-mode = false
 
 [tool.poetry.dependencies]
 python = ">=3.12,<3.13"
-pypdf2 = "^3.0.1"
 pymupdf = "^1.25.3"
 pydantic = "^2.10.6"
 tabulate = "^0.9.0"
@@ -26,12 +25,22 @@ uvicorn = "^0.34.0"
 python-multipart = "^0.0.20"
 python-magic = "^0.4.27"
 jinja2 = "^3.1.6"
+google-cloud-storage = "^3.1.0"
+google-auth = "^2.38.0"
+google-api-core = "^2.24.2"
+google-cloud-storage-control = "^1.3.1"
+langchain = "^0.3.23"
+langchain-openai = "^0.3.12"
+langchain-community = "^0.3.21"
+langchain-pinecone = "^0.2.4"
+pinecone = "^6.0.2"
 
 
 [tool.poetry.group.dev.dependencies]
 pympler = "^1.1"
 psutil = "^7.0.0"
 python-magic-bin = "^0.4.14"
+sourcery = "^1.35.0"
 
 
 [tool.poetry.group.test.dependencies]
@@ -41,6 +50,8 @@ mypy = "^1.15.0"
 types-psutil = "^7.0.0.20250218"
 matplotlib = "^3.10.1"
 coverage = "^7.7.0"
+pytest = "^8.3.5"
+pytest-asyncio = "^0.26.0"
 
 [tool.pytest.ini_options]
 asyncio_mode = "strict"
