@@ -81,7 +81,10 @@ class ItemCreateSchema(ItemSchema):
 
 
 class ItemDetailSchema(ItemCreateSchema):
-    pass
+    knowledge_storage: str
+    category: str
+    size: Optional[int] = None
+    content_type: Optional[str] = None
 
 
 class ItemRenameSchema(ItemSchema):
