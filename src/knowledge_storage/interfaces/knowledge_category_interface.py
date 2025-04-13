@@ -17,6 +17,7 @@ from src.knowledge_storage.schemas import (
     ItemDetailSchema,
     CategoryDetailSchema,
     ItemSchema,
+    SubCategoryDetailSchema,
 )
 
 
@@ -73,8 +74,12 @@ class KnowledgeCategoryInterface(ABC):
 
     @abstractmethod
     async def get_subcategory(
-        self, storage_name: str, category_name: str, subcategory_name: str
-    ) -> SubCategorySchema:
+        self,
+        storage_name: str,
+        category_name: str,
+        subcategory_name: str,
+        is_detail: bool = False,
+    ) -> Union[SubCategoryDetailSchema, SubCategorySchema]:
         pass
 
     @abstractmethod

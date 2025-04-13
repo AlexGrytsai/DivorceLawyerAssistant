@@ -58,6 +58,10 @@ class SubCategorySchema(CategorySchema):
     category: str
 
 
+class SubCategoryDetailSchema(SubCategorySchema):
+    list_item: Optional[List[ItemSchema]]
+
+
 class SubCategoryRenameSchema(CategoryRenameSchema):
     pass
 
