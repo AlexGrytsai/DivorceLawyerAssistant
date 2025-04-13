@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Any, Dict
 
 from pydantic import BaseModel, Field
 
@@ -97,3 +97,14 @@ class ItemRenameSchema(ItemSchema):
 
 class ItemDeleteSchema(DeleteSchema):
     pass
+
+
+class SmartSearchSchema(BaseModel):
+    text: str
+    item_path: str
+    metadata: Dict[str, Any]
+
+
+class SmartSearchResponseSchema(BaseModel):
+    query: str
+    results: List[SmartSearchSchema]
