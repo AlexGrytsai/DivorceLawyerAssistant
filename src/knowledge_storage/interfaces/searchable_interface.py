@@ -26,7 +26,8 @@ class SearchableInterface(ABC, Generic[EntityPath]):
         case_sensitive: bool = False,
         pagination: Optional[PaginationParams] = None,
     ) -> Union[List[ItemDetailSchema], PaginatedResponse]:
-        """Search for entities by name.
+        """
+        Search for entities by name.
 
         Args:
             path: Path to search within
@@ -47,7 +48,8 @@ class SearchableInterface(ABC, Generic[EntityPath]):
         num_results: int = 3,
         filters: Optional[Dict[str, Any]] = None,
     ) -> SmartSearchResponseSchema:
-        """Perform semantic search across entities.
+        """
+        Perform semantic search across entities.
 
         Args:
             path: Path to search within
