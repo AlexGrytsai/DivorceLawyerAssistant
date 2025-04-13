@@ -102,6 +102,7 @@ class ItemDeleteSchema(DeleteSchema):
 class SmartSearchSchema(BaseModel):
     text: str
     item_path: str
+    num_page_in_item: Optional[int] = None
     metadata: Dict[str, Any]
 
 
