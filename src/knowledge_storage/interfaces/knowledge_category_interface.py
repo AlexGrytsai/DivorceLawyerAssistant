@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Dict, Any
 
 from fastapi import UploadFile
 from pydantic import HttpUrl
@@ -18,6 +18,7 @@ from src.knowledge_storage.schemas import (
     CategoryDetailSchema,
     ItemSchema,
     SubCategoryDetailSchema,
+    SmartSearchResponseSchema,
 )
 
 
@@ -148,4 +149,14 @@ class KnowledgeCategoryInterface(ABC):
         query: str,
         subcategory_name: Optional[str] = None,
     ) -> List[ItemDetailSchema]:
+        pass
+
+    @abstractmethod
+    async def smart_search(
+        self,
+        storage_name: str,
+        query: str,
+        num_results: int = 3,
+        filters: Optional[Dict[str, Any]] = None,
+    ) -> SmartSearchResponseSchema:
         pass
