@@ -45,6 +45,7 @@ class SearchableInterface(ABC, Generic[EntityPath]):
         self,
         path: EntityPath,
         query: str,
+        category_name: Optional[str] = None,
         num_results: int = 3,
         filters: Optional[Dict[str, Any]] = None,
     ) -> SmartSearchResponseSchema:
@@ -54,6 +55,7 @@ class SearchableInterface(ABC, Generic[EntityPath]):
         Args:
             path: Path to search within
             query: Search query
+            category_name: Optional category to limit search to
             num_results: Maximum number of results to return
             filters: Optional search filters
 
