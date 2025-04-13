@@ -31,6 +31,21 @@ class KnowledgeCategoryInterface(
     PermissionInterface[str, CategorySchema],
     ABC,
 ):
+    """
+    Interface for managing knowledge categories and subcategories in
+    a storage system.
+
+    This interface provides methods for:
+    - Creating, renaming, and deleting categories and subcategories
+    - Managing category descriptions and metadata
+    - Moving categories between storages
+    - Setting and managing permissions
+    - Adding and removing tags
+    - Listing and retrieving category information
+
+    Categories are organized in a hierarchical structure:
+    Storage -> Category -> Subcategory
+    """
 
     @abstractmethod
     async def create_category(
@@ -40,12 +55,19 @@ class KnowledgeCategoryInterface(
         Create a new category within a storage.
 
         Args:
-            storage_name: Name of the parent storage
-            name: Unique name for the category
-            description: Optional description of the category
+            storage_name: Name of the parent storage where the category
+                          will be created
+            name: Unique name for the category.
+                  Must not contain special characters
+            description: Optional description of the category's purpose
+                         and contents
 
         Returns:
-            CategorySchema containing category details
+            CategorySchema containing the created category's details
+
+        Raises:
+            ValueError: If category name is invalid or already exists
+            StorageNotFoundError: If parent storage does not exist
         """
         pass
 
@@ -57,12 +79,17 @@ class KnowledgeCategoryInterface(
         Rename an existing category.
 
         Args:
-            storage_name: Name of the parent storage
-            old_name: Current name of the category
-            new_name: New name for the category
+            storage_name: Name of the parent storage containing the category
+            old_name: Current name of the category to rename
+            new_name: New name for the category.
+                      Must be unique within the storage
 
         Returns:
-            CategoryRenameSchema with rename operation details
+            CategoryRenameSchema with details of the rename operation
+
+        Raises:
+            ValueError: If new name is invalid or already exists
+            CategoryNotFoundError: If category does not exist
         """
         pass
 
@@ -74,11 +101,15 @@ class KnowledgeCategoryInterface(
         Delete a category and all its contents.
 
         Args:
-            storage_name: Name of the parent storage
+            storage_name: Name of the parent storage containing the category
             name: Name of the category to delete
 
         Returns:
-            CategoryDeleteSchema with deletion details
+            CategoryDeleteSchema with details of the deletion operation
+
+        Raises:
+            CategoryNotFoundError: If category does not exist
+            PermissionError: If user lacks delete permissions
         """
         pass
 
@@ -90,12 +121,17 @@ class KnowledgeCategoryInterface(
         Retrieve a category by name.
 
         Args:
-            storage_name: Name of the parent storage
+            storage_name: Name of the parent storage containing the category
             name: Name of the category to retrieve
             is_detail: If True, returns detailed information including contents
+                       and metadata
 
         Returns:
             Category information, optionally with detailed contents
+
+        Raises:
+            CategoryNotFoundError: If category does not exist
+            PermissionError: If user lacks read permissions
         """
         pass
 
@@ -107,11 +143,15 @@ class KnowledgeCategoryInterface(
         List all categories in a storage.
 
         Args:
-            storage_name: Name of the parent storage
-            pagination: Optional pagination parameters
+            storage_name: Name of the storage to list categories from
+            pagination: Optional parameters for paginated results
 
         Returns:
             List of categories or paginated response
+
+        Raises:
+            StorageNotFoundError: If storage does not exist
+            PermissionError: If user lacks list permissions
         """
         pass
 
@@ -123,12 +163,16 @@ class KnowledgeCategoryInterface(
         Update the description of a category.
 
         Args:
-            storage_name: Name of the parent storage
+            storage_name: Name of the parent storage containing the category
             name: Name of the category to update
             description: New description text
 
         Returns:
             CategoryUpdateDescriptionSchema with update details
+
+        Raises:
+            CategoryNotFoundError: If category does not exist
+            PermissionError: If user lacks update permissions
         """
         pass
 
@@ -146,6 +190,11 @@ class KnowledgeCategoryInterface(
 
         Returns:
             CategoryMoveSchema with move operation details
+
+        Raises:
+            CategoryNotFoundError: If category does not exist
+            StorageNotFoundError: If target storage does not exist
+            PermissionError: If user lacks move permissions
         """
         pass
 
@@ -161,13 +210,18 @@ class KnowledgeCategoryInterface(
         Set the permission level for a user on a category.
 
         Args:
-            storage_name: Name of the parent storage
+            storage_name: Name of the parent storage containing the category
             name: Name of the category
-            user_id: ID of the user
-            permission: Permission level to set
+            user_id: ID of the user to set permissions for
+            permission: Permission level to set (READ, WRITE, ADMIN)
 
         Returns:
             Updated category information
+
+        Raises:
+            CategoryNotFoundError: If category does not exist
+            UserNotFoundError: If user does not exist
+            PermissionError: If current user lacks permission management rights
         """
         pass
 
@@ -179,12 +233,17 @@ class KnowledgeCategoryInterface(
         Remove user permissions from a category.
 
         Args:
-            storage_name: Name of the parent storage
+            storage_name: Name of the parent storage containing the category
             name: Name of the category
-            user_id: ID of the user
+            user_id: ID of the user to remove permissions from
 
         Returns:
             Updated category information
+
+        Raises:
+            CategoryNotFoundError: If category does not exist
+            UserNotFoundError: If user does not exist
+            PermissionError: If current user lacks permission management rights
         """
         pass
 
@@ -196,12 +255,17 @@ class KnowledgeCategoryInterface(
         Add a tag to a category.
 
         Args:
-            storage_name: Name of the parent storage
+            storage_name: Name of the parent storage containing the category
             name: Name of the category
-            tag: Tag to add
+            tag: Tag to add. Must be alphanumeric with optional underscores
 
         Returns:
             Updated category information
+
+        Raises:
+            CategoryNotFoundError: If category does not exist
+            ValueError: If tag format is invalid
+            PermissionError: If user lacks update permissions
         """
         pass
 
@@ -213,12 +277,17 @@ class KnowledgeCategoryInterface(
         Remove a tag from a category.
 
         Args:
-            storage_name: Name of the parent storage
+            storage_name: Name of the parent storage containing the category
             name: Name of the category
             tag: Tag to remove
 
         Returns:
             Updated category information
+
+        Raises:
+            CategoryNotFoundError: If category does not exist
+            ValueError: If tag does not exist
+            PermissionError: If user lacks update permissions
         """
         pass
 
@@ -241,6 +310,11 @@ class KnowledgeCategoryInterface(
 
         Returns:
             SubCategorySchema containing subcategory details
+
+        Raises:
+            CategoryNotFoundError: If parent category does not exist
+            ValueError: If subcategory name is invalid or already exists
+            PermissionError: If user lacks create permissions
         """
         pass
 
@@ -258,6 +332,10 @@ class KnowledgeCategoryInterface(
 
         Returns:
             SubCategoryDeleteSchema with deletion details
+
+        Raises:
+            SubCategoryNotFoundError: If subcategory does not exist
+            PermissionError: If user lacks delete permissions
         """
         pass
 

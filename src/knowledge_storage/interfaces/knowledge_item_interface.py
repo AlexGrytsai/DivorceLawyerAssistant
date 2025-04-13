@@ -28,14 +28,29 @@ from src.knowledge_storage.schemas import (
 )
 
 
-class KnowledgeCategoryInterface(
-    BaseEntityInterface[Tuple[str, str], str, CategorySchema],
-    TaggableInterface[str, CategorySchema],
-    PermissionInterface[str, CategorySchema],
+class KnowledgeItemInterface(
+    BaseEntityInterface[Tuple[str, str], str, ItemSchema],
+    TaggableInterface[str, ItemSchema],
+    PermissionInterface[str, ItemSchema],
     VersionalInterface[str],
     SearchableInterface[str],
     ABC,
 ):
+    """
+    Interface for managing knowledge items (documents, URLs) in a storage system.
+    
+    This interface provides methods for:
+    - Creating, renaming, and deleting items
+    - Managing item descriptions and metadata
+    - Moving items between categories/subcategories
+    - Setting and managing permissions
+    - Adding and removing tags
+    - Version control for items
+    - Searching and retrieving item information
+    
+    Items are organized in a hierarchical structure:
+    Storage -> Category -> Subcategory -> Item
+    """
 
     @abstractmethod
     async def create_item(
@@ -62,6 +77,12 @@ class KnowledgeCategoryInterface(
 
         Returns:
             ItemCreateSchema containing item details
+
+        Raises:
+            CategoryNotFoundError: If parent category does not exist
+            SubCategoryNotFoundError: If specified subcategory does not exist
+            ValueError: If item name is invalid or already exists
+            PermissionError: If user lacks create permissions
         """
         pass
 
@@ -84,6 +105,12 @@ class KnowledgeCategoryInterface(
 
         Returns:
             List of ItemCreateSchema containing created items details
+
+        Raises:
+            CategoryNotFoundError: If parent category does not exist
+            SubCategoryNotFoundError: If specified subcategory does not exist
+            ValueError: If any item name is invalid or already exists
+            PermissionError: If user lacks create permissions
         """
         pass
 
@@ -108,6 +135,11 @@ class KnowledgeCategoryInterface(
 
         Returns:
             ItemRenameSchema with rename operation details
+
+        Raises:
+            ItemNotFoundError: If item does not exist
+            ValueError: If new name is invalid or already exists
+            PermissionError: If user lacks rename permissions
         """
         pass
 
@@ -130,6 +162,10 @@ class KnowledgeCategoryInterface(
 
         Returns:
             ItemDeleteSchema with deletion details
+
+        Raises:
+            ItemNotFoundError: If item does not exist
+            PermissionError: If user lacks delete permissions
         """
         pass
 
@@ -154,6 +190,10 @@ class KnowledgeCategoryInterface(
 
         Returns:
             Item information, optionally with detailed contents
+
+        Raises:
+            ItemNotFoundError: If item does not exist
+            PermissionError: If user lacks read permissions
         """
         pass
 
@@ -165,7 +205,8 @@ class KnowledgeCategoryInterface(
         subcategory_name: Optional[str] = None,
         pagination: Optional[PaginationParams] = None,
     ) -> Union[List[ItemDetailSchema], PaginatedResponse]:
-        """List all items in a category or subcategory.
+        """
+        List all items in a category or subcategory.
 
         Args:
             storage_name: Name of the parent storage
@@ -175,6 +216,11 @@ class KnowledgeCategoryInterface(
 
         Returns:
             List of items or paginated response
+
+        Raises:
+            CategoryNotFoundError: If category does not exist
+            SubCategoryNotFoundError: If subcategory does not exist
+            PermissionError: If user lacks list permissions
         """
         pass
 
@@ -199,6 +245,10 @@ class KnowledgeCategoryInterface(
 
         Returns:
             ItemUpdateDescriptionSchema with update details
+
+        Raises:
+            ItemNotFoundError: If item does not exist
+            PermissionError: If user lacks update permissions
         """
         pass
 
@@ -225,6 +275,12 @@ class KnowledgeCategoryInterface(
 
         Returns:
             ItemMoveSchema with move operation details
+
+        Raises:
+            ItemNotFoundError: If item does not exist
+            CategoryNotFoundError: If target category does not exist
+            SubCategoryNotFoundError: If target subcategory does not exist
+            PermissionError: If user lacks move permissions
         """
         pass
 
@@ -246,11 +302,16 @@ class KnowledgeCategoryInterface(
             category_name: Name of the parent category
             item_name: Name of the item
             user_id: ID of the user
-            permission: Permission level to set
+            permission: Permission level to set (READ, WRITE, ADMIN)
             subcategory_name: Optional parent subcategory name
 
         Returns:
             Updated item information
+
+        Raises:
+            ItemNotFoundError: If item does not exist
+            UserNotFoundError: If user does not exist
+            PermissionError: If current user lacks permission management rights
         """
         pass
 
@@ -275,6 +336,11 @@ class KnowledgeCategoryInterface(
 
         Returns:
             Updated item information
+
+        Raises:
+            ItemNotFoundError: If item does not exist
+            UserNotFoundError: If user does not exist
+            PermissionError: If current user lacks permission management rights
         """
         pass
 
@@ -294,11 +360,16 @@ class KnowledgeCategoryInterface(
             storage_name: Name of the parent storage
             category_name: Name of the parent category
             item_name: Name of the item
-            tag: Tag to add
+            tag: Tag to add. Must be alphanumeric with optional underscores
             subcategory_name: Optional parent subcategory name
 
         Returns:
             Updated item information
+
+        Raises:
+            ItemNotFoundError: If item does not exist
+            ValueError: If tag format is invalid
+            PermissionError: If user lacks update permissions
         """
         pass
 
@@ -323,6 +394,11 @@ class KnowledgeCategoryInterface(
 
         Returns:
             Updated item information
+
+        Raises:
+            ItemNotFoundError: If item does not exist
+            ValueError: If tag does not exist
+            PermissionError: If user lacks update permissions
         """
         pass
 
@@ -347,6 +423,11 @@ class KnowledgeCategoryInterface(
 
         Returns:
             ItemVersionSchema with version details
+
+        Raises:
+            ItemNotFoundError: If item does not exist
+            ValueError: If new version is invalid
+            PermissionError: If user lacks update permissions
         """
         pass
 
@@ -369,6 +450,10 @@ class KnowledgeCategoryInterface(
 
         Returns:
             List of item versions
+
+        Raises:
+            ItemNotFoundError: If item does not exist
+            PermissionError: If user lacks read permissions
         """
         pass
 
@@ -395,6 +480,11 @@ class KnowledgeCategoryInterface(
 
         Returns:
             List of matching items or paginated response
+
+        Raises:
+            CategoryNotFoundError: If category does not exist
+            SubCategoryNotFoundError: If subcategory does not exist
+            PermissionError: If user lacks search permissions
         """
         pass
 
@@ -419,5 +509,9 @@ class KnowledgeCategoryInterface(
 
         Returns:
             SmartSearchResponseSchema with search results
+
+        Raises:
+            CategoryNotFoundError: If specified category does not exist
+            PermissionError: If user lacks search permissions
         """
         pass
