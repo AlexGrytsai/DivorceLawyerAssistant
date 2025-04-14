@@ -1,6 +1,12 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
+from src.services.documant_database.exceptions import (
+    DatabaseConnectionError,
+    DatabaseOperationError,
+    DocumentNotFoundError,
+    ValidationError,
+)
 from src.services.documant_database.schemas import (
     DocumentDetailSchema,
     DocumentSchema,
@@ -27,22 +33,33 @@ class DocumentDatabase(ABC):
 
         Returns:
             ID of the saved document
+
+        Raises:
+            ValidationError: If document validation fails
+            DatabaseConnectionError: If connection to database fails
+            DatabaseOperationError: If operation fails for any other reason
         """
         pass
 
     @abstractmethod
     async def get(
         self, collection: str, document_id: str, is_detail: bool = False
-    ) -> Optional[DocumentSchema, DocumentDetailSchema]:
+    ) -> Union[DocumentSchema, DocumentDetailSchema]:
         """
         Retrieve a document by its ID from the specified collection.
 
         Args:
             collection: Name of the collection to get the document from
             document_id: ID of the document to retrieve
+            is_detail: Whether to return detailed document
 
         Returns:
-            Retrieved document or None if not found
+            Retrieved document
+
+        Raises:
+            DocumentNotFoundError: If document does not exist
+            DatabaseConnectionError: If connection to database fails
+            DatabaseOperationError: If operation fails for any other reason
         """
         pass
 
@@ -65,13 +82,18 @@ class DocumentDatabase(ABC):
 
         Returns:
             List of matching documents
+
+        Raises:
+            ValidationError: If query parameters are invalid
+            DatabaseConnectionError: If connection to database fails
+            DatabaseOperationError: If operation fails for any other reason
         """
         pass
 
     @abstractmethod
     async def update(
         self, collection: str, document_id: str, updates: DocumentDetailSchema
-    ) -> bool:
+    ) -> None:
         """
         Update a document with the specified changes.
 
@@ -80,13 +102,16 @@ class DocumentDatabase(ABC):
             document_id: ID of the document to update
             updates: Dictionary of field-value pairs to update
 
-        Returns:
-            True if update was successful, False otherwise
+        Raises:
+            DocumentNotFoundError: If document does not exist
+            ValidationError: If update data is invalid
+            DatabaseConnectionError: If connection to database fails
+            DatabaseOperationError: If operation fails for any other reason
         """
         pass
 
     @abstractmethod
-    async def delete(self, collection: str, document_id: str) -> bool:
+    async def delete(self, collection: str, document_id: str) -> None:
         """
         Delete a document by its ID.
 
@@ -94,8 +119,10 @@ class DocumentDatabase(ABC):
             collection: Name of the collection containing the document
             document_id: ID of the document to delete
 
-        Returns:
-            True if deletion was successful, False otherwise
+        Raises:
+            DocumentNotFoundError: If document does not exist
+            DatabaseConnectionError: If connection to database fails
+            DatabaseOperationError: If operation fails for any other reason
         """
         pass
 
@@ -120,5 +147,10 @@ class DocumentDatabase(ABC):
 
         Returns:
             List of documents matching the filter criteria
+
+        Raises:
+            ValidationError: If filter parameters are invalid
+            DatabaseConnectionError: If connection to database fails
+            DatabaseOperationError: If operation fails for any other reason
         """
         pass
