@@ -8,6 +8,7 @@ from src.services.documant_database.exceptions import (
     DatabaseConnectionError,
     DatabaseOperationError,
     DocumentNotFoundError,
+    DocumentAlreadyExistsError,
 )
 
 SyncResultType = TypeVar("SyncResultType")
@@ -50,6 +51,7 @@ def handle_firestore_database_errors(
                                 DatabaseOperationError,
                                 ValidationError,
                                 DocumentNotFoundError,
+                                DocumentAlreadyExistsError,
                             ),
                         ):
                             raise
@@ -75,6 +77,7 @@ def handle_firestore_database_errors(
                     DatabaseOperationError,
                     ValidationError,
                     DocumentNotFoundError,
+                    DocumentAlreadyExistsError,
                 ),
             ):
                 raise
