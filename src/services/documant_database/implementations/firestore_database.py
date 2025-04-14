@@ -1,6 +1,7 @@
 from enum import Enum
 from typing import Optional, Union, List, Any, Dict
 
+from dotenv import load_dotenv
 from google.cloud import firestore
 
 from src.services.documant_database.decorators import (
@@ -14,6 +15,8 @@ from src.services.documant_database.schemas import (
     DocumentDetailSchema,
     DocumentSchema,
 )
+
+load_dotenv()
 
 
 class SortDirection(str, Enum):
@@ -39,7 +42,9 @@ class FirestoreDatabase(DocumentDatabase):
 
     @handle_firestore_database_errors
     async def save(
-        self, collection: str, document: DocumentDetailSchema
+        self,
+        collection: str,
+        document: DocumentDetailSchema,
     ) -> str:
         self.client.collection(collection).document(document.name).set(
             document.model_dump(), merge=True
@@ -55,7 +60,7 @@ class FirestoreDatabase(DocumentDatabase):
             self.client.collection(collection).document(document_id).get()
         )
         if not document.exists:
-            raise DocumentNotFoundError(f"Document {document_id} not found")
+            raise DocumentNotFoundError(f"Document '{document_id}' not found")
 
         if is_detail:
             return DocumentDetailSchema(**document.to_dict())
@@ -94,14 +99,16 @@ class FirestoreDatabase(DocumentDatabase):
     ) -> None:
         document = self.client.collection(collection).document(document_name)
         if not document.get().exists:
-            raise DocumentNotFoundError(f"Document {document_name} not found")
+            raise DocumentNotFoundError(
+                f"Document '{document_name}' not found"
+            )
         document.update(updates.model_dump())
 
     @handle_firestore_database_errors
     async def delete(self, collection: str, document_id: str) -> None:
         document = self.client.collection(collection).document(document_id)
         if not document.get().exists:
-            raise DocumentNotFoundError(f"Document {document_id} not found")
+            raise DocumentNotFoundError(f"Document '{document_id}' not found")
         document.delete()
 
     @handle_firestore_database_errors
