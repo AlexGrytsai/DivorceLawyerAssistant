@@ -6,6 +6,10 @@ class DocumentNotFoundError(DocumentDatabaseError):
     pass
 
 
+class DocumentAlreadyExistsError(DocumentDatabaseError):
+    pass
+
+
 class DatabaseConnectionError(DocumentDatabaseError):
     pass
 
