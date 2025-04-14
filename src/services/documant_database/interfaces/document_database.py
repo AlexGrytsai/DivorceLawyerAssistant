@@ -37,14 +37,14 @@ class DocumentDatabase(ABC):
 
     @abstractmethod
     async def get_document(
-        self, collection: str, document_id: str, is_detail: bool = False
+        self, collection: str, document_name: str, is_detail: bool = False
     ) -> Union[DocumentSchema, DocumentDetailSchema]:
         """
         Retrieve a document by its ID from the specified collection.
 
         Args:
             collection: Name of the collection to get the document from
-            document_id: ID of the document to retrieve
+            document_name: Name of the document to retrieve
             is_detail: Whether to return a detailed document
 
         Returns:
