@@ -59,13 +59,22 @@ class DocumentDatabase(ABC):
 
     @abstractmethod
     async def get_collection(
-        self, collection: str
+        self,
+        collection: str,
+        sort_direction: str,
+        limit: int = 0,
+        order_by: str = "name",
+        is_detail: bool = False,
     ) -> List[Union[DocumentSchema, DocumentDetailSchema]]:
         """
         Retrieve all documents from the specified collection.
 
         Args:
             collection: Name of the collection to get all documents from
+            sort_direction: Direction to sort results ('asc' or 'desc')
+            limit: Maximum number of documents to return (0 for unlimited)
+            order_by: Field name to order results by
+            is_detail: Whether to return detailed document objects
 
         Returns:
             List of all documents in the collection
