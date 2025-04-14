@@ -46,7 +46,7 @@ class VersionalInterface(ABC, Generic[EntityPath]):
 
     @abstractmethod
     async def get_version(
-        self, path: EntityPath, version_id: str
+        self, path: EntityPath, version_id: int
     ) -> ItemVersionSchema:
         """Get a specific version of an entity.
 
