@@ -1,11 +1,13 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional, TypeVar, Generic
+from typing import Any, Dict, List, Optional
+
+from src.services.documant_database.schemas import (
+    DocumentDetailSchema,
+    DocumentSchema,
+)
 
 
-DocumentType = TypeVar("DocumentType")
-
-
-class DocumentDatabase(ABC, Generic[DocumentType]):
+class DocumentDatabase(ABC):
     """
     Abstract base class for document-oriented database operations.
     This interface defines the contract for document database implementations
@@ -13,7 +15,9 @@ class DocumentDatabase(ABC, Generic[DocumentType]):
     """
 
     @abstractmethod
-    async def save(self, collection: str, document: DocumentType) -> str:
+    async def save(
+        self, collection: str, document: DocumentDetailSchema
+    ) -> str:
         """
         Save a document to the specified collection.
 
@@ -28,8 +32,8 @@ class DocumentDatabase(ABC, Generic[DocumentType]):
 
     @abstractmethod
     async def get(
-        self, collection: str, document_id: str
-    ) -> Optional[DocumentType]:
+        self, collection: str, document_id: str, is_detail: bool = False
+    ) -> Optional[DocumentSchema, DocumentDetailSchema]:
         """
         Retrieve a document by its ID from the specified collection.
 
@@ -49,7 +53,7 @@ class DocumentDatabase(ABC, Generic[DocumentType]):
         query: Dict[str, Any],
         limit: Optional[int] = None,
         skip: Optional[int] = None,
-    ) -> List[DocumentType]:
+    ) -> List[DocumentSchema]:
         """
         Find documents matching the query criteria.
 
@@ -66,7 +70,7 @@ class DocumentDatabase(ABC, Generic[DocumentType]):
 
     @abstractmethod
     async def update(
-        self, collection: str, document_id: str, updates: Dict[str, Any]
+        self, collection: str, document_id: str, updates: DocumentDetailSchema
     ) -> bool:
         """
         Update a document with the specified changes.
@@ -103,7 +107,7 @@ class DocumentDatabase(ABC, Generic[DocumentType]):
         operator: str,
         value: Any,
         limit: Optional[int] = None,
-    ) -> List[DocumentType]:
+    ) -> List[DocumentDetailSchema]:
         """
         Filter documents by a specific field using a comparison operator.
 
