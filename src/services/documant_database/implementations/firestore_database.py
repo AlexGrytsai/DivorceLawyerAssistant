@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Optional, Union, List, Any, Dict
+from typing import Optional, Union, List, Any, Dict, Generator
 
 from dotenv import load_dotenv
 from google.cloud import firestore
@@ -72,15 +72,16 @@ class FirestoreDatabase(DocumentDatabase):
         self,
         collection: str,
         order_by: str = "name",
-        limit: int = 0,
+        limit: Optional[int] = None,
         sort_direction: SortDirection = SortDirection.ASCENDING,
         is_detail: bool = False,
     ) -> List[Union[DocumentSchema, DocumentDetailSchema]]:
-        documents = (
-            self.client.collection(collection)
-            .order_by(order_by, direction=sort_direction)
-            .limit(limit)
-            .stream()
+
+        documents = await self._prepare_collection(
+            collection=collection,
+            order_by=order_by,
+            limit=limit,
+            sort_direction=sort_direction,
         )
 
         if is_detail:
@@ -148,3 +149,50 @@ class FirestoreDatabase(DocumentDatabase):
         return [
             DocumentSchema(**document.to_dict()) for document in query.stream()
         ]
+
+    async def _prepare_collection(
+        self,
+        collection: str,
+        order_by: str = "name",
+        limit: Optional[int] = None,
+        sort_direction: SortDirection = SortDirection.ASCENDING,
+    ) -> Generator:
+        documents = self.client.collection(collection).order_by(
+            order_by, direction=sort_direction
+        )
+        if limit:
+            documents = documents.limit(limit)
+
+        return documents.stream()
+
+
+if __name__ == "__main__":
+    doc = DocumentDetailSchema(
+        name="document-test",
+        size=10,
+        content_type="application/pdf",
+        owner="Admin",
+        url="http://example.com/test2.pdf",
+        create_time=datetime.now(),
+        update_time=datetime.now(),
+        tags={"tag1", "tag2"},
+        path="test/document.pdf",
+    )
+    db = FirestoreDatabase(
+        project_id="divorce-lawyer-assistant", database="document-db"
+    )
+    print(
+        asyncio.run(
+            db.get_collection(
+                collection="test", order_by="size", is_detail=True
+            )
+        )
+    )
+    # print(
+    #     asyncio.run(
+    #         db.get_document(
+    #             collection="test", document_id="test", is_detail=True
+    #         )
+    #     )
+    # )
+    # print(asyncio.run(db.save(collection="test", document=doc)))
