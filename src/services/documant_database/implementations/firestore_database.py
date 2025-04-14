@@ -3,6 +3,9 @@ from typing import Optional, Union, List, Any, Dict
 
 from google.cloud import firestore
 
+from src.services.documant_database.decorators import (
+    handle_firestore_database_errors,
+)
 from src.services.documant_database.exceptions import (
     DocumentNotFoundError,
 )
@@ -19,18 +22,22 @@ class SortDirection(str, Enum):
 
 
 class FirestoreDatabase(DocumentDatabase):
-    def __init__(self, project_id: str) -> None:
+    def __init__(self, project_id: str, database: str) -> None:
         self._project_id = project_id
+        self._database = database
         self._client: Optional[firestore.Client] = None
 
     @property
+    @handle_firestore_database_errors
     def client(self) -> firestore.Client:
         if self._client is None:
             self._client = firestore.Client(
-                project=self._project_id
-            )  # type: ignore
+                project=self._project_id,  # type: ignore
+                database=self._database,  # type: ignore
+            )
         return self._client
 
+    @handle_firestore_database_errors
     async def save(
         self, collection: str, document: DocumentDetailSchema
     ) -> str:
@@ -40,6 +47,7 @@ class FirestoreDatabase(DocumentDatabase):
 
         return document.name
 
+    @handle_firestore_database_errors
     async def get_document(
         self, collection: str, document_id: str, is_detail: bool = False
     ) -> Union[DocumentSchema, DocumentDetailSchema]:
@@ -54,6 +62,7 @@ class FirestoreDatabase(DocumentDatabase):
 
         return DocumentSchema(**document.to_dict())
 
+    @handle_firestore_database_errors
     async def get_collection(
         self,
         collection: str,
@@ -76,6 +85,7 @@ class FirestoreDatabase(DocumentDatabase):
             ]
         return [DocumentSchema(**document.to_dict()) for document in documents]
 
+    @handle_firestore_database_errors
     async def update(
         self,
         collection: str,
@@ -87,12 +97,14 @@ class FirestoreDatabase(DocumentDatabase):
             raise DocumentNotFoundError(f"Document {document_name} not found")
         document.update(updates.model_dump())
 
+    @handle_firestore_database_errors
     async def delete(self, collection: str, document_id: str) -> None:
         document = self.client.collection(collection).document(document_id)
         if not document.get().exists:
             raise DocumentNotFoundError(f"Document {document_id} not found")
         document.delete()
 
+    @handle_firestore_database_errors
     async def filter(
         self,
         collection: str,
@@ -113,6 +125,7 @@ class FirestoreDatabase(DocumentDatabase):
             for document in query.stream()
         ]
 
+    @handle_firestore_database_errors
     async def find(
         self,
         collection: str,
