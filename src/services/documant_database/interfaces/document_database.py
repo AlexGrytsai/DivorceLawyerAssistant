@@ -36,7 +36,7 @@ class DocumentDatabase(ABC):
         pass
 
     @abstractmethod
-    async def get(
+    async def get_document(
         self, collection: str, document_id: str, is_detail: bool = False
     ) -> Union[DocumentSchema, DocumentDetailSchema]:
         """
@@ -52,6 +52,25 @@ class DocumentDatabase(ABC):
 
         Raises:
             DocumentNotFoundError: If a document does not exist
+            DatabaseConnectionError: If connection to a database fails
+            DatabaseOperationError: If operation fails for any other reason
+        """
+        pass
+
+    @abstractmethod
+    async def get_collection(
+        self, collection: str
+    ) -> List[Union[DocumentSchema, DocumentDetailSchema]]:
+        """
+        Retrieve all documents from the specified collection.
+
+        Args:
+            collection: Name of the collection to get all documents from
+
+        Returns:
+            List of all documents in the collection
+
+        Raises:
             DatabaseConnectionError: If connection to a database fails
             DatabaseOperationError: If operation fails for any other reason
         """
