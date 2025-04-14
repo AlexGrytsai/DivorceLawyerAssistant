@@ -1,14 +1,17 @@
+import uuid
 from enum import Enum
 from typing import Optional, Union, List, Any, Dict, Generator
 
 from dotenv import load_dotenv
 from google.cloud import firestore
+from google.cloud.firestore_v1 import FieldFilter, DocumentSnapshot
 
 from src.services.documant_database.decorators import (
     handle_firestore_database_errors,
 )
 from src.services.documant_database.exceptions import (
     DocumentNotFoundError,
+    DocumentAlreadyExistsError,
 )
 from src.services.documant_database.interfaces import DocumentDatabase
 from src.services.documant_database.schemas import (
@@ -46,21 +49,30 @@ class FirestoreDatabase(DocumentDatabase):
         collection: str,
         document: DocumentDetailSchema,
     ) -> str:
-        self.client.collection(collection).document(document.name).set(
-            document.model_dump(), merge=True
+        is_exists = await self._find_document_by_name(
+            collection=collection, document_name=document.name
         )
+
+        if is_exists:
+            raise DocumentAlreadyExistsError(
+                f"Document '{document.name}' already exists"
+            )
+
+        self.client.collection(collection).document(
+            document_id=str(uuid.uuid4())
+        ).set(document.model_dump(), merge=True)
 
         return document.name
 
     @handle_firestore_database_errors
     async def get_document(
-        self, collection: str, document_id: str, is_detail: bool = False
+        self, collection: str, document_name: str, is_detail: bool = False
     ) -> Union[DocumentSchema, DocumentDetailSchema]:
-        document = (
-            self.client.collection(collection).document(document_id).get()
-        )
-        if not document.exists:
-            raise DocumentNotFoundError(f"Document '{document_id}' not found")
+        document = await self._find_document_by_name(collection, document_name)
+        if not document:
+            raise DocumentNotFoundError(
+                f"Document '{document_name}' not found"
+            )
 
         if is_detail:
             return DocumentDetailSchema(**document.to_dict())
@@ -98,18 +110,20 @@ class FirestoreDatabase(DocumentDatabase):
         document_name: str,
         updates: DocumentDetailSchema,
     ) -> None:
-        document = self.client.collection(collection).document(document_name)
-        if not document.get().exists:
+        document = self._find_document_by_name(collection, document_name)
+        if not document:
             raise DocumentNotFoundError(
                 f"Document '{document_name}' not found"
             )
         document.update(updates.model_dump())
 
     @handle_firestore_database_errors
-    async def delete(self, collection: str, document_id: str) -> None:
-        document = self.client.collection(collection).document(document_id)
-        if not document.get().exists:
-            raise DocumentNotFoundError(f"Document '{document_id}' not found")
+    async def delete(self, collection: str, document_name: str) -> None:
+        document = self._find_document_by_name(collection, document_name)
+        if not document:
+            raise DocumentNotFoundError(
+                f"Document '{document_name}' not found"
+            )
         document.delete()
 
     @handle_firestore_database_errors
@@ -165,34 +179,18 @@ class FirestoreDatabase(DocumentDatabase):
 
         return documents.stream()
 
-
-if __name__ == "__main__":
-    doc = DocumentDetailSchema(
-        name="document-test",
-        size=10,
-        content_type="application/pdf",
-        owner="Admin",
-        url="http://example.com/test2.pdf",
-        create_time=datetime.now(),
-        update_time=datetime.now(),
-        tags={"tag1", "tag2"},
-        path="test/document.pdf",
-    )
-    db = FirestoreDatabase(
-        project_id="divorce-lawyer-assistant", database="document-db"
-    )
-    print(
-        asyncio.run(
-            db.get_collection(
-                collection="test", order_by="size", is_detail=True
+    @handle_firestore_database_errors
+    async def _find_document_by_name(
+        self, collection: str, document_name: str
+    ) -> Optional[DocumentSnapshot]:
+        try:
+            return next(
+                (
+                    self.client.collection(collection)
+                    .where(filter=FieldFilter("name", "==", document_name))
+                    .limit(1)
+                    .stream()
+                )
             )
-        )
-    )
-    # print(
-    #     asyncio.run(
-    #         db.get_document(
-    #             collection="test", document_id="test", is_detail=True
-    #         )
-    #     )
-    # )
-    # print(asyncio.run(db.save(collection="test", document=doc)))
+        except StopIteration:
+            return None
