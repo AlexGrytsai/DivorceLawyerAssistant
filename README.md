@@ -12,6 +12,10 @@ Divorce Lawyer AI Assistant is an intelligent assistant for family law attorneys
 - Integration with Google Cloud Storage for file storage
 - Utilization of Pinecone for vector databases
 - Integration with OpenAI for response generation and embeddings
+- Document management through Firestore Database
+- Hierarchical knowledge storage system with categories and subcategories
+- Access control system with different permission levels
+- Smart document search with result ranking
 
 ## Technology Stack
 
@@ -21,8 +25,10 @@ Divorce Lawyer AI Assistant is an intelligent assistant for family law attorneys
 - OpenAI
 - Pinecone
 - Google Cloud Storage
+- Google Cloud Firestore
 - PyMuPDF (for working with PDF documents)
 - Jinja2 (for templates)
+- Pydantic (for data validation)
 - Poetry (dependency management)
 
 ## Requirements
@@ -30,6 +36,7 @@ Divorce Lawyer AI Assistant is an intelligent assistant for family law attorneys
 - Python 3.12
 - Poetry
 - Google Cloud Storage credentials
+- Google Cloud Firestore credentials
 - API keys for OpenAI and Pinecone
 
 ## Installation and Setup
@@ -53,6 +60,8 @@ Divorce Lawyer AI Assistant is an intelligent assistant for family law attorneys
    BASE_AI_MODEL=gpt-4-turbo
    OPENAI_API_KEY=your_openai_api_key
    PINECONE_API_KEY=your_pinecone_api_key
+   GOOGLE_CLOUD_PROJECT=your_google_cloud_project_id
+   GOOGLE_APPLICATION_CREDENTIALS=path_to_your_credentials.json
    ```
 
 ### Running the Application
@@ -113,8 +122,13 @@ poetry run flake8
   - `api/` - API endpoint definitions
   - `core/` - Base configurations and constants
   - `services/` - Services for working with storage and external APIs
+    - `documant_database/` - Document management service using Firestore
+    - `storage/` - Storage service implementation
+    - `rag_service/` - RAG (Retrieval-Augmented Generation) service implementation
+  - `knowledge_storage/` - Knowledge organization and storage system
   - `templates/` - HTML templates
   - `utils/` - Helper functions and utilities
+  - `tests/` - Test suite
   - `main.py` - Application entry point
 
 ## License
