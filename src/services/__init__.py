@@ -1,4 +1,4 @@
-from .documant_database.implementations.firestore_database import (
+from .document_database.implementations.firestore_database import (
     FirestoreDatabase,
 )
 from .storage.cloud_storage import CloudStorage

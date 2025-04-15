@@ -48,7 +48,7 @@ def mock_collection(mock_firestore_client):
 @pytest.fixture
 def firestore_database(mock_firestore_client):
     with patch(
-        "src.services.documant_database.implementations.firestore_database.FirestoreDatabase.client",
+        "src.services.document_database.implementations.firestore_database.FirestoreDatabase.client",
         new_callable=PropertyMock,
     ) as mock_property:
         mock_property.return_value = mock_firestore_client
