@@ -1,3 +1,3 @@
-from .document_database import DocumentDatabase
+from .document_database import DocumentDatabaseInterface
 
-__all__ = ["DocumentDatabase"]
+__all__ = ["DocumentDatabaseInterface"]

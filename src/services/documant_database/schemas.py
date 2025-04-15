@@ -8,13 +8,14 @@ class DocumentSchema(BaseModel):
     name: str
     path: Optional[str] = None
     url: str
+    language: Optional[str] = "en"
     tags: Optional[Set[str]] = None
 
 
 class DocumentDetailSchema(DocumentSchema):
     size: Optional[int] = None
     content_type: Optional[str] = None
-    owner: Optional[str] = "Admin"
+    owner: Optional[str] = "System"
 
     create_time: Optional[datetime] = None
     update_time: Optional[datetime] = None

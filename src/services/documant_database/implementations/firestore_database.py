@@ -15,7 +15,7 @@ from src.services.documant_database.exceptions import (
     DocumentNotFoundError,
     DocumentAlreadyExistsError,
 )
-from src.services.documant_database.interfaces import DocumentDatabase
+from src.services.documant_database.interfaces import DocumentDatabaseInterface
 from src.services.documant_database.interfaces.document_database import (
     SearchQueryParameter,
 )
@@ -34,7 +34,7 @@ class SortDirection(str, Enum):
     DESCENDING = "DESCENDING"
 
 
-class FirestoreDatabase(DocumentDatabase):
+class FirestoreDatabase(DocumentDatabaseInterface):
     def __init__(self, project_id: str, database_name: str) -> None:
         self._project_id = project_id
         self._database = database_name
