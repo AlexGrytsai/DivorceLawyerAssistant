@@ -1,10 +1,16 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, List, Optional, Union, NamedTuple
 
 from src.services.documant_database.schemas import (
     DocumentDetailSchema,
     DocumentSchema,
 )
+
+
+class SearchQueryParameter(NamedTuple):
+    field: str
+    operator: str
+    value: Union[str, int, float, bool]
 
 
 class DocumentDatabase(ABC):
@@ -62,7 +68,7 @@ class DocumentDatabase(ABC):
         self,
         collection: str,
         sort_direction: str,
-        limit: int = 0,
+        limit: Optional[int] = None,
         order_by: str = "name",
         is_detail: bool = False,
     ) -> List[Union[DocumentSchema, DocumentDetailSchema]]:
@@ -89,7 +95,7 @@ class DocumentDatabase(ABC):
     async def find(
         self,
         collection: str,
-        query: Dict[str, Any],
+        query: List[SearchQueryParameter],
         limit: Optional[int] = None,
         skip: Optional[int] = None,
     ) -> List[DocumentSchema]:
