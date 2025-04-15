@@ -27,6 +27,9 @@ PROJECT_ID: str = os.getenv("PROJECT_ID", "Unknown")
 MAIN_BUCKET_NAME: str = os.getenv("MAIN_BUCKET_NAME", "Unknown")
 RAG_BUCKET_NAME: str = os.getenv("RAG_BUCKET_NAME", "Unknown")
 
+# Document database settings
+DOCUMENT_DATABASE_NAME: str = os.getenv("FIRESTORE_DB_NAME", "Unknown")
+
 # Allowed mime types
 ALLOWED_MIME_TYPES_FOR_FORMS = (
     "application/pdf",
