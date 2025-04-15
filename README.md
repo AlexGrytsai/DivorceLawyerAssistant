@@ -17,6 +17,13 @@ Divorce Lawyer AI Assistant is an intelligent assistant for family law attorneys
 - Access control system with different permission levels
 - Smart document search with result ranking
 
+   The ranking mechanism is implemented by generating vector embeddings for each document 
+   using OpenAI’s models. When a search is performed, the query is converted into a vector, 
+   and then using Pinecone’s vector database, each document is scored based on similarity 
+   (e.g., cosine similarity) to the query. Additional factors such as document metadata 
+   and keyword relevance help refine the final normalized ranking score, ensuring 
+   the most relevant documents are returned first.
+
 ## Technology Stack
 
 - Python 3.12
