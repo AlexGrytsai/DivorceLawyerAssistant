@@ -46,7 +46,7 @@ class DocumentDatabaseInterface(ABC):
         self, collection: str, document_name: str, is_detail: bool = False
     ) -> Union[DocumentSchema, DocumentDetailSchema]:
         """
-        Retrieve a document by its ID from the specified collection.
+        Retrieve a document by its name from the specified collection.
 
         Args:
             collection: Name of the collection to get the document from
@@ -120,14 +120,17 @@ class DocumentDatabaseInterface(ABC):
 
     @abstractmethod
     async def update(
-        self, collection: str, document_id: str, updates: DocumentDetailSchema
+        self,
+        collection: str,
+        document_name: str,
+        updates: DocumentDetailSchema,
     ) -> None:
         """
         Update a document with the specified changes.
 
         Args:
             collection: Name of the collection containing the document
-            document_id: ID of the document to update
+            document_name: Name of the document to update
             updates: Dictionary of field-value pairs to update
 
         Raises:
@@ -139,13 +142,13 @@ class DocumentDatabaseInterface(ABC):
         pass
 
     @abstractmethod
-    async def delete(self, collection: str, document_id: str) -> None:
+    async def delete(self, collection: str, document_name: str) -> None:
         """
         Delete a document by its ID.
 
         Args:
             collection: Name of the collection containing the document
-            document_id: ID of the document to delete
+            document_name: Name of the document to delete
 
         Raises:
             DocumentNotFoundError: If a document does not exist
