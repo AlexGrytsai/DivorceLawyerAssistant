@@ -1,10 +1,10 @@
 import pytest
 from google.api_core import exceptions as google_exceptions
 
-from src.services.documant_database.decorators import (
+from src.services.document_database.decorators import (
     handle_firestore_database_errors,
 )
-from src.services.documant_database.exceptions import (
+from src.services.document_database.exceptions import (
     DocumentNotFoundError,
     ValidationError,
     DatabaseOperationError,

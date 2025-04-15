@@ -8,18 +8,18 @@ from google.cloud.firestore import Client
 from google.cloud.firestore_v1 import FieldFilter, DocumentSnapshot
 from google.cloud.firestore_v1.stream_generator import StreamGenerator
 
-from src.services.documant_database.decorators import (
+from src.services.document_database.decorators import (
     handle_firestore_database_errors,
 )
-from src.services.documant_database.exceptions import (
+from src.services.document_database.exceptions import (
     DocumentNotFoundError,
     DocumentAlreadyExistsError,
 )
-from src.services.documant_database.interfaces import DocumentDatabaseInterface
-from src.services.documant_database.interfaces.document_database import (
+from src.services.document_database.interfaces import DocumentDatabaseInterface
+from src.services.document_database.interfaces.document_database import (
     SearchQueryParameter,
 )
-from src.services.documant_database.schemas import (
+from src.services.document_database.schemas import (
     DocumentDetailSchema,
     DocumentSchema,
 )

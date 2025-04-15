@@ -4,18 +4,18 @@ from unittest.mock import AsyncMock, MagicMock, patch, PropertyMock
 
 import pytest
 
-from src.services.documant_database.exceptions import (
+from src.services.document_database.exceptions import (
     DocumentNotFoundError,
     DocumentAlreadyExistsError,
 )
-from src.services.documant_database.implementations.firestore_database import (
+from src.services.document_database.implementations.firestore_database import (
     FirestoreDatabase,
     SortDirection,
 )
-from src.services.documant_database.interfaces.document_database import (
+from src.services.document_database.interfaces.document_database import (
     SearchQueryParameter,
 )
-from src.services.documant_database.schemas import (
+from src.services.document_database.schemas import (
     DocumentDetailSchema,
     DocumentSchema,
 )
