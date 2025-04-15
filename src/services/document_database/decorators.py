@@ -24,14 +24,14 @@ Parameters = ParamSpec("Parameters")
 
 # For synchronous functions
 @overload
-def handle_firestore_database_errors(
+def handle_firestore_database_errors(  # noqa
     func: Callable[Parameters, ReturnType],
 ) -> Callable[Parameters, ReturnType]: ...
 
 
 # For asynchronous functions
 @overload
-def handle_firestore_database_errors(
+def handle_firestore_database_errors(  # noqa
     func: Callable[Parameters, Coroutine[Any, Any, ReturnType]],
 ) -> Callable[Parameters, Coroutine[Any, Any, ReturnType]]: ...
 
