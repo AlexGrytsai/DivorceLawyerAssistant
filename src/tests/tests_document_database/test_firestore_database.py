@@ -3,12 +3,16 @@ from typing import Any, Dict, List
 from unittest.mock import AsyncMock, MagicMock, patch, PropertyMock
 
 import pytest
+from google.api_core import exceptions as google_exceptions
 
 from src.services.document_database.exceptions import (
     DocumentNotFoundError,
     DocumentAlreadyExistsError,
     InvalidQueryParameterError,
     UnsupportedOperatorError,
+    ValidationError,
+    DatabaseOperationError,
+    DatabaseConnectionError,
 )
 from src.services.document_database.implementations.firestore_database import (
     FirestoreDatabase,
@@ -565,3 +569,102 @@ async def test_find_with_incorrect_value_type(
     # This test should be removed as type validation is not implemented
     # in the current version of FirestoreDatabase
     await firestore_database.find("test_collection", query=invalid_query)
+
+
+@pytest.mark.asyncio
+async def test_empty_document_name(firestore_database):
+    with pytest.raises(ValidationError) as exc_info:
+        await firestore_database.get_document("test_collection", "")
+    assert "Validation failed" in str(exc_info.value)
+
+
+@pytest.mark.asyncio
+async def test_empty_collection_name(firestore_database):
+    with pytest.raises(ValidationError) as exc_info:
+        await firestore_database.get_document("", "test_document")
+    assert "Validation failed" in str(exc_info.value)
+
+
+@pytest.mark.asyncio
+async def test_none_document_name(firestore_database):
+    with pytest.raises(ValidationError) as exc_info:
+        await firestore_database.get_document("test_collection", None)
+    assert "Validation failed" in str(exc_info.value)
+
+
+@pytest.mark.asyncio
+async def test_google_api_error_connection(
+    firestore_database, mock_collection
+):
+    # Simulate Google API connection error
+    mock_collection.where.side_effect = google_exceptions.GoogleAPIError(
+        "Failed to connect"
+    )
+
+    with pytest.raises(DatabaseOperationError) as exc_info:
+        await firestore_database.get_document(
+            "test_collection", "test_document"
+        )
+    assert "Operation failed" in str(exc_info.value)
+
+
+@pytest.mark.asyncio
+async def test_google_api_permission_denied(
+    firestore_database, mock_collection
+):
+    # Simulate permission denied error
+    mock_collection.where.side_effect = google_exceptions.Forbidden(
+        "Permission denied"
+    )
+
+    with pytest.raises(DatabaseOperationError) as exc_info:
+        await firestore_database.get_document(
+            "test_collection", "test_document"
+        )
+    assert "Operation failed" in str(exc_info.value)
+
+
+@pytest.mark.asyncio
+async def test_unexpected_error(firestore_database, mock_collection):
+    # Simulate unexpected error
+    mock_collection.where.side_effect = RuntimeError("Unexpected error")
+
+    with pytest.raises(DatabaseConnectionError) as exc_info:
+        await firestore_database.get_document(
+            "test_collection", "test_document"
+        )
+    assert "Unexpected error" in str(exc_info.value)
+
+
+@pytest.mark.asyncio
+async def test_invalid_query_value_type(firestore_database):
+    # Create a query with invalid value type
+    query_params = [
+        SearchQueryParameter(
+            field="name", operator="==", value={"complex": "object"}
+        )
+    ]
+
+    with pytest.raises(InvalidQueryParameterError) as exc_info:
+        await firestore_database.find("test_collection", query=query_params)
+    assert "Invalid value type for field" in str(exc_info.value)
+
+
+@pytest.mark.asyncio
+async def test_document_version_conflict(
+    firestore_database, mock_collection, sample_document
+):
+    # Simulate document version conflict error
+    mock_document = MockDocumentSnapshot(sample_document.model_dump())
+    mock_document.reference.update.side_effect = google_exceptions.Aborted(
+        "Version conflict"
+    )
+    mock_collection.where.return_value.limit.return_value.stream.return_value = iter(
+        [mock_document]
+    )
+
+    with pytest.raises(DatabaseOperationError) as exc_info:
+        await firestore_database.update(
+            "test_collection", sample_document.name, sample_document
+        )
+    assert "Operation failed" in str(exc_info.value)
