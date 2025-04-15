@@ -13,7 +13,7 @@ class SearchQueryParameter(NamedTuple):
     value: Union[str, int, float, bool]
 
 
-class DocumentDatabase(ABC):
+class DocumentDatabaseInterface(ABC):
     """
     Abstract base class for document-oriented database operations.
     This interface defines the contract for document database implementations
