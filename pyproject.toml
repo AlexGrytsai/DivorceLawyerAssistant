@@ -34,6 +34,7 @@ langchain-openai = "^0.3.12"
 langchain-community = "^0.3.21"
 langchain-pinecone = "^0.2.4"
 pinecone = "^6.0.2"
+google-cloud-firestore = "^2.20.1"
 
 
 [tool.poetry.group.dev.dependencies]
