@@ -129,7 +129,7 @@ poetry run flake8
   - `api/` - API endpoint definitions
   - `core/` - Base configurations and constants
   - `services/` - Services for working with storage and external APIs
-    - `documant_database/` - Document management service using Firestore
+    - `document_database/` - Document management service using Firestore
     - `storage/` - Storage service implementation
     - `rag_service/` - RAG (Retrieval-Augmented Generation) service implementation
   - `knowledge_storage/` - Knowledge organization and storage system
