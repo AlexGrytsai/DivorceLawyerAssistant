@@ -14,6 +14,8 @@ from src.services.document_database.decorators import (
 from src.services.document_database.exceptions import (
     DocumentNotFoundError,
     DocumentAlreadyExistsError,
+    InvalidQueryParameterError,
+    UnsupportedOperatorError,
 )
 from src.services.document_database.interfaces import DocumentDatabaseInterface
 from src.services.document_database.interfaces.document_database import (
@@ -141,7 +143,6 @@ class FirestoreDatabase(DocumentDatabaseInterface):
         value: Any,
         limit: Optional[int] = None,
     ) -> List[DocumentDetailSchema]:
-
         query = (
             self.client.collection(collection)
             .where(field, operator, value)
@@ -161,6 +162,8 @@ class FirestoreDatabase(DocumentDatabaseInterface):
         limit: Optional[int] = None,
         skip: Optional[int] = None,
     ) -> List[DocumentSchema]:
+        self._validate_query(query)
+
         query_ = self.client.collection(collection)
 
         for param in query:
@@ -208,3 +211,29 @@ class FirestoreDatabase(DocumentDatabaseInterface):
             raise DocumentNotFoundError(
                 f"Document '{document_name}' not found"
             ) from exc
+
+    @staticmethod
+    def _validate_query(query: List[SearchQueryParameter]) -> bool:
+        if not query:
+            raise InvalidQueryParameterError(
+                "Query parameters list cannot be empty"
+            )
+
+        valid_operators = {"==", "<", "<=", ">", ">=", "array_contains"}
+        valid_fields = set(DocumentSchema.model_fields.keys())
+
+        for param in query:
+            if param.field not in valid_fields:
+                raise InvalidQueryParameterError(
+                    f"Invalid field: {param.field}"
+                )
+            if param.operator not in valid_operators:
+                raise UnsupportedOperatorError(
+                    f"Unsupported operator: {param.operator}"
+                )
+            if not isinstance(param.value, (str, int, float, bool, list)):
+                raise InvalidQueryParameterError(
+                    f"Invalid value type for field {param.field}"
+                )
+
+        return True
