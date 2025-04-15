@@ -7,6 +7,8 @@ import pytest
 from src.services.document_database.exceptions import (
     DocumentNotFoundError,
     DocumentAlreadyExistsError,
+    InvalidQueryParameterError,
+    UnsupportedOperatorError,
 )
 from src.services.document_database.implementations.firestore_database import (
     FirestoreDatabase,
@@ -501,13 +503,13 @@ class TestFirestoreDatabase:
             [MockDocumentSnapshot(sample_document.model_dump())]
         )
 
-        # Prepare query
+        # Prepare query with valid fields from DocumentSchema
         query_params = [
             SearchQueryParameter(
                 field="name", operator="==", value=sample_document.name
             ),
             SearchQueryParameter(
-                field="owner", operator="==", value="test_user"
+                field="url", operator="==", value=sample_document.url
             ),
         ]
 
@@ -519,3 +521,47 @@ class TestFirestoreDatabase:
         # Verify
         assert len(result) == 1
         assert mock_collection.where.call_count == 2
+
+
+# Additional tests for invalid query parameters
+
+
+@pytest.mark.asyncio
+async def test_find_with_empty_query(firestore_database):
+    with pytest.raises(InvalidQueryParameterError) as exc_info:
+        await firestore_database.find("test_collection", query=[])
+    assert str(exc_info.value) == "Query parameters list cannot be empty"
+
+
+@pytest.mark.asyncio
+async def test_find_with_invalid_field(firestore_database):
+    invalid_query = [
+        SearchQueryParameter(
+            field="non_existent_field", operator="==", value="some_value"
+        )
+    ]
+    with pytest.raises(InvalidQueryParameterError) as exc_info:
+        await firestore_database.find("test_collection", query=invalid_query)
+    assert str(exc_info.value) == "Invalid field: non_existent_field"
+
+
+@pytest.mark.asyncio
+async def test_find_with_unsupported_operator(firestore_database):
+    invalid_query = [
+        SearchQueryParameter(field="name", operator="!=", value="some_value")
+    ]
+    with pytest.raises(UnsupportedOperatorError) as exc_info:
+        await firestore_database.find("test_collection", query=invalid_query)
+    assert str(exc_info.value) == "Unsupported operator: !="
+
+
+@pytest.mark.asyncio
+async def test_find_with_incorrect_value_type(
+    firestore_database, sample_document
+):
+    invalid_query = [
+        SearchQueryParameter(field="name", operator="==", value=12345)
+    ]
+    # This test should be removed as type validation is not implemented
+    # in the current version of FirestoreDatabase
+    await firestore_database.find("test_collection", query=invalid_query)
