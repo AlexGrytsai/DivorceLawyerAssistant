@@ -1,10 +1,11 @@
 import uuid
 from enum import Enum
-from typing import Optional, Union, List, Any, Dict, Generator
+from typing import Optional, Union, List, Any
 
 from dotenv import load_dotenv
-from google.cloud import firestore
+from google.cloud.firestore import Client
 from google.cloud.firestore_v1 import FieldFilter, DocumentSnapshot
+from google.cloud.firestore_v1.stream_generator import StreamGenerator
 
 from src.services.documant_database.decorators import (
     handle_firestore_database_errors,
@@ -14,6 +15,9 @@ from src.services.documant_database.exceptions import (
     DocumentAlreadyExistsError,
 )
 from src.services.documant_database.interfaces import DocumentDatabase
+from src.services.documant_database.interfaces.document_database import (
+    SearchQueryParameter,
+)
 from src.services.documant_database.schemas import (
     DocumentDetailSchema,
     DocumentSchema,
@@ -28,16 +32,16 @@ class SortDirection(str, Enum):
 
 
 class FirestoreDatabase(DocumentDatabase):
-    def __init__(self, project_id: str, database: str) -> None:
+    def __init__(self, project_id: str, database_name: str) -> None:
         self._project_id = project_id
-        self._database = database
-        self._client: Optional[firestore.Client] = None
+        self._database = database_name
+        self._client: Optional[Client] = None
 
     @property
     @handle_firestore_database_errors
-    def client(self) -> firestore.Client:
+    def client(self) -> Client:
         if self._client is None:
-            self._client = firestore.Client(
+            self._client = Client(
                 project=self._project_id,  # type: ignore
                 database=self._database,  # type: ignore
             )
@@ -68,28 +72,30 @@ class FirestoreDatabase(DocumentDatabase):
     async def get_document(
         self, collection: str, document_name: str, is_detail: bool = False
     ) -> Union[DocumentSchema, DocumentDetailSchema]:
-        document = await self._find_document_by_name(collection, document_name)
-        if not document:
-            raise DocumentNotFoundError(
-                f"Document '{document_name}' not found"
-            )
+        document: DocumentSnapshot = await self._find_document_by_name(
+            collection, document_name
+        )
 
-        if is_detail:
-            return DocumentDetailSchema(**document.to_dict())
+        document_dict = document.to_dict()
+        if document_dict:
+            if is_detail:
+                return DocumentDetailSchema(**document_dict)
 
-        return DocumentSchema(**document.to_dict())
+            return DocumentSchema(**document_dict)
+
+        raise DocumentNotFoundError(f"Document '{document_name}' not found")
 
     @handle_firestore_database_errors
     async def get_collection(
         self,
         collection: str,
-        order_by: str = "name",
+        sort_direction: str = SortDirection.ASCENDING,
         limit: Optional[int] = None,
-        sort_direction: SortDirection = SortDirection.ASCENDING,
+        order_by: str = "name",
         is_detail: bool = False,
     ) -> List[Union[DocumentSchema, DocumentDetailSchema]]:
 
-        documents = await self._prepare_collection(
+        documents: StreamGenerator = await self._prepare_collection(
             collection=collection,
             order_by=order_by,
             limit=limit,
@@ -110,21 +116,17 @@ class FirestoreDatabase(DocumentDatabase):
         document_name: str,
         updates: DocumentDetailSchema,
     ) -> None:
-        document = self._find_document_by_name(collection, document_name)
-        if not document:
-            raise DocumentNotFoundError(
-                f"Document '{document_name}' not found"
-            )
-        document.update(updates.model_dump())
+        document: DocumentSnapshot = await self._find_document_by_name(
+            collection, document_name
+        )
+        document.reference.update(updates.model_dump())
 
     @handle_firestore_database_errors
     async def delete(self, collection: str, document_name: str) -> None:
-        document = self._find_document_by_name(collection, document_name)
-        if not document:
-            raise DocumentNotFoundError(
-                f"Document '{document_name}' not found"
-            )
-        document.delete()
+        document: DocumentSnapshot = await self._find_document_by_name(
+            collection, document_name
+        )
+        document.reference.delete()
 
     @handle_firestore_database_errors
     async def filter(
@@ -133,7 +135,7 @@ class FirestoreDatabase(DocumentDatabase):
         field: str,
         operator: str,
         value: Any,
-        limit: int = 0,
+        limit: Optional[int] = None,
     ) -> List[DocumentDetailSchema]:
 
         query = (
@@ -151,17 +153,23 @@ class FirestoreDatabase(DocumentDatabase):
     async def find(
         self,
         collection: str,
-        query: Dict[str, Any],
+        query: List[SearchQueryParameter],
         limit: Optional[int] = None,
         skip: Optional[int] = None,
     ) -> List[DocumentSchema]:
-        query = self.client.collection(collection).where(**query)
+        query_ = self.client.collection(collection)
+
+        for param in query:
+            query_ = query_.where(
+                filter=FieldFilter(param.field, param.operator, param.value)
+            )
         if limit:
-            query = query.limit(limit)
+            query_ = query_.limit(limit)
         if skip:
-            query = query.offset(skip)
+            query_ = query_.offset(skip)
         return [
-            DocumentSchema(**document.to_dict()) for document in query.stream()
+            DocumentSchema(**document.to_dict())
+            for document in query_.stream()
         ]
 
     async def _prepare_collection(
@@ -169,20 +177,19 @@ class FirestoreDatabase(DocumentDatabase):
         collection: str,
         order_by: str = "name",
         limit: Optional[int] = None,
-        sort_direction: SortDirection = SortDirection.ASCENDING,
-    ) -> Generator:
+        sort_direction: str = SortDirection.ASCENDING,
+    ) -> StreamGenerator:
         documents = self.client.collection(collection).order_by(
             order_by, direction=sort_direction
         )
         if limit:
             documents = documents.limit(limit)
-
         return documents.stream()
 
     @handle_firestore_database_errors
     async def _find_document_by_name(
         self, collection: str, document_name: str
-    ) -> Optional[DocumentSnapshot]:
+    ) -> DocumentSnapshot:
         try:
             return next(
                 (
@@ -192,5 +199,7 @@ class FirestoreDatabase(DocumentDatabase):
                     .stream()
                 )
             )
-        except StopIteration:
-            return None
+        except StopIteration as exc:
+            raise DocumentNotFoundError(
+                f"Document '{document_name}' not found"
+            ) from exc
