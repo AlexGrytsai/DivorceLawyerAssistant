@@ -9,7 +9,8 @@ from google.cloud.firestore_v1 import FieldFilter, DocumentSnapshot
 from google.cloud.firestore_v1.stream_generator import StreamGenerator
 
 from src.services.document_database.decorators import (
-    handle_firestore_database_errors,
+    handle_firestore_database_errors_async,
+    handle_firestore_database_errors_sync,
 )
 from src.services.document_database.exceptions import (
     DocumentNotFoundError,
@@ -43,7 +44,7 @@ class FirestoreDatabase(DocumentDatabaseInterface):
         self._client: Optional[Client] = None
 
     @property
-    @handle_firestore_database_errors
+    @handle_firestore_database_errors_sync
     def client(self) -> Client:
         if self._client is None:
             self._client = Client(
@@ -52,7 +53,7 @@ class FirestoreDatabase(DocumentDatabaseInterface):
             )
         return self._client
 
-    @handle_firestore_database_errors
+    @handle_firestore_database_errors_async
     async def save(
         self,
         collection: str,
@@ -73,7 +74,7 @@ class FirestoreDatabase(DocumentDatabaseInterface):
 
         return document.name
 
-    @handle_firestore_database_errors
+    @handle_firestore_database_errors_async
     async def get_document(
         self, collection: str, document_name: str, is_detail: bool = False
     ) -> Union[DocumentSchema, DocumentDetailSchema]:
@@ -91,7 +92,7 @@ class FirestoreDatabase(DocumentDatabaseInterface):
         logger.warning(f"Document '{document_name}' not found")
         raise DocumentNotFoundError(f"Document '{document_name}' not found")
 
-    @handle_firestore_database_errors
+    @handle_firestore_database_errors_async
     async def get_collection(
         self,
         collection: str,
@@ -115,7 +116,7 @@ class FirestoreDatabase(DocumentDatabaseInterface):
             ]
         return [DocumentSchema(**document.to_dict()) for document in documents]
 
-    @handle_firestore_database_errors
+    @handle_firestore_database_errors_async
     async def update(
         self,
         collection: str,
@@ -127,14 +128,14 @@ class FirestoreDatabase(DocumentDatabaseInterface):
         )
         document.reference.update(updates.model_dump())
 
-    @handle_firestore_database_errors
+    @handle_firestore_database_errors_async
     async def delete(self, collection: str, document_name: str) -> None:
         document: DocumentSnapshot = await self._find_document_by_name(
             collection, document_name
         )
         document.reference.delete()
 
-    @handle_firestore_database_errors
+    @handle_firestore_database_errors_async
     async def filter(
         self,
         collection: str,
@@ -154,7 +155,7 @@ class FirestoreDatabase(DocumentDatabaseInterface):
             for document in query.stream()
         ]
 
-    @handle_firestore_database_errors
+    @handle_firestore_database_errors_async
     async def find(
         self,
         collection: str,
@@ -179,6 +180,7 @@ class FirestoreDatabase(DocumentDatabaseInterface):
             for document in query_.stream()
         ]
 
+    @handle_firestore_database_errors_async
     async def _prepare_collection(
         self,
         collection: str,
@@ -193,7 +195,7 @@ class FirestoreDatabase(DocumentDatabaseInterface):
             documents = documents.limit(limit)
         return documents.stream()
 
-    @handle_firestore_database_errors
+    @handle_firestore_database_errors_async
     async def _find_document_by_name(
         self, collection: str, document_name: str
     ) -> DocumentSnapshot:
