@@ -17,35 +17,29 @@ ReturnType = TypeVar("ReturnType")
 Parameters = ParamSpec("Parameters")
 
 
-def _handle_firestore_database_errors(
-    func: Callable[..., ReturnType],
-    *args,
-    **kwargs,
-) -> ReturnType:
-    try:
-        return func(*args, **kwargs)
-    except google_exceptions.NotFound as e:
+def _process_exception(e: Exception) -> None:
+    if isinstance(e, google_exceptions.NotFound):
         raise DocumentNotFoundError(f"Document not found: {e}") from e
-    except (ValueError, TypeError) as e:
+    elif isinstance(e, (ValueError, TypeError)):
         raise ValidationError(f"Validation failed: {e}") from e
-    except google_exceptions.GoogleAPIError as e:
+    elif isinstance(e, google_exceptions.GoogleAPIError):
         if "not found" in str(e).lower():
             raise DocumentNotFoundError(f"Document not found: {e}") from e
         raise DatabaseOperationError(f"Operation failed: {e}") from e
-    except (InvalidQueryParameterError, UnsupportedOperatorError):
+    elif isinstance(e, (InvalidQueryParameterError, UnsupportedOperatorError)):
         raise
-    except Exception as e:
-        if isinstance(
-            e,
-            (
-                DatabaseConnectionError,
-                DatabaseOperationError,
-                ValidationError,
-                DocumentNotFoundError,
-                DocumentAlreadyExistsError,
-            ),
-        ):
-            raise
+    elif isinstance(
+        e,
+        (
+            DatabaseConnectionError,
+            DatabaseOperationError,
+            ValidationError,
+            DocumentNotFoundError,
+            DocumentAlreadyExistsError,
+        ),
+    ):
+        raise
+    else:
         raise DatabaseConnectionError(f"Unexpected error: {e}") from e
 
 
@@ -54,7 +48,11 @@ def handle_firestore_database_errors_sync(
 ) -> Callable[Parameters, ReturnType]:
     @wraps(func)
     def wrapper(*args: Any, **kwargs: Any) -> ReturnType:
-        return _handle_firestore_database_errors(func, *args, **kwargs)
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            _process_exception(e)
+            raise
 
     return wrapper
 
@@ -66,28 +64,8 @@ def handle_firestore_database_errors_async(
     async def wrapper(*args: Any, **kwargs: Any) -> ReturnType:
         try:
             return await func(*args, **kwargs)
-        except google_exceptions.NotFound as e:
-            raise DocumentNotFoundError(f"Document not found: {e}") from e
-        except (ValueError, TypeError) as e:
-            raise ValidationError(f"Validation failed: {e}") from e
-        except google_exceptions.GoogleAPIError as e:
-            if "not found" in str(e).lower():
-                raise DocumentNotFoundError(f"Document not found: {e}") from e
-            raise DatabaseOperationError(f"Operation failed: {e}") from e
-        except (InvalidQueryParameterError, UnsupportedOperatorError):
-            raise
         except Exception as e:
-            if isinstance(
-                e,
-                (
-                    DatabaseConnectionError,
-                    DatabaseOperationError,
-                    ValidationError,
-                    DocumentNotFoundError,
-                    DocumentAlreadyExistsError,
-                ),
-            ):
-                raise
-            raise DatabaseConnectionError(f"Unexpected error: {e}") from e
+            _process_exception(e)
+            raise
 
     return wrapper
