@@ -9,7 +9,7 @@ from src.knowledge_storage.schemas import ItemVersionSchema
 EntityPath = TypeVar("EntityPath")
 
 
-class VersionalInterface(ABC, Generic[EntityPath]):
+class VersionableInterface(ABC, Generic[EntityPath]):
     """
     Interface for entities that support versioning.
 
