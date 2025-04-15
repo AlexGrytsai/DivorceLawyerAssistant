@@ -32,7 +32,7 @@ def handle_firestore_database_errors_sync(
             if "not found" in str(e).lower():
                 raise DocumentNotFoundError(f"Document not found: {e}") from e
             raise DatabaseOperationError(f"Operation failed: {e}") from e
-        except (InvalidQueryParameterError, UnsupportedOperatorError) as e:
+        except (InvalidQueryParameterError, UnsupportedOperatorError):
             raise
         except Exception as e:
             if isinstance(
@@ -66,7 +66,7 @@ def handle_firestore_database_errors_async(
             if "not found" in str(e).lower():
                 raise DocumentNotFoundError(f"Document not found: {e}") from e
             raise DatabaseOperationError(f"Operation failed: {e}") from e
-        except (InvalidQueryParameterError, UnsupportedOperatorError) as e:
+        except (InvalidQueryParameterError, UnsupportedOperatorError):
             raise
         except Exception as e:
             if isinstance(
