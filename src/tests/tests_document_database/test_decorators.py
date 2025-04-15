@@ -2,7 +2,8 @@ import pytest
 from google.api_core import exceptions as google_exceptions
 
 from src.services.document_database.decorators import (
-    handle_firestore_database_errors,
+    handle_firestore_database_errors_sync,
+    handle_firestore_database_errors_async,
 )
 from src.services.document_database.exceptions import (
     DocumentNotFoundError,
@@ -15,7 +16,7 @@ from src.services.document_database.exceptions import (
 # Test fixtures for synchronous functions
 @pytest.fixture
 def sync_success_func():
-    @handle_firestore_database_errors
+    @handle_firestore_database_errors_sync
     def test_func():
         return "success"
 
@@ -24,7 +25,7 @@ def sync_success_func():
 
 @pytest.fixture
 def sync_not_found_func():
-    @handle_firestore_database_errors
+    @handle_firestore_database_errors_sync
     def test_func():
         raise google_exceptions.NotFound("Document not found")
 
@@ -33,7 +34,7 @@ def sync_not_found_func():
 
 @pytest.fixture
 def sync_validation_error_func():
-    @handle_firestore_database_errors
+    @handle_firestore_database_errors_sync
     def test_func():
         raise ValueError("Invalid data")
 
@@ -42,7 +43,7 @@ def sync_validation_error_func():
 
 @pytest.fixture
 def sync_database_error_func():
-    @handle_firestore_database_errors
+    @handle_firestore_database_errors_sync
     def test_func():
         raise google_exceptions.GoogleAPIError("Operation failed")
 
@@ -52,7 +53,7 @@ def sync_database_error_func():
 # Test fixtures for asynchronous functions
 @pytest.fixture
 def async_success_func():
-    @handle_firestore_database_errors
+    @handle_firestore_database_errors_async
     async def test_func():
         return "success"
 
@@ -61,7 +62,7 @@ def async_success_func():
 
 @pytest.fixture
 def async_not_found_func():
-    @handle_firestore_database_errors
+    @handle_firestore_database_errors_async
     async def test_func():
         raise google_exceptions.NotFound("Document not found")
 
@@ -70,7 +71,7 @@ def async_not_found_func():
 
 @pytest.fixture
 def async_validation_error_func():
-    @handle_firestore_database_errors
+    @handle_firestore_database_errors_async
     async def test_func():
         raise ValueError("Invalid data")
 
@@ -79,7 +80,7 @@ def async_validation_error_func():
 
 @pytest.fixture
 def async_database_error_func():
-    @handle_firestore_database_errors
+    @handle_firestore_database_errors_async
     async def test_func():
         raise google_exceptions.GoogleAPIError("Operation failed")
 
@@ -140,7 +141,7 @@ async def test_async_database_error(async_database_error_func):
 
 # Edge cases tests
 def test_preserves_function_signature():
-    @handle_firestore_database_errors
+    @handle_firestore_database_errors_sync
     def test_func(a: int, b: str) -> bool:
         return True
 
@@ -149,7 +150,7 @@ def test_preserves_function_signature():
 
 
 def test_unexpected_error():
-    @handle_firestore_database_errors
+    @handle_firestore_database_errors_sync
     def test_func():
         raise RuntimeError("Unexpected error")
 
@@ -160,7 +161,7 @@ def test_unexpected_error():
 
 @pytest.mark.asyncio
 async def test_async_unexpected_error():
-    @handle_firestore_database_errors
+    @handle_firestore_database_errors_async
     async def test_func():
         raise RuntimeError("Unexpected error")
 
@@ -170,7 +171,7 @@ async def test_async_unexpected_error():
 
 
 def test_nested_exceptions():
-    @handle_firestore_database_errors
+    @handle_firestore_database_errors_sync
     def test_func():
         try:
             raise ValueError("Inner error")
@@ -184,7 +185,7 @@ def test_nested_exceptions():
 
 @pytest.mark.asyncio
 async def test_async_nested_exceptions():
-    @handle_firestore_database_errors
+    @handle_firestore_database_errors_async
     async def test_func():
         try:
             raise ValueError("Inner error")

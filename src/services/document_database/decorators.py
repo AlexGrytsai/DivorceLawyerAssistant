@@ -9,6 +9,8 @@ from src.services.document_database.exceptions import (
     DatabaseOperationError,
     DocumentNotFoundError,
     DocumentAlreadyExistsError,
+    InvalidQueryParameterError,
+    UnsupportedOperatorError,
 )
 
 ReturnType = TypeVar("ReturnType")
@@ -30,6 +32,8 @@ def handle_firestore_database_errors_sync(
             if "not found" in str(e).lower():
                 raise DocumentNotFoundError(f"Document not found: {e}") from e
             raise DatabaseOperationError(f"Operation failed: {e}") from e
+        except (InvalidQueryParameterError, UnsupportedOperatorError) as e:
+            raise
         except Exception as e:
             if isinstance(
                 e,
@@ -62,6 +66,8 @@ def handle_firestore_database_errors_async(
             if "not found" in str(e).lower():
                 raise DocumentNotFoundError(f"Document not found: {e}") from e
             raise DatabaseOperationError(f"Operation failed: {e}") from e
+        except (InvalidQueryParameterError, UnsupportedOperatorError) as e:
+            raise
         except Exception as e:
             if isinstance(
                 e,
