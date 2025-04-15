@@ -1,5 +1,12 @@
 from functools import wraps
-from typing import Any, Callable, TypeVar, cast, Awaitable, Union, Coroutine
+from typing import (
+    Any,
+    Callable,
+    TypeVar,
+    Coroutine,
+    ParamSpec,
+    overload,
+)
 
 from google.api_core import exceptions as google_exceptions
 
@@ -11,22 +18,32 @@ from src.services.documant_database.exceptions import (
     DocumentAlreadyExistsError,
 )
 
-SyncResultType = TypeVar("SyncResultType")
-AsyncResultType = TypeVar("AsyncResultType", bound=Awaitable[Any])
+ReturnType = TypeVar("ReturnType")
+Parameters = ParamSpec("Parameters")
 
 
+# For synchronous functions
+@overload
 def handle_firestore_database_errors(
-    func: Callable[..., Union[SyncResultType, AsyncResultType]],
-) -> Callable[..., Union[SyncResultType, AsyncResultType]]:
+    func: Callable[Parameters, ReturnType],
+) -> Callable[Parameters, ReturnType]: ...
+
+
+# For asynchronous functions
+@overload
+def handle_firestore_database_errors(
+    func: Callable[Parameters, Coroutine[Any, Any, ReturnType]],
+) -> Callable[Parameters, Coroutine[Any, Any, ReturnType]]: ...
+
+
+def handle_firestore_database_errors(func):
     @wraps(func)
-    def wrapper(
-        *args: Any, **kwargs: Any
-    ) -> Union[SyncResultType, AsyncResultType]:
+    def wrapper(*args: Any, **kwargs: Any):
         try:
             result = func(*args, **kwargs)
             if isinstance(result, Coroutine):
 
-                async def async_wrapper() -> Any:
+                async def async_wrapper():
                     try:
                         return await result
                     except google_exceptions.NotFound as e:
@@ -83,4 +100,4 @@ def handle_firestore_database_errors(
                 raise
             raise DatabaseConnectionError(f"Unexpected error: {str(e)}")
 
-    return cast(Callable[..., Union[SyncResultType, AsyncResultType]], wrapper)
+    return wrapper
