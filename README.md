@@ -14,7 +14,7 @@ Divorce Lawyer AI Assistant is an intelligent assistant for family law attorneys
 - Integration with OpenAI for response generation and embeddings
 - Document management through Firestore Database
 - Hierarchical knowledge storage system with categories and subcategories
-- Access control system with different permission levels
+- Access a control system with different permission levels
 - Smart document search with result ranking
 
    The ranking mechanism is implemented by generating vector embeddings for each document 
