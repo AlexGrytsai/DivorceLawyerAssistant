@@ -4,7 +4,7 @@ from .knowledge_storage_interface import KnowledgeStorageInterface
 from .permission_interface import PermissionInterface
 from .searchable_interface import SearchableInterface
 from .taggable_interface import TaggableInterface
-from .versionable_interface import VersionalInterface
+from .versionable_interface import VersionableInterface
 
 __all__ = [
     "KnowledgeStorageInterface",
@@ -12,6 +12,6 @@ __all__ = [
     "BaseEntityInterface",
     "TaggableInterface",
     "PermissionInterface",
-    "VersionalInterface",
+    "VersionableInterface",
     "SearchableInterface",
 ]
