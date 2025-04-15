@@ -1,3 +1,4 @@
+import logging
 import uuid
 from enum import Enum
 from typing import Optional, Union, List, Any
@@ -24,6 +25,8 @@ from src.services.documant_database.schemas import (
 )
 
 load_dotenv()
+
+logger = logging.getLogger(__name__)
 
 
 class SortDirection(str, Enum):
@@ -83,6 +86,7 @@ class FirestoreDatabase(DocumentDatabase):
 
             return DocumentSchema(**document_dict)
 
+        logger.warning(f"Document '{document_name}' not found")
         raise DocumentNotFoundError(f"Document '{document_name}' not found")
 
     @handle_firestore_database_errors
@@ -200,6 +204,7 @@ class FirestoreDatabase(DocumentDatabase):
                 )
             )
         except StopIteration as exc:
+            logger.warning(f"Document '{document_name}' not found")
             raise DocumentNotFoundError(
                 f"Document '{document_name}' not found"
             ) from exc
