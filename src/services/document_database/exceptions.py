@@ -20,3 +20,11 @@ class DatabaseOperationError(DocumentDatabaseError):
 
 class ValidationError(DocumentDatabaseError):
     pass
+
+
+class InvalidQueryParameterError(DocumentDatabaseError):
+    pass
+
+
+class UnsupportedOperatorError(DocumentDatabaseError):
+    pass
