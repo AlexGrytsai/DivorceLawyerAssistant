@@ -8,8 +8,8 @@ from src.knowledge_storage.interfaces import (
     BaseEntityInterface,
     TaggableInterface,
     PermissionInterface,
-    VersionalInterface,
     SearchableInterface,
+    VersionableInterface,
 )
 from src.knowledge_storage.schemas import (
     ItemCreateSchema,
@@ -31,7 +31,7 @@ class KnowledgeItemInterface(
     BaseEntityInterface[Tuple[str, str], str, ItemSchema],
     TaggableInterface[str, ItemSchema],
     PermissionInterface[str, ItemSchema],
-    VersionalInterface[str],
+    VersionableInterface[str],
     SearchableInterface[str],
     ABC,
 ):
