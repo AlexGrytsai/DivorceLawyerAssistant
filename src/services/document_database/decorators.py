@@ -1,3 +1,4 @@
+import inspect
 from functools import wraps
 from typing import (
     Any,
@@ -41,7 +42,7 @@ def handle_firestore_database_errors(func):
     def wrapper(*args: Any, **kwargs: Any):
         try:
             result = func(*args, **kwargs)
-            if isinstance(result, Coroutine):
+            if inspect.isawaitable(result):
 
                 async def async_wrapper():
                     try:
