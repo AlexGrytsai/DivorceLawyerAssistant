@@ -1,4 +1,3 @@
-import inspect
 from functools import wraps
 from typing import (
     Any,
@@ -17,6 +16,8 @@ from src.services.document_database.exceptions import (
     DatabaseOperationError,
     DocumentNotFoundError,
     DocumentAlreadyExistsError,
+    InvalidQueryParameterError,
+    UnsupportedOperatorError,
 )
 
 ReturnType = TypeVar("ReturnType")
@@ -42,7 +43,7 @@ def handle_firestore_database_errors(func):
     def wrapper(*args: Any, **kwargs: Any):
         try:
             result = func(*args, **kwargs)
-            if inspect.isawaitable(result):
+            if isinstance(result, Coroutine):
 
                 async def async_wrapper():
                     try:
@@ -70,6 +71,8 @@ def handle_firestore_database_errors(func):
                                 ValidationError,
                                 DocumentNotFoundError,
                                 DocumentAlreadyExistsError,
+                                InvalidQueryParameterError,
+                                UnsupportedOperatorError,
                             ),
                         ):
                             raise
@@ -96,6 +99,8 @@ def handle_firestore_database_errors(func):
                     ValidationError,
                     DocumentNotFoundError,
                     DocumentAlreadyExistsError,
+                    InvalidQueryParameterError,
+                    UnsupportedOperatorError,
                 ),
             ):
                 raise
