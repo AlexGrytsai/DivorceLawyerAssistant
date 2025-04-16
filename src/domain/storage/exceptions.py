@@ -48,3 +48,13 @@ class ErrorDeletingFile(StorageError):
     """Exception raised when there is an error deleting a file from storage."""
 
     pass
+
+class PathNotFoundError(StorageError):
+    """Exception raised when a specified path is not found in storage."""
+
+    pass
+
+class PathAlreadyExistsError(StorageError):
+    """Exception raised when a specified path already exists in storage."""
+
+    pass
