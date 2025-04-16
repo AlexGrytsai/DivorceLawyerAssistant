@@ -13,15 +13,28 @@ logger = logging.getLogger(__name__)
 
 
 def current_timestamp() -> str:
-    """Generate current timestamp in consistent format"""
+    """
+    Generate a formatted timestamp string for the current time.
+
+    Returns:
+        str: Formatted timestamp in the format "HH:MM:SS MM-DD-YYYY"
+    """
     return datetime.datetime.now().strftime("%H:%M:%S %m-%d-%Y")
 
 
 class StorageRepository(ABC):
-    """Interface for storage implementations.
+    """
+    Abstract base class defining the contract for storage repositories.
 
-    This abstract class defines the contract for all storage implementations,
-    providing methods for file and folder operations.
+    This interface provides methods for file and folder operations such as:
+    - Uploading single and multiple files
+    - Deleting files
+    - Creating, renaming, and deleting folders
+    - Listing files and folders
+    - Getting file and folder information
+
+    Implementations of this interface should handle the specifics of different
+    storage backends (local filesystem, cloud storage, etc.).
     """
 
     async def __call__(
@@ -32,6 +45,28 @@ class StorageRepository(ABC):
         *args,
         **kwargs,
     ) -> Union[File, List[File]]:
+        """
+        Make the repository instance callable for convenient file uploads.
+
+        This method provides a shorthand for uploading files by making
+        the repository instance callable. It automatically determines whether
+        to use single or multi-upload based on the provided parameters.
+
+        Args:
+            request: Optional FastAPI request object for context
+            file: Optional single file to upload
+            files: Optional list of files to upload
+            *args: Additional positional arguments
+            **kwargs: Additional keyword arguments
+
+        Returns:
+            Union[File, List[File]]: File entity or list of File entities
+            representing uploaded files
+
+        Raises:
+            NoFileProvided: If neither file nor files parameter is provided
+            ErrorSavingFile: If an error occurs during file upload
+        """
         try:
             if file:
                 return await self.upload(file=file, request=request)
@@ -55,6 +90,21 @@ class StorageRepository(ABC):
         *args,
         **kwargs,
     ) -> File:
+        """
+        Upload a single file to storage.
+
+        Args:
+            file: The file to upload
+            request: Optional FastAPI request object for context
+            *args: Additional positional arguments
+            **kwargs: Additional keyword arguments
+
+        Returns:
+            File: File entity representing the uploaded file
+
+        Raises:
+            ErrorSavingFile: If an error occurs during file upload
+        """
         pass
 
     @abstractmethod
@@ -65,6 +115,21 @@ class StorageRepository(ABC):
         *args,
         **kwargs,
     ) -> List[File]:
+        """
+        Upload multiple files to storage.
+
+        Args:
+            files: List of files to upload
+            request: Optional FastAPI request object for context
+            *args: Additional positional arguments
+            **kwargs: Additional keyword arguments
+
+        Returns:
+            List[File]: List of File entities representing the uploaded files
+
+        Raises:
+            ErrorSavingFile: If an error occurs during file upload
+        """
         pass
 
     @abstractmethod
@@ -75,6 +140,21 @@ class StorageRepository(ABC):
         *args,
         **kwargs,
     ) -> FileDelete:
+        """
+        Delete a file from storage.
+
+        Args:
+            file_path: Path to the file to delete
+            request: Optional FastAPI request object for context
+            *args: Additional positional arguments
+            **kwargs: Additional keyword arguments
+
+        Returns:
+            FileDelete: Entity containing information about the deleted file
+
+        Raises:
+            ErrorDeletingFile: If an error occurs during file deletion
+        """
         pass
 
     @abstractmethod
@@ -85,6 +165,21 @@ class StorageRepository(ABC):
         *args,
         **kwargs,
     ) -> FolderData:
+        """
+        Create a new folder in storage.
+
+        Args:
+            folder_path: Path where the folder should be created
+            request: Optional FastAPI request object for context
+            *args: Additional positional arguments
+            **kwargs: Additional keyword arguments
+
+        Returns:
+            FolderData: Entity containing information about the created folder
+
+        Raises:
+            ProblemWithBucket: If an error occurs with the storage bucket
+        """
         pass
 
     @abstractmethod
@@ -96,6 +191,22 @@ class StorageRepository(ABC):
         *args,
         **kwargs,
     ) -> FolderData:
+        """
+        Rename a folder in storage.
+
+        Args:
+            old_path: Current path of the folder
+            new_path: New path for the folder
+            request: Optional FastAPI request object for context
+            *args: Additional positional arguments
+            **kwargs: Additional keyword arguments
+
+        Returns:
+            FolderData: Entity containing information about the renamed folder
+
+        Raises:
+            ProblemWithBucket: If an error occurs with the storage bucket
+        """
         pass
 
     @abstractmethod
@@ -107,18 +218,39 @@ class StorageRepository(ABC):
         *args,
         **kwargs,
     ) -> FolderDelete:
+        """
+        Delete a folder from storage.
+
+        Args:
+            folder_path: Path to the folder to delete
+            request: Optional FastAPI request object for context
+            is_delete_all: If True, delete all contents of the folder
+                           recursively
+            *args: Additional positional arguments
+            **kwargs: Additional keyword arguments
+
+        Returns:
+            FolderDelete: Entity containing information about
+                          the deleted folder
+
+        Raises:
+            ErrorDeletingFile: If an error occurs during folder deletion
+        """
         pass
 
     @abstractmethod
     async def get_folder(self, folder_path: str) -> FolderData:
         """
-        Get folder information by path
+        Get information about a folder.
 
         Args:
-            folder_path: Path to folder
+            folder_path: Path to the folder
 
         Returns:
-            FolderDataSchema: Folder information
+            FolderData: Entity containing information about the folder
+
+        Raises:
+            ProblemWithBucket: If an error occurs with the storage bucket
         """
         pass
 
@@ -131,10 +263,38 @@ class StorageRepository(ABC):
         *args,
         **kwargs,
     ) -> File:
+        """
+        Rename a file in storage.
+
+        Args:
+            old_path: Current path of the file
+            new_file_name: New name for the file
+            request: Optional FastAPI request object for context
+            *args: Additional positional arguments
+            **kwargs: Additional keyword arguments
+
+        Returns:
+            File: Entity containing information about the renamed file
+
+        Raises:
+            ProblemWithBucket: If an error occurs with the storage bucket
+        """
         pass
 
     @abstractmethod
     async def get_file(self, file_path: str) -> File:
+        """
+        Get information about a file.
+
+        Args:
+            file_path: Path to the file
+
+        Returns:
+            File: Entity containing information about the file
+
+        Raises:
+            ProblemWithBucket: If an error occurs with the storage bucket
+        """
         pass
 
     @abstractmethod
@@ -144,14 +304,53 @@ class StorageRepository(ABC):
         search_query: Optional[str] = "",
         case_sensitive: Optional[bool] = False,
     ) -> List[File]:
+        """
+        List files in storage with optional filtering.
+
+        Args:
+            prefix: Optional prefix to filter files by path
+            search_query: Optional search query to filter files by name
+            case_sensitive: Whether the search should be case-sensitive
+
+        Returns:
+            List[File]: List of File entities matching the criteria
+
+        Raises:
+            ProblemWithBucket: If an error occurs with the storage bucket
+        """
         pass
 
     @abstractmethod
     async def list_folders(
         self, prefix: Optional[str] = None
     ) -> List[FolderData]:
+        """
+        List folders in storage with optional filtering.
+
+        Args:
+            prefix: Optional prefix to filter folders by path
+
+        Returns:
+            List[FolderData]: List of FolderData entities matching the criteria
+
+        Raises:
+            ProblemWithBucket: If an error occurs with the storage bucket
+        """
         pass
 
     @abstractmethod
     async def get_folder_contents(self, folder_path: str) -> FolderContents:
+        """
+        Get the contents of a folder.
+
+        Args:
+            folder_path: Path to the folder
+
+        Returns:
+            FolderContents: Entity containing the folder's contents
+                            (files and subfolders)
+
+        Raises:
+            ProblemWithBucket: If an error occurs with the storage bucket
+        """
         pass
