@@ -4,11 +4,8 @@ from unittest.mock import AsyncMock, MagicMock, patch, PropertyMock
 
 import pytest
 from google.api_core import exceptions as google_exceptions
-from src.services.document_database.schemas import (
-    DocumentDetailSchema,
-    DocumentSchema,
-)
 
+from src.domain.document.entities import DocumentDetail, Document
 from src.domain.document.exceptions import (
     DocumentNotFoundError,
     DocumentAlreadyExistsError,
@@ -18,12 +15,10 @@ from src.domain.document.exceptions import (
     DatabaseOperationError,
     DatabaseConnectionError,
 )
-from src.services.document_database.implementations.firestore_database import (
-    FirestoreDatabase,
+from src.domain.document.value_objects import SearchQuery
+from src.infrastructure.persistence import FirestoreDocumentRepository
+from src.infrastructure.persistence.firestore.firestore_document_repository import (
     SortDirection,
-)
-from src.services.document_database.interfaces.document_database import (
-    SearchQueryParameter,
 )
 
 
@@ -54,11 +49,11 @@ def mock_collection(mock_firestore_client):
 @pytest.fixture
 def firestore_database(mock_firestore_client):
     with patch(
-        "src.services.document_database.implementations.firestore_database.FirestoreDatabase.client",
+        "src.infrastructure.persistence.firestore.firestore_document_repository.FirestoreDocumentRepository.client",
         new_callable=PropertyMock,
     ) as mock_property:
         mock_property.return_value = mock_firestore_client
-        yield FirestoreDatabase(
+        yield FirestoreDocumentRepository(
             project_id="test-project", database_name="test-db"
         )
 
@@ -81,7 +76,7 @@ def sample_document_data():
 
 @pytest.fixture
 def sample_document(sample_document_data):
-    return DocumentDetailSchema(**sample_document_data)
+    return DocumentDetail(**sample_document_data)
 
 
 @pytest.fixture
@@ -146,7 +141,7 @@ class TestFirestoreDatabase:
         )
 
         # Verify
-        assert isinstance(result, DocumentSchema)
+        assert isinstance(result, Document)
         assert result.name == sample_document.name
         assert result.url == sample_document.url
 
@@ -166,7 +161,7 @@ class TestFirestoreDatabase:
             "test_collection", sample_document.name, is_detail=True
         )
 
-        assert isinstance(result, DocumentDetailSchema)
+        assert isinstance(result, DocumentDetail)
         assert result.name == sample_document.name
         assert result.url == sample_document.url
         assert result.size == sample_document.size
@@ -209,7 +204,7 @@ class TestFirestoreDatabase:
             "test_collection", "empty"
         )
 
-        assert isinstance(result, DocumentSchema)
+        assert isinstance(result, Document)
         assert result.name == "empty"
         assert result.url == "https://example.com/empty"
 
@@ -232,7 +227,7 @@ class TestFirestoreDatabase:
 
         # Verify
         assert len(result) == 1
-        assert isinstance(result[0], DocumentSchema)
+        assert isinstance(result[0], Document)
         assert result[0].name == sample_document.name
 
     @pytest.mark.asyncio
@@ -252,7 +247,7 @@ class TestFirestoreDatabase:
         )
 
         assert len(result) == 1
-        assert isinstance(result[0], DocumentDetailSchema)
+        assert isinstance(result[0], DocumentDetail)
         assert result[0].name == sample_document.name
 
     @pytest.mark.asyncio
@@ -411,7 +406,7 @@ class TestFirestoreDatabase:
 
         # Verify
         assert len(result) == 1
-        assert isinstance(result[0], DocumentDetailSchema)
+        assert isinstance(result[0], DocumentDetail)
         assert result[0].name == sample_document.name
 
     @pytest.mark.asyncio
@@ -452,7 +447,7 @@ class TestFirestoreDatabase:
 
         # Prepare query
         query_params = [
-            SearchQueryParameter(
+            SearchQuery(
                 field="name", operator="==", value=sample_document.name
             )
         ]
@@ -464,7 +459,7 @@ class TestFirestoreDatabase:
 
         # Verify
         assert len(result) == 1
-        assert isinstance(result[0], DocumentSchema)
+        assert isinstance(result[0], Document)
         assert result[0].name == sample_document.name
 
     @pytest.mark.asyncio
@@ -480,7 +475,7 @@ class TestFirestoreDatabase:
         )
 
         query_params = [
-            SearchQueryParameter(
+            SearchQuery(
                 field="name", operator="==", value=sample_document.name
             )
         ]
@@ -509,12 +504,10 @@ class TestFirestoreDatabase:
 
         # Prepare query with valid fields from DocumentSchema
         query_params = [
-            SearchQueryParameter(
+            SearchQuery(
                 field="name", operator="==", value=sample_document.name
             ),
-            SearchQueryParameter(
-                field="url", operator="==", value=sample_document.url
-            ),
+            SearchQuery(field="url", operator="==", value=sample_document.url),
         ]
 
         # Execute
@@ -540,7 +533,7 @@ async def test_find_with_empty_query(firestore_database):
 @pytest.mark.asyncio
 async def test_find_with_invalid_field(firestore_database):
     invalid_query = [
-        SearchQueryParameter(
+        SearchQuery(
             field="non_existent_field", operator="==", value="some_value"
         )
     ]
@@ -552,7 +545,7 @@ async def test_find_with_invalid_field(firestore_database):
 @pytest.mark.asyncio
 async def test_find_with_unsupported_operator(firestore_database):
     invalid_query = [
-        SearchQueryParameter(field="name", operator="!=", value="some_value")
+        SearchQuery(field="name", operator="!=", value="some_value")
     ]
     with pytest.raises(UnsupportedOperatorError) as exc_info:
         await firestore_database.find("test_collection", query=invalid_query)
@@ -563,9 +556,7 @@ async def test_find_with_unsupported_operator(firestore_database):
 async def test_find_with_incorrect_value_type(
     firestore_database, sample_document
 ):
-    invalid_query = [
-        SearchQueryParameter(field="name", operator="==", value=12345)
-    ]
+    invalid_query = [SearchQuery(field="name", operator="==", value=12345)]
     # This test should be removed as type validation is not implemented
     # in the current version of FirestoreDatabase
     await firestore_database.find("test_collection", query=invalid_query)
@@ -640,9 +631,7 @@ async def test_unexpected_error(firestore_database, mock_collection):
 async def test_invalid_query_value_type(firestore_database):
     # Create a query with invalid value type
     query_params = [
-        SearchQueryParameter(
-            field="name", operator="==", value={"complex": "object"}
-        )
+        SearchQuery(field="name", operator="==", value={"complex": "object"})
     ]
 
     with pytest.raises(InvalidQueryParameterError) as exc_info:
