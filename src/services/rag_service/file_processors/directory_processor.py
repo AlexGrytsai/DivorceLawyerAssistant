@@ -5,12 +5,12 @@ import logging
 from typing import Dict, List, Any, Optional, Union, TYPE_CHECKING
 
 from src.core.config import settings
+from src.domain.storage.entities import FileForFolder, FolderItem
+from src.domain.storage.repositories import StorageRepository
 from src.services.rag_service.decorators import (
     handle_document_processing,
 )
 from src.services.rag_service.schemas import DocumentSchema
-from src.services.storage.interfaces import BaseStorageInterface
-from src.services.storage.shemas import FileSchemaForFolder, FolderItem
 
 if TYPE_CHECKING:
     from src.services.rag_service.factory.file_processor_factory import (
@@ -37,7 +37,7 @@ class DirectoryProcessor:
     def __init__(
         self,
         file_processor_factory: FileProcessorFactory,
-        rag_storage: Optional[BaseStorageInterface] = None,
+        rag_storage: Optional[StorageRepository] = None,
     ):
         self.file_processor_factory = file_processor_factory
         self.rag_storage = rag_storage or settings.RAG_STORAGE
@@ -71,13 +71,13 @@ class DirectoryProcessor:
 
     @staticmethod
     def _filter_files(
-        folder_contents_items: List[Union[FileSchemaForFolder, FolderItem]],
-    ) -> List[FileSchemaForFolder]:
+        folder_contents_items: List[Union[FileForFolder, FolderItem]],
+    ) -> List[FileForFolder]:
         return [item for item in folder_contents_items if item.type == "file"]
 
     async def _process_single_file(
         self,
-        item: FileSchemaForFolder,
+        item: FileForFolder,
         index_name: str,
         namespace: str,
         metadata: Optional[Dict[str, Any]] = None,
@@ -93,7 +93,7 @@ class DirectoryProcessor:
 
     async def _process_files(
         self,
-        files: List[FileSchemaForFolder],
+        files: List[FileForFolder],
         index_name: str,
         namespace: str,
         metadata: Optional[Dict[str, Any]] = None,

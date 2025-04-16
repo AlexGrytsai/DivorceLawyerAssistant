@@ -3,6 +3,8 @@ from typing import Dict, List, Optional, Any
 
 from fastapi import UploadFile, Request
 
+from src.domain.storage.entities import File, FileDelete
+from src.domain.storage.entities.folder import FolderDelete
 from src.services.rag_service.schemas import (
     IndexCreateSchema,
     IndexSchema,
@@ -10,11 +12,6 @@ from src.services.rag_service.schemas import (
     NamespaceSchema,
     SearchResponseSchema,
     ProcessingStatusSchema,
-)
-from src.services.storage.shemas import (
-    FileSchema,
-    FileDeleteSchema,
-    FolderDeleteSchema,
 )
 
 
@@ -56,7 +53,7 @@ class RAGServiceInterface(ABC):
         self,
         index_name: str,
         request: Optional[Request] = None,
-    ) -> FolderDeleteSchema:
+    ) -> FolderDelete:
         """
         Deletes an index from Vector DB and corresponding folder from storage.
 
@@ -108,7 +105,7 @@ class RAGServiceInterface(ABC):
         index_name: str,
         namespace: str,
         request: Optional[Request] = None,
-    ) -> FolderDeleteSchema:
+    ) -> FolderDelete:
         """
         Deletes a namespace from an index and its folder from storage.
 
@@ -130,7 +127,7 @@ class RAGServiceInterface(ABC):
         file: UploadFile,
         request: Optional[Request] = None,
         metadata: Optional[Dict[str, Any]] = None,
-    ) -> FileSchema:
+    ) -> File:
         """
         Uploads a file to a namespace, validates it, processes it,
         and adds it to vector store.
@@ -155,7 +152,7 @@ class RAGServiceInterface(ABC):
         files: List[UploadFile],
         request: Optional[Request] = None,
         metadata: Optional[Dict[str, Any]] = None,
-    ) -> List[FileSchema]:
+    ) -> List[File]:
         """
         Uploads multiple files to a namespace, validates them,
         processes them, and adds them to vector store.
@@ -201,7 +198,7 @@ class RAGServiceInterface(ABC):
         namespace: str,
         document_path: str,
         request: Optional[Request] = None,
-    ) -> FileDeleteSchema:
+    ) -> FileDelete:
         """
         Deletes a document from storage and its vectors from Vector DB.
 
