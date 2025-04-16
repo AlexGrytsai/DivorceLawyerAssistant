@@ -70,8 +70,7 @@ and permissions.
 ### 🛡 **Role**
 
 A collection of responsibilities and permissions assigned to a user, defining
-what
-actions they are authorized to perform within the system.
+what actions they are authorized to perform within the system.
 
 ---
 
