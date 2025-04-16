@@ -14,7 +14,7 @@ Divorce Lawyer AI Assistant is an intelligent assistant for family law attorneys
 - Integration with OpenAI for response generation and embeddings
 - Document management through Firestore Database
 - Hierarchical knowledge storage system with categories and subcategories
-- Access a control system with different permission levels
+- Access control system with different permission levels
 - Smart document search with result ranking
 
    The ranking mechanism is implemented by generating vector embeddings for each document 
@@ -26,7 +26,7 @@ Divorce Lawyer AI Assistant is an intelligent assistant for family law attorneys
 
 ## Technology Stack
 
-- Python 3.12
+- Python 3.12.7
 - FastAPI
 - LangChain
 - OpenAI
@@ -40,7 +40,7 @@ Divorce Lawyer AI Assistant is an intelligent assistant for family law attorneys
 
 ## Requirements
 
-- Python 3.12
+- Python 3.12.7
 - Poetry
 - Google Cloud Storage credentials
 - Google Cloud Firestore credentials
@@ -73,11 +73,18 @@ Divorce Lawyer AI Assistant is an intelligent assistant for family law attorneys
 
 ### Running the Application
 
+#### Local Development
 ```bash
 poetry run uvicorn src.main:app --reload
 ```
 
 After starting, the application will be available at http://localhost:8000
+
+#### Docker
+```bash
+docker build -t divorce-lawyer-ai .
+docker run -p 8000:8000 divorce-lawyer-ai
+```
 
 ## API Endpoints
 
@@ -113,6 +120,8 @@ After starting, the application will be available at http://localhost:8000
 poetry run pytest
 ```
 
+For CI/CD, tests are automatically run on pull requests to main and develop branches.
+
 ### Type Checking
 ```bash
 poetry run mypy .
@@ -123,6 +132,8 @@ poetry run mypy .
 poetry run black .
 poetry run flake8
 ```
+
+The project uses GitHub Actions for automated linting and type checking on pull requests.
 
 ## Project Structure
 - `src/` - Project source code
@@ -137,6 +148,13 @@ poetry run flake8
   - `utils/` - Helper functions and utilities
   - `tests/` - Test suite
   - `main.py` - Application entry point
+
+## Contributing
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## License
 This project is distributed under the Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0) license.
