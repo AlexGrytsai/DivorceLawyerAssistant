@@ -1,5 +1,5 @@
 from .file import File, FileDelete, FileForFolder
-from .folder import Folder, FolderData, FolderItem, FolderRenameSchema
+from .folder import Folder, FolderData, FolderItem, FolderRename
 
 __all__ = [
     "File",
@@ -8,5 +8,5 @@ __all__ = [
     "Folder",
     "FolderData",
     "FolderItem",
-    "FolderRenameSchema",
+    "FolderRename",
 ]
