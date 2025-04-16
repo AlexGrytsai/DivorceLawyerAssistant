@@ -8,16 +8,16 @@ from google.cloud.storage_control_v2 import (
     DeleteFolderRequest,
     RenameFolderRequest,
 )
-
-from src.services.storage.implementations.google_storage import (
-    GoogleCloudStorage,
-)
 from src.services.storage.shemas import (
     FileSchema,
     FileDeleteSchema,
     FolderDataSchema,
     FolderDeleteSchema,
     FolderRenameSchema,
+)
+
+from src.infrastructure.storage.cloud.google_cloud.google_storage import (
+    GoogleCloudStorage,
 )
 
 
