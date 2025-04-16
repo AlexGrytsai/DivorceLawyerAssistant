@@ -4,7 +4,7 @@ from typing import Optional, Set
 from pydantic import BaseModel, Field
 
 
-class DocumentSchema(BaseModel):
+class Document(BaseModel):
     """Schema for basic document information.
 
     Attributes:
@@ -22,7 +22,7 @@ class DocumentSchema(BaseModel):
     tags: Optional[Set[str]] = None
 
 
-class DocumentDetailSchema(DocumentSchema):
+class DocumentDetail(Document):
     """Detailed document schema with additional metadata.
 
     Attributes:
@@ -41,7 +41,7 @@ class DocumentDetailSchema(DocumentSchema):
     update_time: Optional[datetime] = None
 
 
-class DocumentDeleteSchema(BaseModel):
+class DocumentDelete(BaseModel):
     """Schema for deleted documents.
 
     Attributes:

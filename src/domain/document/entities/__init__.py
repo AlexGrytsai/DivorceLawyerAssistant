@@ -1,3 +1,3 @@
-from .document import DocumentSchema, DocumentDetailSchema
+from .document import Document, DocumentDetail, DocumentDelete
 
-__all__ = ["DocumentSchema", "DocumentDetailSchema"]
+__all__ = ["Document", "DocumentDetail", "DocumentDelete"]
