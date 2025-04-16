@@ -44,7 +44,6 @@ def _validate_blob_exists(
 def _validate_blob_not_exists(
     cloud_storage: CloudStorageRepository,
     blob_name: str,
-    error_code: int = status.HTTP_409_CONFLICT,
 ) -> None:
     """Validate that blob does not exist in cloud storage"""
     if cloud_storage.bucket.blob(blob_name).exists():
