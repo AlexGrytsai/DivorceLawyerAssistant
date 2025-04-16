@@ -3,7 +3,7 @@ from typing import Any, Callable, TypeVar, ParamSpec, Coroutine
 
 from google.api_core import exceptions as google_exceptions
 
-from src.services.document_database.exceptions import (
+from src.domain.document.exceptions import (
     ValidationError,
     DatabaseConnectionError,
     DatabaseOperationError,

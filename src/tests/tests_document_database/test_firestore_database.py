@@ -4,8 +4,12 @@ from unittest.mock import AsyncMock, MagicMock, patch, PropertyMock
 
 import pytest
 from google.api_core import exceptions as google_exceptions
+from src.services.document_database.schemas import (
+    DocumentDetailSchema,
+    DocumentSchema,
+)
 
-from src.services.document_database.exceptions import (
+from src.domain.document.exceptions import (
     DocumentNotFoundError,
     DocumentAlreadyExistsError,
     InvalidQueryParameterError,
@@ -20,10 +24,6 @@ from src.services.document_database.implementations.firestore_database import (
 )
 from src.services.document_database.interfaces.document_database import (
     SearchQueryParameter,
-)
-from src.services.document_database.schemas import (
-    DocumentDetailSchema,
-    DocumentSchema,
 )
 
 
