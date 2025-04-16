@@ -2,7 +2,7 @@ import asyncio
 import logging
 from typing import List, Optional, Union, Set, Tuple
 
-from fastapi import UploadFile, Request, status, HTTPException
+from fastapi import UploadFile, Request, status
 from google.cloud.storage import Blob  # type: ignore
 from google.cloud.storage_control_v2 import RenameFolderRequest  # type: ignore
 
@@ -18,6 +18,10 @@ from src.domain.storage.repositories import (
     StorageRepository,
 )
 from src.infrastructure.storage.cloud import GoogleCloudStorage
+from src.infrastructure.storage.cloud.google_cloud.exceptions import (
+    BlobNotFoundError,
+    BlobAlreadyExistsError,
+)
 from src.infrastructure.storage.decorators import (
     handle_upload_file_exceptions,
     handle_delete_file_exceptions,
@@ -30,18 +34,11 @@ logger = logging.getLogger(__name__)
 def _validate_blob_exists(
     cloud_storage: CloudStorageRepository,
     blob_name: str,
-    error_code: int = status.HTTP_404_NOT_FOUND,
 ) -> None:
     """Validate that blob exists in cloud storage"""
     if not cloud_storage.bucket.blob(blob_name).exists():
         logger.warning(f"Blob {blob_name} not found")
-        raise HTTPException(
-            status_code=error_code,
-            detail={
-                "error": "Blob not found",
-                "message": f"{blob_name} not found",
-            },
-        )
+        raise BlobNotFoundError(f"Blob {blob_name} not found")
 
 
 def _validate_blob_not_exists(
@@ -52,13 +49,7 @@ def _validate_blob_not_exists(
     """Validate that blob does not exist in cloud storage"""
     if cloud_storage.bucket.blob(blob_name).exists():
         logger.warning(f"Blob {blob_name} already exists")
-        raise HTTPException(
-            status_code=error_code,
-            detail={
-                "error": "Blob already exists",
-                "message": f"{blob_name} already exists",
-            },
-        )
+        raise BlobAlreadyExistsError(f"Blob {blob_name} already exists")
 
 
 class CloudStorage(StorageRepository):
