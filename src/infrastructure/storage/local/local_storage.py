@@ -6,21 +6,27 @@ import urllib
 from pathlib import Path
 from typing import List, Optional
 
-from fastapi import UploadFile, Request, status, HTTPException
-from src.services.storage.shemas import (
-    FileSchema,
-    FileDeleteSchema,
-    FolderDeleteSchema,
-    FolderDataSchema,
-    FolderRenameSchema,
-)
+from fastapi import UploadFile, Request
 
-from src.domain.storage.exceptions import ErrorSavingFile
+from src.domain.storage.entities import File, FileDelete
+from src.domain.storage.entities.folder import (
+    FolderDelete,
+    FolderData,
+    FolderRename,
+)
+from src.domain.storage.exceptions import (
+    ErrorSavingFile,
+    PathNotFoundError,
+    PathAlreadyExistsError,
+    FileNotFound,
+    FileAlreadyExistsError,
+    SourceFileNotFound,
+)
+from src.domain.storage.repositories import StorageRepository
 from src.services.storage.decorators import (
     handle_upload_file_exceptions,
     handle_delete_file_exceptions,
 )
-from src.services.storage.interfaces import BaseStorageInterface
 
 logger = logging.getLogger(__name__)
 
@@ -28,38 +34,24 @@ logger = logging.getLogger(__name__)
 def _validate_path_exists(
     path: Path,
     entity: str,
-    error_code: int = status.HTTP_404_NOT_FOUND,
 ) -> None:
     """Validate that path exists"""
     if not path.exists():
         logger.warning(f"{entity} {path} not found")
-        raise HTTPException(
-            status_code=error_code,
-            detail={
-                "error": f"{entity} not found",
-                "message": f"{path} not found",
-            },
-        )
+        raise PathNotFoundError(f"{entity} {path} not found")
 
 
 def _validate_path_not_exists(
     path: Path,
     entity: str,
-    error_code: int = status.HTTP_409_CONFLICT,
 ) -> None:
     """Validate that path does not exist"""
     if path.exists():
         logger.warning(f"{entity} {path} already exists")
-        raise HTTPException(
-            status_code=error_code,
-            detail={
-                "error": f"{entity} already exists",
-                "message": f"{path} already exists",
-            },
-        )
+        raise PathAlreadyExistsError(f"{entity} {path} already exists")
 
 
-class LocalStorage(BaseStorageInterface):
+class LocalStorage(StorageRepository):
     __slots__ = ("_path_to_storage",)
 
     def __init__(self, path_to_upload_dir: str) -> None:
@@ -72,7 +64,7 @@ class LocalStorage(BaseStorageInterface):
         request: Request,
         *args,
         **kwargs,
-    ) -> FileSchema:
+    ) -> File:
         file_object = await file.read()
 
         file_path = os.path.join(
@@ -83,7 +75,7 @@ class LocalStorage(BaseStorageInterface):
             fh.write(file_object)
         await file.close()
 
-        return FileSchema(
+        return File(
             filename=file.filename or "Unknown",
             path=file_path,
             url=self._create_url_path(file_path, request),
@@ -97,7 +89,7 @@ class LocalStorage(BaseStorageInterface):
         request: Optional[Request] = None,
         *args,
         **kwargs,
-    ) -> List[FileSchema]:
+    ) -> List[File]:
         uploaded = await asyncio.gather(
             *[self.upload(file=file, request=request) for file in files]
         )
@@ -106,12 +98,12 @@ class LocalStorage(BaseStorageInterface):
     @handle_delete_file_exceptions
     async def delete_file(
         self, file_path: str, request: Request, *args, **kwargs
-    ) -> FileDeleteSchema:
+    ) -> FileDelete:
         if Path(file_path).exists():
             os.remove(Path(file_path))
             logger.info(f"{file_path} deleted successfully")
 
-            return FileDeleteSchema(
+            return FileDelete(
                 file=file_path,
             )
         else:
@@ -119,18 +111,12 @@ class LocalStorage(BaseStorageInterface):
                 f"{file_path} not found in {self._path_to_storage} "
                 f"for deletion"
             )
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail={
-                    "error": "File not found",
-                    "message": f"{file_path} not found",
-                },
-            )
+            raise FileNotFound(f"{file_path} not found")
 
     @handle_delete_file_exceptions
     async def delete_folder(
         self, folder_path: str, request: Request, *args, **kwargs
-    ) -> FolderDeleteSchema:
+    ) -> FolderDelete:
         """Delete a folder and all its contents"""
         folder = Path(folder_path)
         _validate_path_exists(folder, "Folder")
@@ -145,14 +131,14 @@ class LocalStorage(BaseStorageInterface):
         os.rmdir(folder)
 
         logger.info(f"{folder_path} deleted successfully")
-        return FolderDeleteSchema(
+        return FolderDelete(
             folder_name=folder_path,
         )
 
     @handle_upload_file_exceptions
     async def create_folder(
         self, folder_path: str, request: Request, *args, **kwargs
-    ) -> FolderDataSchema:
+    ) -> FolderData:
         """Create a new folder in storage"""
         folder = Path(folder_path)
         _validate_path_not_exists(folder, "Folder")
@@ -160,7 +146,7 @@ class LocalStorage(BaseStorageInterface):
         folder.mkdir(parents=True, exist_ok=True)
         logger.info(f"Folder {folder_path} created successfully")
 
-        return FolderDataSchema(
+        return FolderData(
             folder_path=str(folder),
             folder_name=folder.name,
             create_time=datetime.datetime.now(),
@@ -170,7 +156,7 @@ class LocalStorage(BaseStorageInterface):
     @handle_upload_file_exceptions
     async def rename_folder(
         self, old_path: str, new_path: str, request: Request, *args, **kwargs
-    ) -> FolderRenameSchema:
+    ) -> FolderRename:
         """Rename existing folder"""
         old_folder = Path(old_path)
         new_folder = Path(new_path)
@@ -181,7 +167,7 @@ class LocalStorage(BaseStorageInterface):
         old_folder.rename(new_folder)
         logger.info(f"Folder renamed from {old_path} to {new_path}")
 
-        return FolderRenameSchema(
+        return FolderRename(
             folder_name=new_folder.name,
             old_name=old_folder.name,
             folder_path=str(new_folder),
@@ -195,7 +181,7 @@ class LocalStorage(BaseStorageInterface):
         request: Request,
         *args,
         **kwargs,
-    ) -> FileSchema:
+    ) -> File:
         """Rename existing file"""
         old_file = Path(old_path)
         new_file = Path(new_file_name)
@@ -205,7 +191,7 @@ class LocalStorage(BaseStorageInterface):
                 old_file.rename(new_file)
                 logger.info(f"File renamed from {old_path} to {new_file_name}")
 
-                return FileSchema(
+                return File(
                     filename=new_file.name,
                     path=str(new_file),
                     url=self._create_url_path(str(new_file), request),
@@ -214,37 +200,25 @@ class LocalStorage(BaseStorageInterface):
                 )
             else:
                 logger.warning(f"Target file {new_file_name} already exists")
-                raise HTTPException(
-                    status_code=status.HTTP_409_CONFLICT,
-                    detail={
-                        "error": "Target file exists",
-                        "message": (
-                            f"Target file {new_file_name} already exists"
-                        ),
-                    },
+                raise FileAlreadyExistsError(
+                    f"Target file {new_file_name} already exists"
                 )
         else:
             logger.warning(f"Source file {old_path} not found")
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail={
-                    "error": "Source file not found",
-                    "message": f"Source file {old_path} not found",
-                },
-            )
+            raise SourceFileNotFound(f"Source file {old_path} not found")
 
     @handle_upload_file_exceptions
     async def get_file(
         self,
         file_path: str,
         request: Request,
-    ) -> FileSchema:
+    ) -> File:
         """Get file by path"""
         file = Path(file_path)
         if not file.exists():
             raise ErrorSavingFile(f"File {file_path} not found")
 
-        return FileSchema(
+        return File(
             filename=file.name,
             path=str(file),
             url=self._create_url_path(str(file), request),
@@ -257,7 +231,7 @@ class LocalStorage(BaseStorageInterface):
         self,
         request: Request,
         prefix: Optional[str] = None,
-    ) -> List[FileSchema]:
+    ) -> List[File]:
         """List all files in storage"""
         storage_path = Path(self._path_to_storage)
         if prefix:
@@ -266,7 +240,7 @@ class LocalStorage(BaseStorageInterface):
         files = []
         for file_path in storage_path.rglob("*"):
             if file_path.is_file():
-                file_data = FileSchema(
+                file_data = File(
                     filename=file_path.name,
                     path=str(file_path),
                     url=self._create_url_path(str(file_path), request),
@@ -280,7 +254,7 @@ class LocalStorage(BaseStorageInterface):
     @handle_upload_file_exceptions
     async def list_folders(
         self, prefix: Optional[str] = None
-    ) -> List[FolderDataSchema]:
+    ) -> List[FolderData]:
         """List all folders in storage"""
         storage_path = Path(self._path_to_storage)
         if prefix:
@@ -289,7 +263,7 @@ class LocalStorage(BaseStorageInterface):
         folders = []
         for folder_path in storage_path.rglob("*"):
             if folder_path.is_dir():
-                folder_data = FolderDataSchema(
+                folder_data = FolderData(
                     folder_path=str(folder_path),
                     folder_name=folder_path.name,
                     create_time=None,
@@ -300,12 +274,12 @@ class LocalStorage(BaseStorageInterface):
         return folders
 
     @handle_upload_file_exceptions
-    async def get_folder(self, folder_path: str) -> FolderDataSchema:
+    async def get_folder(self, folder_path: str) -> FolderData:
         """Get folder information by path"""
         folder = Path(folder_path)
         _validate_path_exists(folder, "Folder")
 
-        return FolderDataSchema(
+        return FolderData(
             folder_path=str(folder),
             folder_name=folder.name,
         )
@@ -351,7 +325,7 @@ class LocalStorage(BaseStorageInterface):
         search_query: str,
         request: Request,
         case_sensitive: bool = False,
-    ) -> List[FileSchema]:
+    ) -> List[File]:
         """Search files by name with optional case sensitivity"""
         storage_path = Path(self._path_to_storage)
         files = []
@@ -365,7 +339,7 @@ class LocalStorage(BaseStorageInterface):
                     filename = filename.lower()
 
                 if search_query in filename:
-                    file_data = FileSchema(
+                    file_data = File(
                         filename=file_path.name,
                         path=str(file_path),
                         url=self._create_url_path(str(file_path), request),
