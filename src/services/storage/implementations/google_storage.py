@@ -13,14 +13,6 @@ from google.cloud.storage_control_v2 import (
     ListFoldersRequest,
     GetFolderRequest,
 )  # type: ignore
-
-from src.services.storage.decorators import (
-    handle_cloud_storage_exceptions,
-    async_handle_cloud_storage_exceptions,
-)
-from src.services.storage.interfaces.cloud_storage_interface import (
-    CloudStorageInterface,
-)
 from src.services.storage.shemas import (
     FolderBaseSchema,
     FolderDeleteSchema,
@@ -28,6 +20,14 @@ from src.services.storage.shemas import (
     FolderRenameSchema,
     FileSchema,
     FileDeleteSchema,
+)
+
+from src.infrastructure.storage.decorators import (
+    handle_cloud_storage_exceptions,
+    async_handle_cloud_storage_exceptions,
+)
+from src.services.storage.interfaces.cloud_storage_interface import (
+    CloudStorageInterface,
 )
 
 load_dotenv()

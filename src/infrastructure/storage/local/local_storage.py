@@ -23,7 +23,7 @@ from src.domain.storage.exceptions import (
     SourceFileNotFound,
 )
 from src.domain.storage.repositories import StorageRepository
-from src.services.storage.decorators import (
+from src.infrastructure.storage.decorators import (
     handle_upload_file_exceptions,
     handle_delete_file_exceptions,
 )
