@@ -216,7 +216,7 @@ class LocalStorage(StorageRepository):
         """Get file by path"""
         file = Path(file_path)
         if not file.exists():
-            raise ErrorSavingFile(f"File {file_path} not found")
+            raise FileNotFound(f"File {file_path} not found")
 
         return File(
             filename=file.name,
