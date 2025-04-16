@@ -30,7 +30,7 @@ def handle_google_storage_exceptions(func: Callable) -> Callable:
             raise ProblemWithRequestToGCP(
                 f"Failed to perform GCS operation: {exc}"
             )
-        except UnexpectedError as exc:
+        except Exception as exc:
             logger.exception("Unexpected error", exc_info=True)
             raise UnexpectedError(f"Unexpected error: {exc}") from exc
 
