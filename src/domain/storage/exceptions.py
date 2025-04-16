@@ -14,13 +14,17 @@ class ProblemWithBucket(Exception):
     pass
 
 
-class ErrorSavingFile(Exception):
+class StorageError(Exception):
     pass
 
 
-class ErrorUploadingFile(Exception):
+class ErrorSavingFile(StorageError):
     pass
 
 
-class ErrorDeletingFile(Exception):
+class ErrorUploadingFile(StorageError):
+    pass
+
+
+class ErrorDeletingFile(StorageError):
     pass
