@@ -3,24 +3,46 @@ from unittest.mock import MagicMock, AsyncMock, patch
 import pytest
 from fastapi import HTTPException, UploadFile, Request
 from google.cloud.storage_control_v2 import RenameFolderRequest
-from src.services.storage.interfaces import CloudStorageInterface
-from src.services.storage.shemas import (
-    FileSchema,
-    FileDeleteSchema,
-    FolderBaseSchema,
-    FolderDeleteSchema,
-    FileSchemaForFolder,
-    FolderItem,
-    FolderContentsSchema,
-    FolderDataSchema,
-)
 
+from src.domain.storage.entities import (
+    File,
+    FileDelete,
+    Folder,
+    FolderData,
+    FileForFolder,
+)
+from src.domain.storage.entities.folder import (
+    FolderDelete,
+    FolderItem,
+    FolderContents,
+)
+from src.domain.storage.repositories import CloudStorageRepository
 from src.infrastructure.storage.cloud.cloud_storage import (
     _validate_blob_exists,
     _validate_blob_not_exists,
     CloudStorage,
 )
 from src.utils.path_handler import PathHandler
+from src.infrastructure.storage.cloud.google_cloud.exceptions import (
+    BlobNotFoundError,
+    BlobAlreadyExistsError,
+)
+from src.domain.storage.exceptions import (
+    ErrorWithAuthenticationInGCP,
+    ProblemWithRequestToGCP,
+    ProblemWithBucket,
+    StorageError,
+    NoFileProvided,
+    FileNotFound,
+    FileAlreadyExistsError,
+    SourceFileNotFound,
+    ErrorSavingFile,
+    ErrorUploadingFile,
+    ErrorDeletingFile,
+    PathNotFoundError,
+    PathAlreadyExistsError,
+    UnexpectedError,
+)
 
 
 class MockBlob:
@@ -43,12 +65,12 @@ class MockBucket:
 
 class MockCloudStorage(AsyncMock):
     def __init__(self, *args, **kwargs):
-        super().__init__(spec=CloudStorageInterface)
+        super().__init__(spec=CloudStorageRepository)
         self.bucket = kwargs.get("bucket", MockBucket())
         self.base_url = "https://storage.example.com"
 
         # Configure default return values
-        self.upload_blob.return_value = FileSchema(
+        self.upload_blob.return_value = File(
             filename="test.txt",
             path="test.txt",
             url=f"{self.base_url}/test.txt",
@@ -56,9 +78,9 @@ class MockCloudStorage(AsyncMock):
             content_type="text/plain",
         )
 
-        self.delete_blob.return_value = FileDeleteSchema(file="test.txt")
+        self.delete_blob.return_value = FileDelete(file="test.txt")
 
-        self.get_blob.return_value = FileSchema(
+        self.get_blob.return_value = File(
             filename="test.txt",
             path="test.txt",
             url=f"{self.base_url}/test.txt",
@@ -66,7 +88,7 @@ class MockCloudStorage(AsyncMock):
             content_type="text/plain",
         )
 
-        self.rename_blob.return_value = FileSchema(
+        self.rename_blob.return_value = File(
             filename="new_test.txt",
             path="new_test.txt",
             url=f"{self.base_url}/new_test.txt",
@@ -75,14 +97,14 @@ class MockCloudStorage(AsyncMock):
         )
 
         self.list_blobs.return_value = [
-            FileSchema(
+            File(
                 filename="test1.txt",
                 path="test1.txt",
                 url=f"{self.base_url}/test1.txt",
                 size=100,
                 content_type="text/plain",
             ),
-            FileSchema(
+            File(
                 filename="test2.txt",
                 path="test2.txt",
                 url=f"{self.base_url}/test2.txt",
@@ -91,31 +113,29 @@ class MockCloudStorage(AsyncMock):
             ),
         ]
 
-        self.create_folder.return_value = FolderBaseSchema(
-            folder_name="test_folder"
-        )
+        self.create_folder.return_value = Folder(folder_name="test_folder")
 
-        self.get_folder.return_value = FolderDataSchema(
+        self.get_folder.return_value = FolderData(
             folder_name="test_folder",
             folder_path="test_folder",
             create_time=None,
             update_time=None,
         )
 
-        self.delete_folder.return_value = FolderDeleteSchema(
+        self.delete_folder.return_value = FolderDelete(
             folder_name="test_folder"
         )
 
         self.rename_folder.return_value = MagicMock(spec=RenameFolderRequest)
 
         self.list_folders.return_value = [
-            FolderDataSchema(
+            FolderData(
                 folder_name="folder1",
                 folder_path="folder1",
                 create_time=None,
                 update_time=None,
             ),
-            FolderDataSchema(
+            FolderData(
                 folder_name="folder2",
                 folder_path="folder2",
                 create_time=None,
@@ -178,44 +198,26 @@ class TestValidateBlob:
         _validate_blob_exists(cloud_storage_mock, "test.txt")
 
     def test_validate_blob_exists_failure(self, cloud_storage_mock):
-        # Check that function raises HTTPException if blob does not exist
-        with pytest.raises(HTTPException) as exc_info:
+        # Check that function raises BlobNotFoundError if blob does not exist
+        with pytest.raises(BlobNotFoundError) as exc_info:
             _validate_blob_exists(cloud_storage_mock, "non_existent.txt")
-
-        assert exc_info.value.status_code == 404
-        assert "not found" in exc_info.value.detail["message"]
+        assert "not found" in str(exc_info.value)
 
     def test_validate_blob_exists_custom_error_code(self, cloud_storage_mock):
-        # Check that function uses specified error code
-        with pytest.raises(HTTPException) as exc_info:
-            _validate_blob_exists(
-                cloud_storage_mock, "non_existent.txt", error_code=400
-            )
-
-        assert exc_info.value.status_code == 400
+        # Check that function raises BlobNotFoundError if blob does not exist
+        with pytest.raises(BlobNotFoundError) as exc_info:
+            _validate_blob_exists(cloud_storage_mock, "non_existent.txt")
+        assert "not found" in str(exc_info.value)
 
     def test_validate_blob_not_exists_success(self, cloud_storage_mock):
         # Check that function does not raise exception if blob does not exist
         _validate_blob_not_exists(cloud_storage_mock, "non_existent.txt")
 
     def test_validate_blob_not_exists_failure(self, cloud_storage_mock):
-        # Check that function raises HTTPException if blob exists
-        with pytest.raises(HTTPException) as exc_info:
+        # Check that function raises BlobAlreadyExistsError if blob exists
+        with pytest.raises(BlobAlreadyExistsError) as exc_info:
             _validate_blob_not_exists(cloud_storage_mock, "test.txt")
-
-        assert exc_info.value.status_code == 409
-        assert "already exists" in exc_info.value.detail["message"]
-
-    def test_validate_blob_not_exists_custom_error_code(
-        self, cloud_storage_mock
-    ):
-        # Check that function uses specified error code
-        with pytest.raises(HTTPException) as exc_info:
-            _validate_blob_not_exists(
-                cloud_storage_mock, "test.txt", error_code=400
-            )
-
-        assert exc_info.value.status_code == 400
+        assert "already exists" in str(exc_info.value)
 
 
 # Tests for CloudStorage
@@ -225,11 +227,13 @@ class TestCloudStorage:
         # Check successful file upload
         result = await cloud_storage.upload(upload_file_mock, request_mock)
 
-        assert isinstance(result, FileSchema)
+        assert isinstance(result, File)
         assert result.filename == "test.txt"
         # Check that cloud_storage.upload_blob was called with correct parameters
         cloud_storage._cloud_storage.upload_blob.assert_called_once_with(
-            "test.txt", b"test content", "text/plain"
+            "test.txt",
+            b"test content",
+            "text/plain"
         )
 
     @pytest.mark.asyncio
@@ -255,7 +259,7 @@ class TestCloudStorage:
 
         assert isinstance(result, list)
         assert len(result) == 2
-        assert all(isinstance(item, FileSchema) for item in result)
+        assert all(isinstance(item, File) for item in result)
         # Check that cloud_storage.upload_blob was called twice
         assert cloud_storage._cloud_storage.upload_blob.call_count == 2
 
@@ -263,7 +267,7 @@ class TestCloudStorage:
     async def test_delete_file(self, cloud_storage, request_mock):
         result = await cloud_storage.delete_file("test.txt", request_mock)
 
-        assert isinstance(result, FileDeleteSchema)
+        assert isinstance(result, FileDelete)
         cloud_storage._cloud_storage.delete_blob.assert_called_once_with(
             "test.txt"
         )
@@ -274,7 +278,7 @@ class TestCloudStorage:
             "test.txt", "new_test.txt", request_mock
         )
 
-        assert isinstance(result, FileSchema)
+        assert isinstance(result, File)
         assert result.filename == "new_test.txt"
         cloud_storage._cloud_storage.rename_blob.assert_called_once_with(
             "test.txt", "new_test.txt"
@@ -284,19 +288,15 @@ class TestCloudStorage:
     async def test_delete_all_files(self, cloud_storage, request_mock):
         # Configure return value for list_blobs
         cloud_storage._cloud_storage.list_blobs.return_value = [
-            FileSchema(
-                filename="test1.txt", path="prefix/test1.txt", url="url1"
-            ),
-            FileSchema(
-                filename="test2.txt", path="prefix/test2.txt", url="url2"
-            ),
+            File(filename="test1.txt", path="prefix/test1.txt", url="url1"),
+            File(filename="test2.txt", path="prefix/test2.txt", url="url2"),
         ]
 
         result = await cloud_storage.delete_all_files("prefix/", request_mock)
 
         assert isinstance(result, list)
         assert len(result) == 2
-        assert all(isinstance(item, FileDeleteSchema) for item in result)
+        assert all(isinstance(item, FileDelete) for item in result)
         cloud_storage._cloud_storage.list_blobs.assert_called_once_with(
             prefix="prefix/"
         )
@@ -310,7 +310,7 @@ class TestCloudStorage:
 
         result = await cloud_storage.create_folder("test_folder", request_mock)
 
-        assert isinstance(result, FolderBaseSchema)
+        assert isinstance(result, Folder)
         assert result.folder_name == "test_folder"
         cloud_storage._path_handler.normalize_path.assert_called_once_with(
             "test_folder"
@@ -329,11 +329,10 @@ class TestCloudStorage:
             {"folder": MockBlob(exists_value=True)}
         )
 
-        with pytest.raises(HTTPException) as exc_info:
+        with pytest.raises(BlobAlreadyExistsError) as exc_info:
             await cloud_storage.create_folder("folder", request_mock)
 
-        assert exc_info.value.status_code == 409
-        assert "already exists" in exc_info.value.detail["message"]
+        assert "already exists" in str(exc_info.value)
 
     @pytest.mark.asyncio
     async def test_rename_folder(self, cloud_storage, request_mock):
@@ -358,7 +357,7 @@ class TestCloudStorage:
     async def test_delete_folder(self, cloud_storage, request_mock):
         result = await cloud_storage.delete_folder("test_folder", request_mock)
 
-        assert isinstance(result, FolderDeleteSchema)
+        assert isinstance(result, FolderDelete)
         assert result.folder_name == "test_folder"
         cloud_storage._cloud_storage.delete_folder.assert_called_once_with(
             "test_folder", is_delete_all=False
@@ -372,7 +371,7 @@ class TestCloudStorage:
             "test_folder", request_mock, is_delete_all=True
         )
 
-        assert isinstance(result, FolderDeleteSchema)
+        assert isinstance(result, FolderDelete)
         cloud_storage._cloud_storage.delete_folder.assert_called_once_with(
             "test_folder", is_delete_all=True
         )
@@ -382,7 +381,7 @@ class TestCloudStorage:
         # Check file upload by path
         result = await cloud_storage.upload_file("local/path/test.txt")
 
-        assert isinstance(result, FileSchema)
+        assert isinstance(result, File)
         # In this case PathHandler.get_basename should be called
         cloud_storage._path_handler.get_basename.assert_called_once_with(
             "local/path/test.txt"
@@ -396,7 +395,7 @@ class TestCloudStorage:
             "local/path/test.txt", "custom/path/file.txt"
         )
 
-        assert isinstance(result, FileSchema)
+        assert isinstance(result, File)
         # In this case PathHandler.get_basename should NOT be called
         cloud_storage._path_handler.get_basename.assert_not_called()
         cloud_storage._cloud_storage.upload_blob.assert_called_once_with(
@@ -415,7 +414,7 @@ class TestCloudStorage:
     async def test_get_file(self, cloud_storage):
         result = await cloud_storage.get_file("test.txt")
 
-        assert isinstance(result, FileSchema)
+        assert isinstance(result, File)
         assert result.filename == "test.txt"
         cloud_storage._cloud_storage.get_blob.assert_called_once_with(
             "test.txt"
@@ -428,7 +427,7 @@ class TestCloudStorage:
 
         assert isinstance(result, list)
         assert len(result) == 2
-        assert all(isinstance(item, FileSchema) for item in result)
+        assert all(isinstance(item, File) for item in result)
         cloud_storage._cloud_storage.list_blobs.assert_called_once_with(
             prefix="", search_query="", case_sensitive=False
         )
@@ -451,7 +450,7 @@ class TestCloudStorage:
 
         assert isinstance(result, list)
         assert len(result) == 2
-        assert all(isinstance(item, FolderDataSchema) for item in result)
+        assert all(isinstance(item, FolderData) for item in result)
         cloud_storage._cloud_storage.list_folders.assert_called_once_with(
             prefix=None
         )
@@ -468,7 +467,7 @@ class TestCloudStorage:
     async def test_get_folder(self, cloud_storage):
         result = await cloud_storage.get_folder("test_folder")
 
-        assert isinstance(result, FolderDataSchema)
+        assert isinstance(result, FolderData)
         assert result.folder_name == "test_folder"
         cloud_storage._cloud_storage.get_folder.assert_called_once_with(
             "test_folder"
@@ -482,10 +481,8 @@ class TestCloudStorage:
         )
 
         cloud_storage._cloud_storage.list_blobs.return_value = [
-            FileSchema(
-                filename="file1.txt", path="folder/file1.txt", url="url1"
-            ),
-            FileSchema(
+            File(filename="file1.txt", path="folder/file1.txt", url="url1"),
+            File(
                 filename="subfolder/file2.txt",
                 path="folder/subfolder/file2.txt",
                 url="url2",
@@ -497,7 +494,7 @@ class TestCloudStorage:
             cloud_storage, "_separate_files_and_folders"
         ) as mock_separate:
             files = [
-                FileSchemaForFolder(
+                FileForFolder(
                     filename="file1.txt",
                     path="folder/file1.txt",
                     url="url1",
@@ -527,7 +524,7 @@ class TestCloudStorage:
 
                     result = await cloud_storage.get_folder_contents("folder")
 
-                    assert isinstance(result, FolderContentsSchema)
+                    assert isinstance(result, FolderContents)
                     assert result.current_path == "folder"
                     assert result.items == combined_items
 
@@ -560,15 +557,13 @@ class TestCloudStorage:
     def test_separate_files_and_folders(self, cloud_storage):
         # Create test data
         blobs = [
-            FileSchema(
-                filename="file1.txt", path="folder/file1.txt", url="url1"
-            ),
-            FileSchema(
+            File(filename="file1.txt", path="folder/file1.txt", url="url1"),
+            File(
                 filename="subfolder/file2.txt",
                 path="folder/subfolder/file2.txt",
                 url="url2",
             ),
-            FileSchema(
+            File(
                 filename="subfolder/subfile/file3.txt",
                 path="folder/subfolder/subfile/file3.txt",
                 url="url3",
@@ -579,8 +574,8 @@ class TestCloudStorage:
         with patch.object(
             cloud_storage, "_process_file_item"
         ) as mock_process_file:
-            mock_process_file.side_effect = (
-                lambda **kwargs: FileSchemaForFolder(**kwargs, type="file")
+            mock_process_file.side_effect = lambda **kwargs: FileForFolder(
+                **kwargs, type="file"
             )
 
             files, folders = cloud_storage._separate_files_and_folders(
@@ -601,13 +596,13 @@ class TestCloudStorage:
         folder2 = FolderItem(
             folder_name="folder_a", folder_path="path/folder_a", type="folder"
         )
-        file1 = FileSchemaForFolder(
+        file1 = FileForFolder(
             filename="file_b.txt",
             path="path/file_b.txt",
             url="url1",
             type="file",
         )
-        file2 = FileSchemaForFolder(
+        file2 = FileForFolder(
             filename="file_a.txt",
             path="path/file_a.txt",
             url="url2",

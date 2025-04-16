@@ -1,23 +1,23 @@
 from datetime import datetime, timezone
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, create_autospec
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from fastapi import UploadFile, Request
 from fastapi.exceptions import HTTPException
 
-from src.services.storage.interfaces.base_storage_interface import (
-    BaseStorageInterface,
+from src.domain.storage.entities import (
+    File,
+    FileDelete,
+    FolderData,
+    FileForFolder,
 )
-from src.services.storage.shemas import (
-    FileSchema,
-    FileDeleteSchema,
-    FolderDataSchema,
-    FolderDeleteSchema,
-    FolderContentsSchema,
-    FileSchemaForFolder,
+from src.domain.storage.entities.folder import (
+    FolderDelete,
+    FolderContents,
     FolderItem,
 )
+from src.domain.storage.repositories import StorageRepository
 
 
 @pytest.fixture
@@ -35,12 +35,12 @@ def mock_request():
 
 @pytest.fixture
 def mock_storage_interface():
-    return AsyncMock(spec=BaseStorageInterface)
+    return AsyncMock(spec=StorageRepository)
 
 
 @pytest.fixture
 def file_schema():
-    return FileSchema(
+    return File(
         filename="test.txt",
         path="/test/test.txt",
         url="http://example.com/test.txt",
@@ -51,7 +51,7 @@ def file_schema():
 
 @pytest.fixture
 def file_delete_schema():
-    return FileDeleteSchema(
+    return FileDelete(
         file=Path("/test/test.txt"),
         date_deleted=datetime.now(timezone.utc),
     )
@@ -59,7 +59,7 @@ def file_delete_schema():
 
 @pytest.fixture
 def folder_data_schema():
-    return FolderDataSchema(
+    return FolderData(
         folder_name="test_folder",
         folder_path="/test",
         create_time=datetime.now(timezone.utc),
@@ -69,7 +69,7 @@ def folder_data_schema():
 
 @pytest.fixture
 def folder_delete_schema():
-    return FolderDeleteSchema(
+    return FolderDelete(
         folder_name="test_folder",
         deleted_time=datetime.now(timezone.utc),
     )
@@ -77,10 +77,10 @@ def folder_delete_schema():
 
 @pytest.fixture
 def folder_contents_schema():
-    return FolderContentsSchema(
+    return FolderContents(
         current_path="/test",
         items=[
-            FileSchemaForFolder(
+            FileForFolder(
                 filename="test.txt",
                 path="/test/test.txt",
                 url="http://example.com/test.txt",
@@ -105,16 +105,18 @@ class TestBaseStorageInterface:
     ):
         async def side_effect(request=None, file=None, files=None):
             if file is not None:
-                return await mock_storage_interface.upload(file=file, request=request)
+                return await mock_storage_interface.upload(
+                    file=file, request=request
+                )
             return None
-            
+
         mock_storage_interface.side_effect = side_effect
         mock_storage_interface.upload.return_value = file_schema
-        
+
         result = await mock_storage_interface(
             request=mock_request, file=mock_upload_file
         )
-        
+
         assert result == file_schema
         mock_storage_interface.upload.assert_called_once_with(
             file=mock_upload_file, request=mock_request
@@ -129,16 +131,18 @@ class TestBaseStorageInterface:
     ):
         async def side_effect(request=None, file=None, files=None):
             if files is not None:
-                return await mock_storage_interface.multi_upload(files=files, request=request)
+                return await mock_storage_interface.multi_upload(
+                    files=files, request=request
+                )
             return None
-            
+
         mock_storage_interface.side_effect = side_effect
         mock_storage_interface.multi_upload.return_value = [file_schema]
-        
+
         result = await mock_storage_interface(
             request=mock_request, files=[mock_upload_file]
         )
-        
+
         assert result == [file_schema]
         mock_storage_interface.multi_upload.assert_called_once_with(
             files=[mock_upload_file], request=mock_request

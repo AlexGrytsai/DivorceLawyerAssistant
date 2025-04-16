@@ -3,15 +3,12 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from fastapi import HTTPException
 
+from src.domain.storage.entities import FileForFolder, FolderItem
+from src.domain.storage.entities.folder import FolderContents
 from src.services.rag_service.file_processors.directory_processor import (
     DirectoryProcessor,
 )
 from src.services.rag_service.schemas import DocumentSchema
-from src.services.storage.shemas import (
-    FileSchemaForFolder,
-    FolderItem,
-    FolderContentsSchema,
-)
 
 
 @pytest.fixture
@@ -34,7 +31,7 @@ def directory_processor(mock_file_processor_factory, mock_rag_storage):
 
 @pytest.fixture
 def mock_file_schema():
-    return FileSchemaForFolder(
+    return FileForFolder(
         filename="test.pdf",
         path="/test/test.pdf",
         url="/test/test.pdf",
@@ -70,7 +67,7 @@ async def test_process_directory(
     mock_file_schema,
     mock_document_schema,
 ):
-    mock_rag_storage.get_folder_contents.return_value = FolderContentsSchema(
+    mock_rag_storage.get_folder_contents.return_value = FolderContents(
         current_path="/test", items=[mock_file_schema]
     )
 
@@ -147,7 +144,7 @@ async def test_process_files(
 async def test_process_directory_with_unsupported_file(
     directory_processor, mock_rag_storage, mock_file_schema
 ):
-    mock_rag_storage.get_folder_contents.return_value = FolderContentsSchema(
+    mock_rag_storage.get_folder_contents.return_value = FolderContents(
         current_path="/test", items=[mock_file_schema]
     )
 
