@@ -1,7 +1,11 @@
 from abc import ABC, abstractmethod
 from typing import Any, List, Optional, Union
 
-from src.domain.document.entities import DocumentDetailSchema, DocumentSchema
+from src.domain.document.entities import (
+    DocumentDetail,
+    Document,
+    DocumentDelete,
+)
 from src.domain.document.value_objects import SearchQuery
 
 
@@ -12,9 +16,7 @@ class DocumentRepository(ABC):
     """
 
     @abstractmethod
-    async def save(
-        self, collection: str, document: DocumentDetailSchema
-    ) -> str:
+    async def save(self, collection: str, document: DocumentDetail) -> str:
         """
         Save a document to the specified collection.
 
@@ -36,7 +38,7 @@ class DocumentRepository(ABC):
     @abstractmethod
     async def get_document(
         self, collection: str, document_name: str, is_detail: bool = False
-    ) -> Union[DocumentSchema, DocumentDetailSchema]:
+    ) -> Union[Document, DocumentDetail]:
         """
         Get a document by name from the specified collection.
 
@@ -63,7 +65,7 @@ class DocumentRepository(ABC):
         limit: Optional[int] = None,
         order_by: str = "name",
         is_detail: bool = False,
-    ) -> List[Union[DocumentSchema, DocumentDetailSchema]]:
+    ) -> List[Union[Document, DocumentDetail]]:
         """
         Get all documents from the specified collection.
 
@@ -90,7 +92,7 @@ class DocumentRepository(ABC):
         query: List[SearchQuery],
         limit: Optional[int] = None,
         skip: Optional[int] = None,
-    ) -> List[DocumentSchema]:
+    ) -> List[Document]:
         """
         Find documents matching query criteria.
 
@@ -115,7 +117,7 @@ class DocumentRepository(ABC):
         self,
         collection: str,
         document_name: str,
-        updates: DocumentDetailSchema,
+        updates: DocumentDetail,
     ) -> None:
         """
         Update a document with specified changes.
@@ -134,7 +136,9 @@ class DocumentRepository(ABC):
         pass
 
     @abstractmethod
-    async def delete(self, collection: str, document_name: str) -> None:
+    async def delete(
+        self, collection: str, document_name: str
+    ) -> DocumentDelete:
         """
         Delete a document by its name.
 
@@ -157,7 +161,7 @@ class DocumentRepository(ABC):
         operator: str,
         value: Any,
         limit: Optional[int] = None,
-    ) -> List[DocumentDetailSchema]:
+    ) -> List[DocumentDetail]:
         """
         Filter documents by a specific field.
 
