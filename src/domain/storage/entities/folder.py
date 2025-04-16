@@ -31,6 +31,6 @@ class FolderItem(FolderData):
     type: Literal["folder"]
 
 
-class FolderContentsSchema(BaseModel):
+class FolderContents(BaseModel):
     current_path: str
     items: List[Union[FileForFolder, FolderItem]]
