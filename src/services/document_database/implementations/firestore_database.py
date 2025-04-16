@@ -7,6 +7,10 @@ from dotenv import load_dotenv
 from google.cloud.firestore import Client
 from google.cloud.firestore_v1 import FieldFilter, DocumentSnapshot
 from google.cloud.firestore_v1.stream_generator import StreamGenerator
+from src.services.document_database.interfaces import DocumentDatabaseInterface
+from src.services.document_database.interfaces.document_database import (
+    SearchQueryParameter,
+)
 from src.services.document_database.schemas import (
     DocumentDetailSchema,
     DocumentSchema,
@@ -18,13 +22,9 @@ from src.domain.document.exceptions import (
     InvalidQueryParameterError,
     UnsupportedOperatorError,
 )
-from src.services.document_database.decorators import (
+from src.infrastructure.persistence.firestore.decorators import (
     handle_firestore_database_errors_async,
     handle_firestore_database_errors_sync,
-)
-from src.services.document_database.interfaces import DocumentDatabaseInterface
-from src.services.document_database.interfaces.document_database import (
-    SearchQueryParameter,
 )
 
 load_dotenv()
