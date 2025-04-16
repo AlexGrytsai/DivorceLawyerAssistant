@@ -3,17 +3,17 @@ from fastapi import HTTPException
 from google.api_core.exceptions import ClientError, NotFound
 from google.auth.exceptions import GoogleAuthError
 
+from src.domain.storage.exceptions import (
+    ErrorUploadingFile,
+    ErrorDeletingFile,
+    ErrorWithAuthenticationInGCP,
+    ProblemWithRequestToGCP,
+)
 from src.services.storage.decorators import (
     handle_upload_file_exceptions,
     handle_delete_file_exceptions,
     handle_cloud_storage_exceptions,
     async_handle_cloud_storage_exceptions,
-)
-from src.services.storage.exceptions import (
-    ErrorUploadingFile,
-    ErrorDeletingFile,
-    ErrorWithAuthenticationInGCP,
-    ProblemWithRequestToGCP,
 )
 
 

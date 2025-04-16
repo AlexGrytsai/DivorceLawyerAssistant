@@ -7,13 +7,6 @@ from pathlib import Path
 from typing import List, Optional
 
 from fastapi import UploadFile, Request, status, HTTPException
-
-from src.services.storage.decorators import (
-    handle_upload_file_exceptions,
-    handle_delete_file_exceptions,
-)
-from src.services.storage.exceptions import ErrorSavingFile
-from src.services.storage.interfaces import BaseStorageInterface
 from src.services.storage.shemas import (
     FileSchema,
     FileDeleteSchema,
@@ -21,6 +14,13 @@ from src.services.storage.shemas import (
     FolderDataSchema,
     FolderRenameSchema,
 )
+
+from src.domain.storage.exceptions import ErrorSavingFile
+from src.services.storage.decorators import (
+    handle_upload_file_exceptions,
+    handle_delete_file_exceptions,
+)
+from src.services.storage.interfaces import BaseStorageInterface
 
 logger = logging.getLogger(__name__)
 

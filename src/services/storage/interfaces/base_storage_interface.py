@@ -4,8 +4,6 @@ from abc import ABC, abstractmethod
 from typing import List, Optional, Union
 
 from fastapi import UploadFile, status, HTTPException, Request
-
-from src.services.storage.exceptions import ErrorSavingFile
 from src.services.storage.shemas import (
     FileDeleteSchema,
     FolderBaseSchema,
@@ -14,6 +12,8 @@ from src.services.storage.shemas import (
     FileSchema,
     FolderDataSchema,
 )
+
+from src.domain.storage.exceptions import ErrorSavingFile
 
 logger = logging.getLogger(__name__)
 
