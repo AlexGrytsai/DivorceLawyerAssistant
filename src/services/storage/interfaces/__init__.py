@@ -1,5 +1,7 @@
+from src.domain.storage.repositories.cloud_storage_interface import (
+    CloudStorageInterface,
+)
 from .base_storage_interface import BaseStorageInterface
-from .cloud_storage_interface import CloudStorageInterface
 
 __all__ = [
     "BaseStorageInterface",

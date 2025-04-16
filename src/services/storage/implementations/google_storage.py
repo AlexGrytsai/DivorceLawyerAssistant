@@ -22,12 +22,12 @@ from src.services.storage.shemas import (
     FileDeleteSchema,
 )
 
+from src.domain.storage.repositories.cloud_storage_interface import (
+    CloudStorageInterface,
+)
 from src.infrastructure.storage.decorators import (
     handle_cloud_storage_exceptions,
     async_handle_cloud_storage_exceptions,
-)
-from src.services.storage.interfaces.cloud_storage_interface import (
-    CloudStorageInterface,
 )
 
 load_dotenv()

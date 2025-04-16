@@ -5,16 +5,6 @@ from typing import List, Optional, Union, Set, Tuple
 from fastapi import UploadFile, Request, status, HTTPException
 from google.cloud.storage import Blob  # type: ignore
 from google.cloud.storage_control_v2 import RenameFolderRequest  # type: ignore
-
-from src.services.storage.decorators import (
-    handle_upload_file_exceptions,
-    handle_delete_file_exceptions,
-)
-from src.services.storage.implementations import GoogleCloudStorage
-from src.services.storage.interfaces import (
-    CloudStorageInterface,
-    BaseStorageInterface,
-)
 from src.services.storage.shemas import (
     FileSchema,
     FileDeleteSchema,
@@ -24,6 +14,16 @@ from src.services.storage.shemas import (
     FolderItem,
     FolderContentsSchema,
     FolderDataSchema,
+)
+
+from src.infrastructure.storage.decorators import (
+    handle_upload_file_exceptions,
+    handle_delete_file_exceptions,
+)
+from src.services.storage.implementations import GoogleCloudStorage
+from src.services.storage.interfaces import (
+    CloudStorageInterface,
+    BaseStorageInterface,
 )
 from src.utils.path_handler import PathHandler
 
