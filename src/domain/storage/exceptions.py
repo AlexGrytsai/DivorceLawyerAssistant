@@ -83,3 +83,9 @@ class PathAlreadyExistsError(StorageError):
     """Exception raised when a specified path already exists in storage."""
 
     pass
+
+
+class UnexpectedError(StorageError):
+    """Exception raised for unexpected errors during storage operations."""
+
+    pass
