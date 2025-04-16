@@ -2,13 +2,13 @@ from typing import List, Optional
 
 from fastapi import APIRouter, UploadFile, Request, File, Form, Body
 
-from src.api.v1.data_for_rag.schemas import (
+from src.core.config import settings
+from src.core.constants import ALLOWED_MIME_TYPES_FOR_RAG
+from src.interfaces.api.v1.data_for_rag.schemas import (
     KnowledgeBaseSchema,
     KnowledgeBaseCreateSchema,
     KnowledgeBaseGetSchema,
 )
-from src.core.config import settings
-from src.core.constants import ALLOWED_MIME_TYPES_FOR_RAG
 from src.services.storage.shemas import (
     FileSchema,
     FileDeleteSchema,

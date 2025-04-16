@@ -6,8 +6,8 @@ from fastapi.staticfiles import StaticFiles
 from starlette.responses import HTMLResponse
 from starlette.templating import Jinja2Templates
 
-from src.api.v1.data_for_rag import router as router_cloud_storage
 from src.core.config import settings
+from src.interfaces.api import router as router_cloud_storage
 
 logger = logging.getLogger(__name__)
 
