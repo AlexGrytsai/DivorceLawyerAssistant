@@ -18,6 +18,10 @@ class StorageError(Exception):
     pass
 
 
+class NoFileProvided(StorageError):
+    pass
+
+
 class ErrorSavingFile(StorageError):
     pass
 
