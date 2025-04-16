@@ -17,8 +17,13 @@ from src.core.constants import (
     PROJECT_ID,
     RAG_BUCKET_NAME,
     MAIN_BUCKET_NAME,
+    DOCUMENT_DATABASE_NAME,
 )
 from src.core.types import TokenLimitsMapping
+from src.domain.document.repositories.document_repository import (
+    DocumentRepository,
+)
+from src.infrastructure.persistence import FirestoreDocumentRepository
 from src.services.storage import CloudStorage
 from src.services.storage.interfaces import BaseStorageInterface
 
@@ -60,6 +65,13 @@ class Settings:
     MODEL_TOKEN_LIMITS: TokenLimitsMapping = MappingProxyType(
         MODEL_TOKEN_LIMITS
     )
+
+    @property
+    def document_repository(self) -> DocumentRepository:
+        """Get the document repository."""
+        return FirestoreDocumentRepository(
+            project_id=PROJECT_ID, database_name=DOCUMENT_DATABASE_NAME
+        )
 
     @property
     def get_token_limit(self) -> int:
