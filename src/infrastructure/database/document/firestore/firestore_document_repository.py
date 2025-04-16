@@ -23,7 +23,7 @@ from src.domain.document.repositories.document_repository import (
     DocumentRepository,
 )
 from src.domain.document.value_objects import SearchQuery
-from src.infrastructure.persistence.firestore import (
+from src.infrastructure.database.document.firestore import (
     handle_firestore_database_errors_sync,
     handle_firestore_database_errors_async,
 )
