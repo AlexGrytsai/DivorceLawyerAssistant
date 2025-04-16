@@ -27,7 +27,30 @@ class StorageError(Exception):
 
 
 class NoFileProvided(StorageError):
-    """Exception raised when no file is provided for an operation that requires one."""
+    """
+    Exception raised when no file is provided for an operation
+    that requires one.
+    """
+
+    pass
+
+
+class FileNotFound(StorageError):
+    """Exception raised when a file is not found in storage."""
+
+    pass
+
+
+class FileAlreadyExistsError(StorageError):
+    """Exception raised when a file already exists in storage."""
+
+    pass
+
+
+class SourceFileNotFound(StorageError):
+    """
+    Exception raised when the source file for a rename operation is not found.
+    """
 
     pass
 
@@ -49,10 +72,12 @@ class ErrorDeletingFile(StorageError):
 
     pass
 
+
 class PathNotFoundError(StorageError):
     """Exception raised when a specified path is not found in storage."""
 
     pass
+
 
 class PathAlreadyExistsError(StorageError):
     """Exception raised when a specified path already exists in storage."""
