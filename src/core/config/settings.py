@@ -23,9 +23,9 @@ from src.core.types import TokenLimitsMapping
 from src.domain.document.repositories.document_repository import (
     DocumentRepository,
 )
-from src.infrastructure.persistence import FirestoreDocumentRepository
-from src.services.storage import CloudStorage
-from src.services.storage.interfaces import BaseStorageInterface
+from src.domain.storage.repositories import StorageRepository
+from src.infrastructure.database import FirestoreDocumentRepository
+from src.infrastructure.storage import CloudStorage
 
 load_dotenv()
 
@@ -43,11 +43,11 @@ class Settings:
     STATIC_DIR: str = STATIC_DIR
     UPLOAD_DIR: str = UPLOAD_DIR
 
-    STORAGE: BaseStorageInterface = CloudStorage(
+    STORAGE: StorageRepository = CloudStorage(
         project_id=PROJECT_ID, bucket_name=MAIN_BUCKET_NAME
     )
 
-    RAG_STORAGE: BaseStorageInterface = CloudStorage(
+    RAG_STORAGE: StorageRepository = CloudStorage(
         project_id=PROJECT_ID, bucket_name=RAG_BUCKET_NAME
     )
 

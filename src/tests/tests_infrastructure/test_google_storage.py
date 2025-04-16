@@ -9,22 +9,17 @@ from google.cloud.storage_control_v2 import (
     RenameFolderRequest,
 )
 
-from src.services.storage.implementations.google_storage import (
+from src.domain.storage.entities import File, FileDelete, FolderData
+from src.domain.storage.entities.folder import FolderDelete, FolderRename
+from src.infrastructure.storage.cloud.google_cloud.google_storage import (
     GoogleCloudStorage,
-)
-from src.services.storage.shemas import (
-    FileSchema,
-    FileDeleteSchema,
-    FolderDataSchema,
-    FolderDeleteSchema,
-    FolderRenameSchema,
 )
 
 
 @pytest.fixture
 def mock_storage_client():
     with patch(
-        "src.services.storage.implementations.google_storage.storage.Client"
+        "src.infrastructure.storage.cloud.google_cloud.google_storage.storage.Client"
     ) as mock_client:
         yield mock_client
 
@@ -32,7 +27,7 @@ def mock_storage_client():
 @pytest.fixture
 def mock_storage_control_client():
     with patch(
-        "src.services.storage.implementations.google_storage.StorageControlClient"
+        "src.infrastructure.storage.cloud.google_cloud.google_storage.StorageControlClient"
     ) as mock_control:
         yield mock_control
 
@@ -124,7 +119,7 @@ class TestGoogleCloudStorage:
             b"test content", content_type="text/plain"
         )
 
-        assert isinstance(result, FileSchema)
+        assert isinstance(result, File)
         assert result.filename == "file.txt"
         assert result.path == "/test/file.txt"
         assert result.url == mock_blob.public_url
@@ -149,7 +144,7 @@ class TestGoogleCloudStorage:
             content, content_type="text/plain"
         )
 
-        assert isinstance(result, FileSchema)
+        assert isinstance(result, File)
 
     @pytest.mark.asyncio
     async def test_get_blob(self, cloud_storage, mock_bucket, mock_blob):
@@ -159,7 +154,7 @@ class TestGoogleCloudStorage:
 
         mock_bucket.get_blob.assert_called_once_with("test/file.txt")
 
-        assert isinstance(result, FileSchema)
+        assert isinstance(result, File)
         assert result.filename == "file.txt"
         assert result.path == "/test/file.txt"
         assert result.url == mock_blob.public_url
@@ -175,7 +170,7 @@ class TestGoogleCloudStorage:
         mock_bucket.blob.assert_called_once_with("test/file.txt")
         mock_blob.delete.assert_called_once()
 
-        assert isinstance(result, FileDeleteSchema)
+        assert isinstance(result, FileDelete)
         assert result.file == "/test/file.txt"
 
     @pytest.mark.asyncio
@@ -199,7 +194,7 @@ class TestGoogleCloudStorage:
             source_blob, mock_bucket, "test/new_file.txt"
         )
 
-        assert isinstance(result, FileSchema)
+        assert isinstance(result, File)
         assert result.filename == "new_file.txt"
         assert result.path == "/test/new_file.txt"
         assert result.url == new_blob.public_url
@@ -227,7 +222,7 @@ class TestGoogleCloudStorage:
         mock_bucket.get_blob.assert_called_once_with("test/file.txt")
         mock_bucket.rename_blob.assert_called_once()
 
-        assert isinstance(result, FileSchema)
+        assert isinstance(result, File)
         assert result.filename == "new_name.txt"
         assert result.path == "/test/new_name.txt"
         assert result.url == new_blob.public_url
@@ -263,7 +258,7 @@ class TestGoogleCloudStorage:
 
         assert isinstance(result, list)
         assert len(result) == 2  # folder_blob должен быть исключен
-        assert all(isinstance(item, FileSchema) for item in result)
+        assert all(isinstance(item, File) for item in result)
         assert result[0].filename == "file1.txt"
         assert result[1].filename == "file2.txt"
 
@@ -327,7 +322,7 @@ class TestGoogleCloudStorage:
 
         mock_storage_control_client.return_value.create_folder.assert_called_once()
 
-        assert isinstance(result, FolderDataSchema)
+        assert isinstance(result, FolderData)
         assert result.folder_name == "test_folder"
         assert result.folder_path == "test_folder/"
         assert result.create_time == create_time.replace(microsecond=0)
@@ -359,7 +354,7 @@ class TestGoogleCloudStorage:
 
         mock_storage_control_client.return_value.get_folder.assert_called_once()
 
-        assert isinstance(result, FolderDataSchema)
+        assert isinstance(result, FolderData)
         assert result.folder_name == "test_folder"
         assert result.folder_path == "test_folder/"
         assert result.create_time == create_time.replace(microsecond=0)
@@ -378,7 +373,7 @@ class TestGoogleCloudStorage:
 
             mock_delete_folder.assert_called_once_with("test_folder")
 
-            assert isinstance(result, FolderDeleteSchema)
+            assert isinstance(result, FolderDelete)
             assert result.folder_name == "test_folder"
 
     @pytest.mark.asyncio
@@ -400,7 +395,7 @@ class TestGoogleCloudStorage:
             mock_delete_files.assert_called_once_with("test_folder")
             mock_delete_subfolders.assert_called_once_with("test_folder")
 
-            assert isinstance(result, FolderDeleteSchema)
+            assert isinstance(result, FolderDelete)
             assert result.folder_name == "test_folder"
 
     @pytest.mark.asyncio
@@ -427,7 +422,7 @@ class TestGoogleCloudStorage:
 
         mock_storage_control_client.return_value.rename_folder.assert_called_once()
 
-        assert isinstance(result, FolderRenameSchema)
+        assert isinstance(result, FolderRename)
         assert result.folder_name == "new_folder"
         assert result.old_name == "old_folder"
         assert result.folder_path == "new_folder/"
@@ -463,7 +458,7 @@ class TestGoogleCloudStorage:
 
         assert isinstance(result, list)
         assert len(result) == 2
-        assert all(isinstance(folder, FolderDataSchema) for folder in result)
+        assert all(isinstance(folder, FolderData) for folder in result)
         assert result[0].folder_name == "folder1"
         assert result[1].folder_name == "folder2"
 
@@ -559,10 +554,10 @@ class TestGoogleCloudStorage:
 
     @pytest.mark.asyncio
     async def test_delete_subfolders(self, cloud_storage):
-        subfolder1 = FolderDataSchema(
+        subfolder1 = FolderData(
             folder_name="subfolder1", folder_path="test_folder/subfolder1/"
         )
-        subfolder2 = FolderDataSchema(
+        subfolder2 = FolderData(
             folder_name="subfolder2", folder_path="test_folder/subfolder2/"
         )
 
@@ -582,10 +577,10 @@ class TestGoogleCloudStorage:
 
     @pytest.mark.asyncio
     async def test_delete_all_files_in_folder(self, cloud_storage):
-        file1 = FileSchema(
+        file1 = File(
             filename="file1.txt", path="/test_folder/file1.txt", url="url1"
         )
-        file2 = FileSchema(
+        file2 = File(
             filename="file2.txt", path="/test_folder/file2.txt", url="url2"
         )
 

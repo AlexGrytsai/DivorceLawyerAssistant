@@ -7,7 +7,7 @@ from src.domain.document.exceptions import (
     DatabaseOperationError,
     DatabaseConnectionError,
 )
-from src.infrastructure.persistence.firestore.decorators import (
+from src.infrastructure.database.document.firestore.decorators import (
     handle_firestore_database_errors_sync,
     handle_firestore_database_errors_async,
 )

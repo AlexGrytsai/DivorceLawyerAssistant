@@ -1,4 +1,4 @@
-from .firestore.firestore_document_repository import (
+from .document.firestore.firestore_document_repository import (
     FirestoreDocumentRepository,
 )
 

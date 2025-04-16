@@ -5,6 +5,14 @@ from fastapi import UploadFile, Request
 
 from src.core.config import settings
 from src.core.constants import ALLOWED_MIME_TYPES_FOR_RAG
+from src.domain.storage.entities import File, FileDelete
+from src.domain.storage.entities.folder import (
+    FolderDelete,
+    FolderData,
+    FolderContents,
+    FolderItem,
+)
+from src.domain.storage.repositories import StorageRepository
 from src.services.rag_service import VectorDBInterface
 from src.services.rag_service.decorators import (
     handle_index_operation_exceptions,
@@ -29,17 +37,6 @@ from src.services.rag_service.schemas import (
     IndexStatsSchema,
     Document,
 )
-from src.services.storage.interfaces.base_storage_interface import (
-    BaseStorageInterface,
-)
-from src.services.storage.shemas import (
-    FileSchema,
-    FileDeleteSchema,
-    FolderDeleteSchema,
-    FolderContentsSchema,
-    FolderDataSchema,
-    FolderItem,
-)
 from src.utils.validators.validate_file_mime import validate_file_mime
 
 logger = logging.getLogger(__name__)
@@ -48,7 +45,7 @@ logger = logging.getLogger(__name__)
 class RAGService(RAGServiceInterface):
     def __init__(
         self,
-        storage_interface: Optional[BaseStorageInterface] = None,
+        storage_interface: Optional[StorageRepository] = None,
         vector_db_client: Optional[VectorDBInterface] = None,
         rag_manager: Optional[RAGManagerInterface] = None,
     ):
@@ -107,7 +104,7 @@ class RAGService(RAGServiceInterface):
         self,
         index_name: str,
         request: Optional[Request] = None,
-    ) -> FolderDeleteSchema:
+    ) -> FolderDelete:
         logger.info(f"Deleting index: {index_name}")
 
         success = self.vector_db_client.delete_index(index_name)
@@ -158,7 +155,7 @@ class RAGService(RAGServiceInterface):
         index_name: str,
         namespace: str,
         request: Optional[Request] = None,
-    ) -> FolderDeleteSchema:
+    ) -> FolderDelete:
         logger.info(
             f"Deleting namespace: {namespace} from index: {index_name}"
         )
@@ -187,7 +184,7 @@ class RAGService(RAGServiceInterface):
         file: UploadFile,
         request: Optional[Request] = None,
         metadata: Optional[Dict[str, Any]] = None,
-    ) -> FileSchema:
+    ) -> File:
         logger.info(
             f"Uploading file: {file.filename} to {index_name}/{namespace}"
         )
@@ -214,7 +211,7 @@ class RAGService(RAGServiceInterface):
         files: List[UploadFile],
         request: Optional[Request] = None,
         metadata: Optional[Dict[str, Any]] = None,
-    ) -> List[FileSchema]:
+    ) -> List[File]:
         logger.info(
             f"Uploading {len(files)} files to {index_name}/{namespace}"
         )
@@ -252,7 +249,7 @@ class RAGService(RAGServiceInterface):
         namespace: str,
         document_path: str,
         request: Optional[Request] = None,
-    ) -> FileDeleteSchema:
+    ) -> FileDelete:
         logger.info(
             f"Deleting document: {document_path} from {index_name}/{namespace}"
         )
@@ -302,13 +299,13 @@ class RAGService(RAGServiceInterface):
         """Retrieves list of all indexes from vector database."""
         return set(self.vector_db_client.list_indexes())
 
-    async def _get_storage_folders(self) -> List[FolderDataSchema]:
+    async def _get_storage_folders(self) -> List[FolderData]:
         """Retrieves list of all folders from storage service."""
         return await self.storage.list_folders()
 
     @staticmethod
     def _map_index_to_schema(
-        folder: FolderDataSchema, stats: IndexStatsSchema
+        folder: FolderData, stats: IndexStatsSchema
     ) -> IndexSchema:
         """Converts folder data and index stats into IndexSchema object."""
         return IndexSchema(
@@ -324,9 +321,7 @@ class RAGService(RAGServiceInterface):
         """
         return self.vector_db_client.list_namespaces(index_name)
 
-    async def _get_folder_contents(
-        self, index_name: str
-    ) -> FolderContentsSchema:
+    async def _get_folder_contents(self, index_name: str) -> FolderContents:
         """Retrieves contents of specified folder from storage service."""
         return await self.storage.get_folder_contents(index_name)
 
@@ -359,7 +354,7 @@ class RAGService(RAGServiceInterface):
 
     async def _process_uploaded_files(
         self,
-        files_info: List[FileSchema],
+        files_info: List[File],
         index_name: str,
         namespace: str,
         metadata: Optional[Dict[str, Any]] = None,
@@ -407,7 +402,7 @@ class RAGService(RAGServiceInterface):
             processed_files=len(documents),
         )
 
-    async def _get_document_info(self, document_path: str) -> FileSchema:
+    async def _get_document_info(self, document_path: str) -> File:
         """Retrieves file information from storage service."""
         return await self.storage.get_file(document_path)
 
@@ -415,7 +410,7 @@ class RAGService(RAGServiceInterface):
         self,
         index_name: str,
         namespace: str,
-        file_info: FileSchema,
+        file_info: File,
     ) -> bool:
         """Deletes document vectors from vector database."""
         return self.vector_db_client.delete_from_namespace(
@@ -428,6 +423,6 @@ class RAGService(RAGServiceInterface):
         self,
         document_path: str,
         request: Optional[Request] = None,
-    ) -> FileDeleteSchema:
+    ) -> FileDelete:
         """Deletes document from storage service."""
         return await self.storage.delete_file(document_path, request)

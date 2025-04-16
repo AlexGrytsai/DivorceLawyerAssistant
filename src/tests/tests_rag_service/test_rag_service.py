@@ -8,6 +8,18 @@ from fastapi import UploadFile, HTTPException, status
 
 from src.core.config import settings
 from src.core.constants import ALLOWED_MIME_TYPES_FOR_RAG
+from src.domain.storage.entities import (
+    FolderData,
+    FileForFolder,
+    File,
+    FileDelete,
+)
+from src.domain.storage.entities.folder import (
+    FolderDelete,
+    FolderItem,
+    FolderContents,
+)
+from src.domain.storage.repositories import StorageRepository
 from src.services.rag_service.interfaces import (
     VectorDBInterface,
     RAGManagerInterface,
@@ -24,25 +36,13 @@ from src.services.rag_service.schemas import (
     Document,
     QueryResultSchema,
 )
-from src.services.storage.interfaces.base_storage_interface import (
-    BaseStorageInterface,
-)
-from src.services.storage.shemas import (
-    FileSchema,
-    FileDeleteSchema,
-    FolderDeleteSchema,
-    FolderContentsSchema,
-    FolderDataSchema,
-    FolderItem,
-    FileSchemaForFolder,
-)
 
 logger = logging.getLogger(__name__)
 
 
 @pytest.fixture
 def mock_storage():
-    mock = AsyncMock(spec=BaseStorageInterface)
+    mock = AsyncMock(spec=StorageRepository)
     mock.create_folder = AsyncMock()
     mock.delete_folder = AsyncMock()
     mock.list_folders = AsyncMock()
@@ -139,7 +139,7 @@ class TestRAGService:
         index_name = "test_index"
         dimension = 1024
         metric = "euclidean"
-        mock_folder_data = FolderDataSchema(
+        mock_folder_data = FolderData(
             folder_name=index_name,
             folder_path=index_name,
             create_time=datetime.now(),
@@ -185,20 +185,18 @@ class TestRAGService:
     ):
         mock_db_indexes = ["index1", "index2"]
         mock_storage_folders = [
-            FolderDataSchema(
+            FolderData(
                 folder_name="index1",
                 folder_path="index1",
                 create_time=datetime.now(),
             ),
-            FolderDataSchema(
+            FolderData(
                 folder_name="index2",
                 folder_path="index2",
                 create_time=datetime.now(),
             ),
             # Folder exists, but no index in DB
-            FolderDataSchema(
-                folder_name="stale_folder", folder_path="stale_folder"
-            ),
+            FolderData(folder_name="stale_folder", folder_path="stale_folder"),
         ]
         mock_stats1 = IndexStatsSchema(
             dimension=1536,
@@ -256,13 +254,13 @@ class TestRAGService:
     ):
         mock_db_indexes = ["index1"]  # Only index1 in DB
         mock_storage_folders = [
-            FolderDataSchema(
+            FolderData(
                 folder_name="index1",
                 folder_path="index1",
                 create_time=datetime.now(),
             ),
             # Only index2 in storage
-            FolderDataSchema(folder_name="index2", folder_path="index2"),
+            FolderData(folder_name="index2", folder_path="index2"),
         ]
         mock_stats1 = IndexStatsSchema(
             dimension=1536,
@@ -287,7 +285,7 @@ class TestRAGService:
         self, rag_service, mock_storage, mock_vector_db
     ):
         index_name = "index_to_delete"
-        mock_delete_result = FolderDeleteSchema(
+        mock_delete_result = FolderDelete(
             folder_name=index_name, deleted_time=datetime.now()
         )
         mock_storage.delete_folder.return_value = mock_delete_result
@@ -328,7 +326,7 @@ class TestRAGService:
         index_name = "index1"
         namespace = "new_ns"
         expected_path = f"{index_name}/{namespace}/"
-        mock_folder_data = FolderDataSchema(
+        mock_folder_data = FolderData(
             folder_name=namespace,
             folder_path=expected_path,
             create_time=datetime.now(),
@@ -373,7 +371,7 @@ class TestRAGService:
         index_name = "index1"
         mock_db_namespaces = ["ns1", "ns2"]
         # Fix type hint for items
-        mock_folder_items: List[Union[FileSchemaForFolder, FolderItem]] = [
+        mock_folder_items: List[Union[FileForFolder, FolderItem]] = [
             FolderItem(
                 folder_name="ns1",
                 type="folder",
@@ -393,14 +391,14 @@ class TestRAGService:
                 folder_path=f"{index_name}/stale_ns_folder",
             ),
             # File item - should be ignored
-            FileSchemaForFolder(
+            FileForFolder(
                 filename="somefile.txt",
                 type="file",
                 path=f"{index_name}/somefile.txt",
                 url="",
             ),
         ]
-        mock_folder_contents = FolderContentsSchema(
+        mock_folder_contents = FolderContents(
             current_path=index_name, items=mock_folder_items
         )
 
@@ -425,7 +423,7 @@ class TestRAGService:
     ):
         index_name = "index_empty_ns"
         mock_vector_db.list_namespaces.return_value = []
-        mock_folder_contents = FolderContentsSchema(
+        mock_folder_contents = FolderContents(
             current_path=index_name, items=[]
         )
         mock_storage.get_folder_contents.return_value = mock_folder_contents
@@ -441,7 +439,7 @@ class TestRAGService:
     ):
         index_name = "index_mismatch_ns"
         mock_db_namespaces = ["ns1"]  # Only ns1 in DB
-        mock_folder_items: List[Union[FileSchemaForFolder, FolderItem]] = [
+        mock_folder_items: List[Union[FileForFolder, FolderItem]] = [
             FolderItem(
                 folder_name="ns1",
                 type="folder",
@@ -455,7 +453,7 @@ class TestRAGService:
                 folder_path=f"{index_name}/ns2",
             ),
         ]
-        mock_folder_contents = FolderContentsSchema(
+        mock_folder_contents = FolderContents(
             current_path=index_name, items=mock_folder_items
         )
 
@@ -476,7 +474,7 @@ class TestRAGService:
         index_name = "index1"
         namespace = "ns_to_delete"
         expected_path = f"{index_name}/{namespace}/"
-        mock_delete_result = FolderDeleteSchema(
+        mock_delete_result = FolderDelete(
             folder_name=namespace, deleted_time=datetime.now()
         )
         mock_storage.delete_folder.return_value = mock_delete_result
@@ -537,7 +535,7 @@ class TestRAGService:
         # Ensure content_type is set if validate_file_mime uses it
         mock_file.content_type = "application/pdf"
 
-        mock_file_info = FileSchema(
+        mock_file_info = File(
             filename=expected_path,
             path=expected_path,
             url="http://storage/path/to/file.pdf",
@@ -579,7 +577,7 @@ class TestRAGService:
         mock_file = MagicMock(spec=UploadFile)
         mock_file.filename = original_filename
         mock_file.content_type = "application/pdf"
-        mock_file_info = FileSchema(
+        mock_file_info = File(
             filename=expected_path,
             path=expected_path,
             url="http://storage/rag_fail.pdf",
@@ -626,10 +624,10 @@ class TestRAGService:
         files = [mock_file1, mock_file2]
         expected_path1 = f"{index_name}/{namespace}/doc1.pdf"
         expected_path2 = f"{index_name}/{namespace}/doc2.pdf"
-        mock_file_info1 = FileSchema(
+        mock_file_info1 = File(
             filename=expected_path1, path=expected_path1, url="url1"
         )
-        mock_file_info2 = FileSchema(
+        mock_file_info2 = File(
             filename=expected_path2, path=expected_path2, url="url2"
         )
         mock_files_info = [mock_file_info1, mock_file_info2]
@@ -761,10 +759,10 @@ class TestRAGService:
         index_name = "index1"
         namespace = "ns1"
         doc_path = f"{index_name}/{namespace}/doc_to_delete.pdf"
-        mock_file_info = FileSchema(
+        mock_file_info = File(
             filename=doc_path, path=doc_path, url="http://storage/delete.pdf"
         )
-        mock_delete_result = FileDeleteSchema(file=doc_path)
+        mock_delete_result = FileDelete(file=doc_path)
 
         mock_storage.get_file.return_value = mock_file_info
         mock_storage.delete_file.return_value = mock_delete_result
@@ -791,7 +789,7 @@ class TestRAGService:
         index_name = "index1"
         namespace = "ns1"
         document_path = f"{index_name}/{namespace}/doc_db_fail.pdf"
-        mock_file_info = FileSchema(
+        mock_file_info = File(
             filename=document_path,
             path=document_path,
             url="http://storage/db_fail.pdf",
@@ -819,7 +817,7 @@ class TestRAGService:
         index_name = "index1"
         namespace = "ns1"
         document_path = f"{index_name}/{namespace}/doc_storage_delete_fail.pdf"
-        mock_file_info = FileSchema(
+        mock_file_info = File(
             filename=document_path,
             path=document_path,
             url="http://storage/delete_fail.pdf",

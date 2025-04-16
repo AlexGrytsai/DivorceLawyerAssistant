@@ -16,9 +16,9 @@ from src.domain.document.exceptions import (
     DatabaseConnectionError,
 )
 from src.domain.document.value_objects import SearchQuery
-from src.infrastructure.persistence import FirestoreDocumentRepository
-from src.infrastructure.persistence.firestore.firestore_document_repository import (
+from src.infrastructure.database.document.firestore.firestore_document_repository import (
     SortDirection,
+    FirestoreDocumentRepository,
 )
 
 
@@ -49,7 +49,7 @@ def mock_collection(mock_firestore_client):
 @pytest.fixture
 def firestore_database(mock_firestore_client):
     with patch(
-        "src.infrastructure.persistence.firestore.firestore_document_repository.FirestoreDocumentRepository.client",
+        "src.infrastructure.database.document.firestore.firestore_document_repository.FirestoreDocumentRepository.client",
         new_callable=PropertyMock,
     ) as mock_property:
         mock_property.return_value = mock_firestore_client

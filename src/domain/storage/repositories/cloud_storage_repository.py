@@ -5,16 +5,11 @@ from google.cloud import storage  # type: ignore
 from google.cloud.storage import Blob, Bucket  # type: ignore
 from google.cloud.storage_control_v2 import RenameFolderRequest
 
-from src.services.storage.shemas import (
-    FolderBaseSchema,
-    FolderDeleteSchema,
-    FileSchema,
-    FileDeleteSchema,
-    FolderDataSchema,
-)
+from src.domain.storage.entities import File, FileDelete, Folder, FolderData
+from src.domain.storage.entities.folder import FolderDelete
 
 
-class CloudStorageInterface(ABC):
+class CloudStorageRepository(ABC):
     """
     Abstract interface for cloud storage implementations.
 
@@ -60,7 +55,7 @@ class CloudStorageInterface(ABC):
         file_path: str,
         content: Union[str, bytes],
         content_type: Optional[str] = None,
-    ) -> FileSchema:
+    ) -> File:
         """
         Upload blob (file) to cloud storage.
 
@@ -79,7 +74,7 @@ class CloudStorageInterface(ABC):
         pass
 
     @abstractmethod
-    async def delete_blob(self, file_path: str) -> FileDeleteSchema:
+    async def delete_blob(self, file_path: str) -> FileDelete:
         """
         Delete blob (file) from cloud storage.
 
@@ -95,7 +90,7 @@ class CloudStorageInterface(ABC):
         pass
 
     @abstractmethod
-    async def get_blob(self, file_path: str) -> FileSchema:
+    async def get_blob(self, file_path: str) -> File:
         """
         Get blob (file) from cloud storage.
 
@@ -108,7 +103,7 @@ class CloudStorageInterface(ABC):
         pass
 
     @abstractmethod
-    async def copy_blob(self, source_blob: Blob, new_name: str) -> FileSchema:
+    async def copy_blob(self, source_blob: Blob, new_name: str) -> File:
         """
         Copy blob (file) to a new location in cloud storage.
 
@@ -125,9 +120,7 @@ class CloudStorageInterface(ABC):
         pass
 
     @abstractmethod
-    async def rename_blob(
-        self, source_blob_path: str, new_name: str
-    ) -> FileSchema:
+    async def rename_blob(self, source_blob_path: str, new_name: str) -> File:
         """
         Rename blob (file) in cloud storage.
 
@@ -149,7 +142,7 @@ class CloudStorageInterface(ABC):
         prefix: Optional[str] = "",
         search_query: Optional[str] = None,
         case_sensitive: Optional[bool] = False,
-    ) -> List[FileSchema]:
+    ) -> List[File]:
         """
         List blobs in storage with optional filtering.
 
@@ -166,7 +159,7 @@ class CloudStorageInterface(ABC):
         pass
 
     @abstractmethod
-    async def create_folder(self, folder_name: str) -> FolderBaseSchema:
+    async def create_folder(self, folder_name: str) -> Folder:
         """
         Create a new managed folder in the storage.
 
@@ -182,7 +175,7 @@ class CloudStorageInterface(ABC):
         pass
 
     @abstractmethod
-    async def get_folder(self, folder_name: str) -> FolderDataSchema:
+    async def get_folder(self, folder_name: str) -> FolderData:
         """
         Get information about a managed folder in the storage.
 
@@ -200,7 +193,7 @@ class CloudStorageInterface(ABC):
     @abstractmethod
     async def delete_folder(
         self, folder_name: str, is_delete_all: bool
-    ) -> FolderDeleteSchema:
+    ) -> FolderDelete:
         """
         Delete a managed folder from the storage.
 
@@ -238,7 +231,7 @@ class CloudStorageInterface(ABC):
     @abstractmethod
     async def list_folders(
         self, prefix: Optional[str] = None
-    ) -> List[FolderDataSchema]:
+    ) -> List[FolderData]:
         """
         List managed folders in the storage.
 
