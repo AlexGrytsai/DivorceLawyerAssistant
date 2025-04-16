@@ -13,21 +13,13 @@ from google.cloud.storage_control_v2 import (
     ListFoldersRequest,
     GetFolderRequest,
 )  # type: ignore
-from src.services.storage.shemas import (
-    FolderBaseSchema,
-    FolderDeleteSchema,
-    FolderDataSchema,
-    FolderRenameSchema,
-    FileSchema,
-    FileDeleteSchema,
-)
 
-from src.domain.storage.repositories.cloud_storage_interface import (
-    CloudStorageInterface,
-)
-from src.infrastructure.storage.decorators import (
-    handle_cloud_storage_exceptions,
-    async_handle_cloud_storage_exceptions,
+from src.domain.storage.entities import File, FileDelete, FolderData
+from src.domain.storage.entities.folder import FolderDelete, FolderRename
+from src.domain.storage.repositories import CloudStorageRepository
+from src.infrastructure.storage.cloud.google_cloud.decorators import (
+    handle_google_storage_exceptions,
+    async_handle_google_storage_exceptions,
 )
 
 load_dotenv()
@@ -35,7 +27,7 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 
 
-class GoogleCloudStorage(CloudStorageInterface):
+class GoogleCloudStorage(CloudStorageRepository):
     _BASE_STORAGE_CLOUD_URL = "https://storage.googleapis.com"
 
     def __init__(self, bucket_name: str, project_id: str) -> None:
@@ -50,7 +42,7 @@ class GoogleCloudStorage(CloudStorageInterface):
         return f"{self._BASE_STORAGE_CLOUD_URL}/{self.bucket_name}"
 
     @property
-    @handle_cloud_storage_exceptions
+    @handle_google_storage_exceptions
     def client(self) -> storage.Client:
         """
         Get cloud storage client instance.
@@ -68,7 +60,7 @@ class GoogleCloudStorage(CloudStorageInterface):
         return self._client
 
     @property
-    @handle_cloud_storage_exceptions
+    @handle_google_storage_exceptions
     def storage_control(self) -> StorageControlClient:
         """
         Get storage control client instance.
@@ -84,7 +76,7 @@ class GoogleCloudStorage(CloudStorageInterface):
         return self._storage_control
 
     @property
-    @handle_cloud_storage_exceptions
+    @handle_google_storage_exceptions
     def bucket(self) -> Bucket:
         """
         Get the cloud storage bucket instance.
@@ -103,13 +95,13 @@ class GoogleCloudStorage(CloudStorageInterface):
             )
         return self._bucket
 
-    @async_handle_cloud_storage_exceptions
+    @async_handle_google_storage_exceptions
     async def upload_blob(
         self,
         file_path: str,
         content: Union[str, bytes],
         content_type: Optional[str] = None,
-    ) -> FileSchema:
+    ) -> File:
         blob: Blob = self.bucket.blob(file_path)
 
         if content_type:
@@ -120,7 +112,7 @@ class GoogleCloudStorage(CloudStorageInterface):
 
         blob.upload_from_string(content, content_type=content_type)
 
-        return FileSchema(
+        return File(
             filename=self._get_blob_name(blob.name),
             path=self._get_blob_path(blob.name),
             url=blob.public_url,
@@ -128,12 +120,12 @@ class GoogleCloudStorage(CloudStorageInterface):
             content_type=blob.content_type,
         )
 
-    @async_handle_cloud_storage_exceptions
-    async def get_blob(self, file_path: str) -> FileSchema:
+    @async_handle_google_storage_exceptions
+    async def get_blob(self, file_path: str) -> File:
         """Get blob (file) by path"""
         blob: Blob = self.bucket.get_blob(self._normalize_file_path(file_path))
 
-        return FileSchema(
+        return File(
             filename=self._get_blob_name(blob.name),
             path=self._get_blob_path(blob.name),
             url=blob.public_url,
@@ -141,18 +133,18 @@ class GoogleCloudStorage(CloudStorageInterface):
             content_type=blob.content_type,
         )
 
-    @async_handle_cloud_storage_exceptions
-    async def delete_blob(self, file_path: str) -> FileDeleteSchema:
+    @async_handle_google_storage_exceptions
+    async def delete_blob(self, file_path: str) -> FileDelete:
         blob: Blob = self.bucket.blob(self._normalize_file_path(file_path))
         blob.delete()
 
-        return FileDeleteSchema(file=file_path)
+        return FileDelete(file=file_path)
 
-    @async_handle_cloud_storage_exceptions
-    async def copy_blob(self, source_blob: Blob, new_name: str) -> FileSchema:
+    @async_handle_google_storage_exceptions
+    async def copy_blob(self, source_blob: Blob, new_name: str) -> File:
         new_blob = self.bucket.copy_blob(source_blob, self.bucket, new_name)
 
-        return FileSchema(
+        return File(
             filename=self._get_blob_name(new_blob.name),
             path=self._get_blob_path(new_blob.name),
             url=new_blob.public_url,
@@ -160,10 +152,8 @@ class GoogleCloudStorage(CloudStorageInterface):
             content_type=new_blob.content_type,
         )
 
-    @async_handle_cloud_storage_exceptions
-    async def rename_blob(
-        self, source_blob_path: str, new_name: str
-    ) -> FileSchema:
+    @async_handle_google_storage_exceptions
+    async def rename_blob(self, source_blob_path: str, new_name: str) -> File:
 
         source_blob = self.bucket.get_blob(
             self._normalize_file_path(source_blob_path)
@@ -174,7 +164,7 @@ class GoogleCloudStorage(CloudStorageInterface):
             source_blob, f"{folder_}/{new_name}"
         )
 
-        return FileSchema(
+        return File(
             filename=self._get_blob_name(new_blob.name),
             path=self._get_blob_path(new_blob.name),
             url=new_blob.public_url,
@@ -182,13 +172,13 @@ class GoogleCloudStorage(CloudStorageInterface):
             content_type=new_blob.content_type,
         )
 
-    @async_handle_cloud_storage_exceptions
+    @async_handle_google_storage_exceptions
     async def list_blobs(
         self,
         prefix: Optional[str] = "",
         search_query: Optional[str] = None,
         case_sensitive: Optional[bool] = False,
-    ) -> List[FileSchema]:
+    ) -> List[File]:
         blobs: List[Blob] = list(
             self.bucket.list_blobs(
                 prefix=self._normalize_file_path(prefix),
@@ -201,7 +191,7 @@ class GoogleCloudStorage(CloudStorageInterface):
             return self._search_blobs(blobs, search_query, case_sensitive)
 
         return [
-            FileSchema(
+            File(
                 filename=self._get_blob_name(blob.name),
                 path=self._get_blob_path(blob.name),
                 url=blob.public_url,
@@ -212,14 +202,14 @@ class GoogleCloudStorage(CloudStorageInterface):
             if not blob.name.endswith("/")
         ]
 
-    @async_handle_cloud_storage_exceptions
+    @async_handle_google_storage_exceptions
     async def create_folder(
         self,
         folder_name: str,
         create_request: Type[CreateFolderRequest] = CreateFolderRequest,
         *args,
         **kwargs,
-    ) -> FolderBaseSchema:
+    ) -> FolderData:
         """
         Create a new managed folder in the storage.
 
@@ -248,15 +238,15 @@ class GoogleCloudStorage(CloudStorageInterface):
             )
         )
 
-        return FolderDataSchema(
+        return FolderData(
             folder_name=self._get_folder_name(response.name),
             folder_path=self._get_common_folder_path(folder_name),
             create_time=response.create_time.replace(microsecond=0),
             update_time=response.update_time.replace(microsecond=0),
         )
 
-    @async_handle_cloud_storage_exceptions
-    async def get_folder(self, folder_path: str) -> FolderDataSchema:
+    @async_handle_google_storage_exceptions
+    async def get_folder(self, folder_path: str) -> FolderData:
         """
         Get information about a managed folder in the storage.
 
@@ -266,20 +256,20 @@ class GoogleCloudStorage(CloudStorageInterface):
             request=GetFolderRequest(name=self._get_folder_path(folder_path))
         )
 
-        return FolderDataSchema(
+        return FolderData(
             folder_name=self._get_folder_name(folder.name),
             folder_path=self._get_common_folder_path(folder.name),
             create_time=folder.create_time.replace(microsecond=0),
             update_time=folder.update_time.replace(microsecond=0),
         )
 
-    @async_handle_cloud_storage_exceptions
+    @async_handle_google_storage_exceptions
     async def delete_folder(
         self,
         folder_path: str,
         delete_request: Type[DeleteFolderRequest] = DeleteFolderRequest,
         is_delete_all: bool = False,
-    ) -> FolderDeleteSchema:
+    ) -> FolderDelete:
         """
         Delete a managed folder from the storage.
 
@@ -304,15 +294,15 @@ class GoogleCloudStorage(CloudStorageInterface):
         else:
             await self._delete_folder(folder_path)
 
-        return FolderDeleteSchema(folder_name=folder_path)
+        return FolderDelete(folder_name=folder_path)
 
-    @async_handle_cloud_storage_exceptions
+    @async_handle_google_storage_exceptions
     async def rename_folder(
         self,
         old_name: str,
         new_name: str,
         rename_request: Type[RenameFolderRequest] = RenameFolderRequest,
-    ) -> FolderRenameSchema:
+    ) -> FolderRename:
         """
         Rename a managed folder in the storage.
 
@@ -342,17 +332,17 @@ class GoogleCloudStorage(CloudStorageInterface):
 
         folder_path = self._get_common_folder_path(new_name)
 
-        return FolderRenameSchema(
+        return FolderRename(
             folder_name=new_name,
             old_name=old_name,
             folder_path=folder_path,
         )
 
-    @async_handle_cloud_storage_exceptions
+    @async_handle_google_storage_exceptions
     async def list_folders(
         self,
         prefix: Optional[str] = None,
-    ) -> List[FolderDataSchema]:
+    ) -> List[FolderData]:
         """
         List managed folders in the storage.
 
@@ -376,10 +366,10 @@ class GoogleCloudStorage(CloudStorageInterface):
             request=list_folders_request
         )
 
-        folders: List[FolderDataSchema] = []
+        folders: List[FolderData] = []
 
         folders.extend(
-            FolderDataSchema(
+            FolderData(
                 folder_name=self._get_folder_name(folder.name),
                 folder_path=self._get_common_folder_path(folder.name),
                 create_time=folder.create_time.replace(microsecond=0),
@@ -472,7 +462,7 @@ class GoogleCloudStorage(CloudStorageInterface):
         return ""
 
     async def _delete_subfolders(self, folder_path: str) -> bool:
-        subfolders: List[FolderDataSchema] = await self.list_folders(
+        subfolders: List[FolderData] = await self.list_folders(
             prefix=folder_path
         )
         if subfolders:
@@ -483,7 +473,7 @@ class GoogleCloudStorage(CloudStorageInterface):
         return True
 
     async def _delete_all_files_in_folder(self, folder_path: str) -> bool:
-        files: List[FileSchema] = await self.list_blobs(prefix=folder_path)
+        files: List[File] = await self.list_blobs(prefix=folder_path)
         delete_tasks = [self.delete_blob(file.path) for file in files]
 
         await asyncio.gather(*delete_tasks)
@@ -507,7 +497,7 @@ class GoogleCloudStorage(CloudStorageInterface):
         blobs: List[Blob],
         search_query: str,
         case_sensitive: Optional[bool] = False,
-    ) -> List[FileSchema]:
+    ) -> List[File]:
         """
         Search for blobs that match a given query string.
 
@@ -528,7 +518,7 @@ class GoogleCloudStorage(CloudStorageInterface):
         if not case_sensitive:
             search_query = search_query.lower()
 
-        matching_files: List[FileSchema] = []
+        matching_files: List[File] = []
         for blob in blobs:
             if blob.content_type != "Folder":
                 original_name = blob.name.split("/")[-1]
@@ -540,7 +530,7 @@ class GoogleCloudStorage(CloudStorageInterface):
                     and search_query in original_name.lower()
                 ):
                     matching_files.append(
-                        FileSchema(
+                        File(
                             filename=original_name,
                             path=self._get_blob_path(blob.name),
                             url=blob.public_url,
