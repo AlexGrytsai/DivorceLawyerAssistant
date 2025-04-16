@@ -5,25 +5,22 @@ from typing import List, Optional, Union, Set, Tuple
 from fastapi import UploadFile, Request, status, HTTPException
 from google.cloud.storage import Blob  # type: ignore
 from google.cloud.storage_control_v2 import RenameFolderRequest  # type: ignore
-from src.services.storage.shemas import (
-    FileSchema,
-    FileDeleteSchema,
-    FolderBaseSchema,
-    FolderDeleteSchema,
-    FileSchemaForFolder,
-    FolderItem,
-    FolderContentsSchema,
-    FolderDataSchema,
-)
 
+from src.domain.storage.entities import File, FileDelete, Folder, FileForFolder
+from src.domain.storage.entities.folder import (
+    FolderDelete,
+    FolderData,
+    FolderContents,
+    FolderItem,
+)
+from src.domain.storage.repositories import (
+    CloudStorageRepository,
+    StorageRepository,
+)
+from src.infrastructure.storage.cloud import GoogleCloudStorage
 from src.infrastructure.storage.decorators import (
     handle_upload_file_exceptions,
     handle_delete_file_exceptions,
-)
-from src.services.storage.implementations import GoogleCloudStorage
-from src.services.storage.interfaces import (
-    CloudStorageInterface,
-    BaseStorageInterface,
 )
 from src.utils.path_handler import PathHandler
 
@@ -31,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 
 def _validate_blob_exists(
-    cloud_storage: CloudStorageInterface,
+    cloud_storage: CloudStorageRepository,
     blob_name: str,
     error_code: int = status.HTTP_404_NOT_FOUND,
 ) -> None:
@@ -48,7 +45,7 @@ def _validate_blob_exists(
 
 
 def _validate_blob_not_exists(
-    cloud_storage: CloudStorageInterface,
+    cloud_storage: CloudStorageRepository,
     blob_name: str,
     error_code: int = status.HTTP_409_CONFLICT,
 ) -> None:
@@ -64,14 +61,14 @@ def _validate_blob_not_exists(
         )
 
 
-class CloudStorage(BaseStorageInterface):
+class CloudStorage(StorageRepository):
 
     def __init__(
         self,
         project_id: str,
         bucket_name: str,
         path_handler: Optional[PathHandler] = None,
-        cloud_storage: Optional[CloudStorageInterface] = None,
+        cloud_storage: Optional[CloudStorageRepository] = None,
     ):
 
         self._path_handler = path_handler or PathHandler()
@@ -87,7 +84,7 @@ class CloudStorage(BaseStorageInterface):
         request: Optional[Request] = None,
         *args,
         **kwargs,
-    ) -> FileSchema:
+    ) -> File:
         content = await file.read()
         if not file.filename:
             raise ValueError("File name cannot be empty")
@@ -103,7 +100,7 @@ class CloudStorage(BaseStorageInterface):
         request: Optional[Request] = None,
         *args,
         **kwargs,
-    ) -> List[FileSchema]:
+    ) -> List[File]:
         tasks = [self.upload(file, request) for file in files]
         return await asyncio.gather(*tasks)
 
@@ -114,7 +111,7 @@ class CloudStorage(BaseStorageInterface):
         request: Request,
         *args,
         **kwargs,
-    ) -> FileDeleteSchema:
+    ) -> FileDelete:
         return await self._cloud_storage.delete_blob(file_path)
 
     @handle_upload_file_exceptions
@@ -125,7 +122,7 @@ class CloudStorage(BaseStorageInterface):
         request: Optional[Request] = None,
         *args,
         **kwargs,
-    ) -> FileSchema:
+    ) -> File:
         return await self._cloud_storage.rename_blob(old_path, new_file_name)
 
     @handle_upload_file_exceptions
@@ -135,10 +132,8 @@ class CloudStorage(BaseStorageInterface):
         request: Optional[Request] = None,
         *args,
         **kwargs,
-    ) -> List[FileDeleteSchema]:
-        blobs: List[FileSchema] = await self._cloud_storage.list_blobs(
-            prefix=prefix
-        )
+    ) -> List[FileDelete]:
+        blobs: List[File] = await self._cloud_storage.list_blobs(prefix=prefix)
         tasks = [self.delete_file(blob.path, request) for blob in blobs]
         return await asyncio.gather(*tasks)
 
@@ -149,7 +144,7 @@ class CloudStorage(BaseStorageInterface):
         request: Optional[Request] = None,
         *args,
         **kwargs,
-    ) -> FolderBaseSchema:
+    ) -> Folder:
         """Create a new folder in storage"""
         folder_path = self._path_handler.normalize_path(folder_path)
         _validate_blob_not_exists(self._cloud_storage, folder_path)
@@ -179,7 +174,7 @@ class CloudStorage(BaseStorageInterface):
         is_delete_all: bool = False,
         *args,
         **kwargs,
-    ) -> FolderDeleteSchema:
+    ) -> FolderDelete:
         """Delete folder and all its contents"""
         return await self._cloud_storage.delete_folder(
             folder_path, is_delete_all=is_delete_all
@@ -190,7 +185,7 @@ class CloudStorage(BaseStorageInterface):
         self,
         file_path: str,
         destination_path: Optional[str] = None,
-    ) -> FileSchema:
+    ) -> File:
         if not file_path:
             raise ValueError("File path cannot be empty")
 
@@ -199,7 +194,7 @@ class CloudStorage(BaseStorageInterface):
         )
         return await self._cloud_storage.upload_blob(file_path, destination)
 
-    async def get_file(self, file_path: str) -> FileSchema:
+    async def get_file(self, file_path: str) -> File:
         return await self._cloud_storage.get_blob(file_path)
 
     async def list_files(
@@ -207,7 +202,7 @@ class CloudStorage(BaseStorageInterface):
         prefix: Optional[str] = "",
         search_query: Optional[str] = "",
         case_sensitive: Optional[bool] = False,
-    ) -> List[FileSchema]:
+    ) -> List[File]:
         return await self._cloud_storage.list_blobs(
             prefix=prefix,
             search_query=search_query,
@@ -217,16 +212,14 @@ class CloudStorage(BaseStorageInterface):
     async def list_folders(
         self,
         prefix: Optional[str] = None,
-    ) -> List[FolderDataSchema]:
+    ) -> List[FolderData]:
         """List managed folders"""
         return await self._cloud_storage.list_folders(prefix=prefix)
 
-    async def get_folder(self, folder_path: str) -> FolderDataSchema:
+    async def get_folder(self, folder_path: str) -> FolderData:
         return await self._cloud_storage.get_folder(folder_path)
 
-    async def get_folder_contents(
-        self, folder_path: str
-    ) -> FolderContentsSchema:
+    async def get_folder_contents(self, folder_path: str) -> FolderContents:
         """Get contents of a folder with files and subfolders"""
         normalized_path = self._normalize_folder_path(folder_path)
         blobs = await self._cloud_storage.list_blobs(prefix=normalized_path)
@@ -239,7 +232,7 @@ class CloudStorage(BaseStorageInterface):
 
         all_items = self._combine_items(files, folder_items)
 
-        return FolderContentsSchema(
+        return FolderContents(
             current_path=(
                 normalized_path.rstrip("/") if normalized_path else ""
             ),
@@ -247,10 +240,10 @@ class CloudStorage(BaseStorageInterface):
         )
 
     def _separate_files_and_folders(
-        self, blobs: List[FileSchema], folder_path: str
-    ) -> Tuple[List[FileSchemaForFolder], Set[str]]:
+        self, blobs: List[File], folder_path: str
+    ) -> Tuple[List[FileForFolder], Set[str]]:
         """Separate blobs into files and folders"""
-        files: List[FileSchemaForFolder] = []
+        files: List[FileForFolder] = []
         folders: Set[str] = set()
 
         for blob in blobs:
@@ -293,10 +286,10 @@ class CloudStorage(BaseStorageInterface):
         return await asyncio.gather(*tasks)
 
     def _combine_items(
-        self, files: List[FileSchemaForFolder], folder_items: List[FolderItem]
-    ) -> List[Union[FileSchemaForFolder, FolderItem]]:
+        self, files: List[FileForFolder], folder_items: List[FolderItem]
+    ) -> List[Union[FileForFolder, FolderItem]]:
         """Combine and sort files and folders"""
-        all_items: List[Union[FileSchemaForFolder, FolderItem]] = [
+        all_items: List[Union[FileForFolder, FolderItem]] = [
             *folder_items,
             *files,
         ]
@@ -321,8 +314,8 @@ class CloudStorage(BaseStorageInterface):
         url: str,
         size: Optional[int] = None,
         content_type: Optional[str] = None,
-    ) -> FileSchemaForFolder:
-        return FileSchemaForFolder(
+    ) -> FileForFolder:
+        return FileForFolder(
             filename=filename,
             path=path,
             url=url,
@@ -332,7 +325,7 @@ class CloudStorage(BaseStorageInterface):
         )
 
     async def _process_folder_item(self, folder_path: str) -> FolderItem:
-        folder: FolderDataSchema = await self.get_folder(folder_path)
+        folder: FolderData = await self.get_folder(folder_path)
         return FolderItem(
             folder_name=folder.folder_name,
             folder_path=folder.folder_path,
@@ -342,12 +335,12 @@ class CloudStorage(BaseStorageInterface):
 
     @staticmethod
     def _sort_folder_items(
-        items: List[Union[FileSchemaForFolder, FolderItem]],
-    ) -> List[Union[FileSchemaForFolder, FolderItem]]:
+        items: List[Union[FileForFolder, FolderItem]],
+    ) -> List[Union[FileForFolder, FolderItem]]:
         def sort_key(
-            item: Union[FileSchemaForFolder, FolderItem],
+            item: Union[FileForFolder, FolderItem],
         ) -> Tuple[bool, str]:
-            if isinstance(item, FileSchemaForFolder):
+            if isinstance(item, FileForFolder):
                 return True, item.filename or ""
             else:
                 return False, item.folder_name

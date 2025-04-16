@@ -3,12 +3,6 @@ from unittest.mock import MagicMock, AsyncMock, patch
 import pytest
 from fastapi import HTTPException, UploadFile, Request
 from google.cloud.storage_control_v2 import RenameFolderRequest
-
-from src.services.storage.cloud_storage import (
-    _validate_blob_exists,
-    _validate_blob_not_exists,
-    CloudStorage,
-)
 from src.services.storage.interfaces import CloudStorageInterface
 from src.services.storage.shemas import (
     FileSchema,
@@ -19,6 +13,12 @@ from src.services.storage.shemas import (
     FolderItem,
     FolderContentsSchema,
     FolderDataSchema,
+)
+
+from src.infrastructure.storage.cloud.cloud_storage import (
+    _validate_blob_exists,
+    _validate_blob_not_exists,
+    CloudStorage,
 )
 from src.utils.path_handler import PathHandler
 
