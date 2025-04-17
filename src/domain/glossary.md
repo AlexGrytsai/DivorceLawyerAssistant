@@ -21,8 +21,18 @@ for easier navigation and management.
 
 ### 🗂 **Category**
 
-A predefined classification that assigns a document or entity to a specific
-group based on shared characteristics or business rules.
+A primary classification within a Root Section that divides content into
+distinct topics or themes. Categories help structure information by subject,
+but they are optional — a Root Section may contain documents and folders
+directly without any categories.
+
+---
+
+### 📂 **Workspace**
+
+A top-level organizational unit representing a major topic, department,
+or domain area. It can contain categories, folders, or documents directly
+and serves as the entry point for structuring large volumes of information.
 
 ---
 
@@ -40,6 +50,15 @@ non-hierarchical.
 A user-generated or system-generated expression used to find documents or other
 entities based on specific criteria such as keywords, filters, or semantic
 vectors.
+
+---
+
+### 🤖 **Smart Search**
+
+An advanced semantic search feature powered by vector embeddings and
+large language models (LLMs). It allows users to ask natural language
+questions and receive context-aware results by understanding the meaning,
+not just the keywords.
 
 ---
 
