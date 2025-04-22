@@ -3,8 +3,8 @@ services:
     image: ngrok/ngrok:latest
     container_name: ngrok
     restart: unless-stopped
-    environment:
-      - NGROK_AUTHTOKEN=${NGROK_AUTHTOKEN}
+    env_file:
+      - .env
     command: >
       http --url=${NGROK_DOMAIN} 5678
     ports:
@@ -20,6 +20,8 @@ services:
       - "5678:5678"
     volumes:
       - n8n_data:/home/node/.n8n
+    env_file:
+      - .env
     environment:
       - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
       - WEBHOOK_URL=${WEBHOOK_URL}
