@@ -22,11 +22,6 @@ services:
       - n8n_data:/home/node/.n8n
     env_file:
       - .env
-    environment:
-      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
-      - WEBHOOK_URL=${WEBHOOK_URL}
-      - N8N_RUNNERS_ENABLED=true
-      - N8N_TRUST_PROXY_ENABLED=true
 
 volumes:
   n8n_data:
