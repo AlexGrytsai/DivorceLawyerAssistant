@@ -1,27 +1,38 @@
 services:
-  ngrok:
-    image: ngrok/ngrok:latest
-    container_name: ngrok
-    restart: unless-stopped
-    env_file:
-      - .env
-    command: >
-      http --url=${NGROK_DOMAIN} 5678
-    ports:
-      - "5678:5678"
-
   n8n:
-    image: docker.n8n.io/n8nio/n8n
-    container_name: n8n
+    image: docker.n8n.io/n8nio/n8n:latest
+    container_name: n8n_local
     restart: unless-stopped
-    depends_on:
-      - ngrok
     ports:
       - "5678:5678"
     volumes:
       - n8n_data:/home/node/.n8n
     env_file:
       - .env
+    environment:
+      - N8N_EXPRESS_TRUST_PROXY=true
+      - N8N_HIRING_BANNER_ENABLED=false
+      - NODE_ENV=production
+      - N8N_HOST=lamb-fit-rationally.ngrok-free.app
+      - N8N_PROTOCOL=https
+      - N8N_EDITOR_BASE_URL=https://lamb-fit-rationally.ngrok-free.app
+      - N8N_DISABLE_PRODUCTION_MAIN_PROCESS=false
+      - N8N_USER_MANAGEMENT_DISABLED=true
+      - N8N_PUSH_BACKEND=websocket
+      - N8N_SKIP_WEBHOOK_DEREGISTRATION_SHUTDOWN=true
+      - EXECUTIONS_PROCESS=main
+      - N8N_WORKFLOW_AUTOACTIVATE=false
+
+  ngrok:
+    image: ngrok/ngrok:latest
+    container_name: ngrok
+    restart: unless-stopped
+    depends_on:
+      - n8n
+    env_file:
+      - .env
+    command: >
+      http n8n:5678 --domain=lamb-fit-rationally.ngrok-free.app
 
 volumes:
   n8n_data:
