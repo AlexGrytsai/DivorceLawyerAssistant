@@ -1,4 +1,4 @@
-FROM python:3.12.7
+FROM python:3.12.10
 LABEL authors="agrytsai"
 
 ENV PYTHONUNBUFFERED=1
